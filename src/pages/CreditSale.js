@@ -10,14 +10,10 @@ import {
     ModalFooter,
     Button,
     useDisclosure,
-    Image
 } from "@nextui-org/react";
 
-
-import { Select, SelectItem } from "@nextui-org/react";
 import Logout from "./Logout.js";
 import React from "react";
-import { error } from "ajv/dist/vocabularies/applicator/dependencies.js";
 function CreditSale({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
@@ -62,10 +58,7 @@ function CreditSale({ petrodata }) {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // Function to open edit modal and populate with data
-    const openEditModal = (data) => {
-        setEditData(data);
-        setIsEditModalOpen(true);
-    };
+
 const base_url = process.env.REACT_APP_API_URL;
     // Function to handle changes in edit modal
     const handleEditChange = (e) => {
