@@ -34,7 +34,7 @@ function App() {
         console.error('Error fetching data:', error);
         // Set loading state to false in case of error
       });
-  }, [data.mobile_no]);
+  }, [base_url, data.mobile_no]);
 
 
 

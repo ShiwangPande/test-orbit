@@ -293,7 +293,7 @@ const base_url = process.env.REACT_APP_API_URL;
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, petrodata.daily_shift]);
+    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
     useEffect(() => {
         axios.post(`${base_url}/petro_cake/PetroAppEmployees/getSundryDebtorsLedgerList/1`, {
             "petro_id": petrodata.petro_id,
@@ -310,7 +310,7 @@ const base_url = process.env.REACT_APP_API_URL;
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id]);
+    }, [petrodata.petro_id, base_url]);
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
@@ -326,7 +326,7 @@ const base_url = process.env.REACT_APP_API_URL;
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata.petro_id, ledgerId]); // Include ledgerId in the dependency array
+    }, [petrodata.petro_id, ledgerId, base_url]); // Include ledgerId in the dependency array
 
     // Function to handle selection of customer
     const handleSelectCustomer = (customer) => {
@@ -360,7 +360,7 @@ const base_url = process.env.REACT_APP_API_URL;
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id]);
+    }, [petrodata.petro_id, base_url]);
     const toggleMobileMenu = () => {
         setShowMobileMenu(!showMobileMenu);
     };
@@ -378,7 +378,7 @@ const base_url = process.env.REACT_APP_API_URL;
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id]);
+    }, [petrodata.petro_id, base_url]);
 
     useEffect(() => {
         axios.post(
@@ -398,7 +398,7 @@ const base_url = process.env.REACT_APP_API_URL;
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, petrodata.daily_shift]);
+    }, [petrodata.petro_id, petrodata.daily_shift,base_url]);
 
     const handleSearchChange = (event) => {
         const query = event.target.value.toLowerCase();

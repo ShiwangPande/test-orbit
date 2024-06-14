@@ -35,7 +35,7 @@ function NoozleReading({ petrodata }) {
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata]);
+    }, [petrodata, base_url]);
 
     const handleCalculation = (startReading, closeReading, testing, rate) => {
         const sale = (closeReading - startReading) - testing;
