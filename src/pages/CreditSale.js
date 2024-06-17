@@ -64,12 +64,14 @@ function CreditSale({ petrodata }) {
     // Function to handle changes in edit modal
     const handleEditChange = (e) => {
         const { name, value } = e.target;
+        const parsedValue = parseFloat(value);
 
         setEditData(prevData => {
-            const updatedData = {
-                ...prevData,
-                [name]: value
-            };
+            let updatedData = { ...prevData };
+            let errorss = { ...errors };
+
+            // Update the value in updatedData
+            updatedData[name] = value;
 
             // Update rate when fuel type changes
             if (name === 'selectedFuel') {
@@ -83,20 +85,73 @@ function CreditSale({ petrodata }) {
 
             // Reset selectedVehicle when editing selectedCustomer
             if (name === 'selectedCustomer') {
-                return {
-                    ...updatedData,
-                    selectedCustomer: value,
-                    selectedVehicle: '', // Reset selectedVehicle when editing selectedCustomer
-                };
+                updatedData.selectedCustomer = value;
+                updatedData.selectedVehicle = ''; // Reset selectedVehicle when editing selectedCustomer
             }
 
-            // Handle other input changes
-            return {
-                ...updatedData,
-                [name]: value,
-            };
+            // Handle total amount change
+            if (name === 'totalAmt') {
+                if (!isNaN(parsedValue)) {
+                    const potentialQuantity = parsedValue / updatedData.rate;
+                    if (potentialQuantity > 20000) {
+                        updatedData.totalAmt = (20000 * updatedData.rate).toFixed(2);
+                        errorss.totalAmt = "Total amount results in quantity exceeding 20,000";
+                    } else {
+                        errorss.totalAmt = "";
+                        updatedData.totalAmt = parsedValue.toFixed(2);
+                        updatedData.quantity = potentialQuantity.toFixed(2); // Round to 2 decimal places
+                    }
+                }
+            }
+
+            // Handle quantity change
+            if (name === 'quantity') {
+                if (!isNaN(parsedValue)) {
+                    if (parsedValue > 20000) {
+                        updatedData.quantity = 20000;
+                        errorss.quantity = "Quantity cannot exceed 20,000";
+                    } else {
+                        errorss.quantity = "";
+                        updatedData.quantity = parsedValue.toFixed(2); // Round to 2 decimal places
+                    }
+                    // Update total amount based on new quantity
+                    updatedData.totalAmt = (updatedData.quantity * updatedData.rate).toFixed(2); // Round to 2 decimal places
+                }
+            }
+
+            // Handle driverCash change
+            if (name === 'driverCash') {
+                if (!isNaN(parsedValue)) {
+                    if (parsedValue < 0) {
+                        errorss.driverCash = "Driver cash cannot be negative";
+                    } else if (parsedValue > 10000000) {
+                        updatedData.driverCash = 10000000;
+                        errorss.driverCash = "Driver cash cannot exceed 10,000,000";
+                    } else {
+                        errorss.driverCash = "";
+                        updatedData.driverCash = parsedValue;
+                    }
+                }
+            }
+
+            // Calculate inclusiveTotal
+            updatedData.inclusiveTotal = (parseFloat(updatedData.totalAmt || 0) + parseFloat(updatedData.driverCash || 0)).toFixed(2);
+
+            // Update the corresponding state variables for UI
+            if (name === 'totalAmt' || name === 'quantity') {
+                setQuantity(updatedData.quantity);
+                setTotalAmt(updatedData.totalAmt);
+            }
+
+            setErrors(errorss);
+
+            return updatedData;
         });
     };
+
+
+
+
 
 
     const validateEditForm = () => {
@@ -115,11 +170,16 @@ function CreditSale({ petrodata }) {
         // Check if quantity is not a positive number
         if (!editData.quantity || editData.quantity <= 0) {
             newErrors.quantity = 'Quantity must be greater than 0';
+        } else if (editData.quantity > 20000) {
+            newErrors.quantity = 'Quantity cannot exceed 20,000';
         }
 
         // Check if driverCash is negative only if a vehicle is selected
         if (editData.selectedVehicle && parseFloat(editData.driverCash) < 0) {
             newErrors.driverCash = 'Driver cash cannot be negative';
+        } else if (parseFloat(editData.driverCash) > 10000000) {
+
+            newErrors.driverCash = 'Driver cash cannot exceed 10,000,000';
         }
 
         // Check if driverCash is greater than 0 and no vehicle is selected
@@ -130,6 +190,8 @@ function CreditSale({ petrodata }) {
         setErrorss(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+
 
 
 
@@ -173,27 +235,50 @@ function CreditSale({ petrodata }) {
     }, []);
     const validateForm = () => {
         const newErrors = {};
-        if (selectedCustomer == null) newErrors.selectedCustomer = 'Customer is required';
-        // if (selectedVehicle == null) newErrors.selectedVehicle = 'Vehicle is required';
-        if (selectedFuel == null) newErrors.selectedFuel = 'Fuel type is required';
-        if (quantity <= 0) newErrors.quantity = 'Quantity must be greater than 0';
-        // Check if driverCash has a value greater than 0 without a selected vehicle
-        if (parseFloat(driverCash) > 0 && selectedVehicle == null) {
-            newErrors.driverCash = 'If driver cash is greater than 0, a vehicle must be selected';
+
+        if (!selectedCustomer) {
+            newErrors.selectedCustomer = 'Customer is required';
+        }
+        // Check if selectedVehicle is required based on your requirement
+        // if (!selectedVehicle) {
+        //     newErrors.selectedVehicle = 'Vehicle is required';
+        // }
+        if (!selectedFuel) {
+            newErrors.selectedFuel = 'Fuel type is required';
+        }
+        if (quantity <= 0) {
+            newErrors.quantity = 'Quantity must be greater than 0';
         }
 
-        // Validate negative driverCash only if a vehicle is selected
-        if (selectedVehicle != null && parseFloat(driverCash) < 0) {
-            newErrors.driverCash = 'Driver cash cannot be negative';
+        const vehicleToUse = selectedVehicle || searchQueryVehicle.trim();
+
+        // Validate driverCash as before
+        const parsedDriverCash = parseFloat(driverCash);
+
+        if (parsedDriverCash < 0) {
+            newErrors.driverCash = 'Driver Cash cannot be negative';
+        } else if (parsedDriverCash > 10000000) {
+            newErrors.driverCash = 'Driver Cash cannot exceed 10,000,000';
+        } else if (parsedDriverCash > 0 && !vehicleToUse) {
+            newErrors.driverCash = 'If driver cash is greater than 0, a vehicle must be selected or entered manually';
         }
+
+        // Optionally, if you want to update the state or errors immediately:
+        setErrors(newErrors);
+
+
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
     const handleSubmit = (e) => {
-        e.preventDefault(); // Ensure preventDefault is called on the event object
+        e.preventDefault(); // Prevent default form submission behavior
+
+        // Validate the form inputs
         if (validateForm()) {
             const newData = {
-                selectedVehicle,
+                selectedVehicle: selectedVehicle || searchQueryVehicle.trim(), // Use manually entered vehicle if selectedVehicle is empty
                 selectedCustomer,
                 selectedFuel,
                 rate,
@@ -204,16 +289,20 @@ function CreditSale({ petrodata }) {
                 slipNo,
                 coupenNo,
             };
-            setShowDropdown(false);
+
+            // Update or add the new data to localStorage
             const existingData = JSON.parse(localStorage.getItem('submittedData')) || [];
-            if (editingIndex !== null) {
+
+            if (editingIndex !== null && editingIndex !== undefined) {
                 existingData[editingIndex] = newData; // Update existing data if editing
             } else {
                 existingData.push(newData); // Add new data if not editing
             }
 
+            // Save updated data back to localStorage
             localStorage.setItem('submittedData', JSON.stringify(existingData));
 
+            // Update state variables and UI after successful submission
             setSubmittedData(existingData);
             setSelectedVehicle('');
             setSelectedCustomer('');
@@ -229,12 +318,14 @@ function CreditSale({ petrodata }) {
             setShowDropdown(false);
             setSearchQuery('');
             setSearchQueryVehicle('');
-            setSearchQueryFuel('');
+
             console.log('Form submitted successfully');
-            console.log(existingData)
-            onClose();
+            console.log(existingData);
+
+            onClose(); // Close modal or perform other UI actions after submission
         }
     };
+
 
     const handleEdit = (index) => {
         console.log("Editing index:", index);
@@ -400,18 +491,12 @@ function CreditSale({ petrodata }) {
         setSearchQuery(query);
 
     };
-
     const handleSearchVehicle = (event) => {
-        const queryvehicle = event.target.value.toLowerCase();
-
+        const queryVehicle = event.target.value.toLowerCase();
+        setSearchQueryVehicle(queryVehicle);
         setShowDropdownVehicle(true); // Show dropdown when input value changes
-        setSearchQueryVehicle(queryvehicle);
     };
-    const handleSearchFuel = (event) => {
-        const queryfuel = event.target.value.toLowerCase();
-        setShowDropdownFuel(true); // Show dropdown when input value changes
-        setSearchQueryFuel(queryfuel);
-    };
+
     const handleSelectVehicle = (vehicleNumber) => {
         setSelectedVehicle(vehicleNumber);
         setEditData((prevState) => ({
@@ -421,63 +506,123 @@ function CreditSale({ petrodata }) {
         setShowDropdownVehicle(false);
         setSearchQueryVehicle(vehicleNumber);
     };
-    const handleSelectfuel = (vehicleFuel, rate) => {
-        setSelectedFuel(vehicleFuel);
-        setSearchQueryFuel(vehicleFuel);
-        setRate(rate);
-        setEditData(prevData => {
-            const updatedData = {
+
+    const handleSearchFuel = (event) => {
+        const queryfuel = event.target.value.toLowerCase();
+        setShowDropdownFuel(true); // Show dropdown when input value changes
+        setSearchQueryFuel(queryfuel);
+    };
+    useEffect(() => {
+        if (Array.isArray(noozleData) && noozleData.length > 0) {
+            const hsdItem = noozleData.find(item => item.Nozzle.Item.name === 'HSD');
+            if (hsdItem) {
+                setSelectedFuel('HSD');
+                setRate(hsdItem.rate);
+                setEditData(prevData => ({
+                    ...prevData,
+                    selectedFuel: 'HSD',
+                    rate: hsdItem.rate
+                }));
+            }
+        }
+    }, [noozleData]);
+
+    const handleSelectfuel = (selectedValue) => {
+        // Find the selected item in noozleData
+        const selectedItem = noozleData.find(item => item.Nozzle.Item.name === selectedValue);
+
+        // If selectedItem is found, update state with selectedFuel and rate
+        if (selectedItem) {
+            setSelectedFuel(selectedValue);
+            setRate(selectedItem.rate);
+
+            // Update other state values as needed
+            setEditData(prevData => ({
                 ...prevData,
-                selectedFuel: vehicleFuel,
-                rate: rate
-            };
+                selectedFuel: selectedValue,
+                rate: selectedItem.rate
+            }));
+        }
 
-            const quantity = parseFloat(updatedData.quantity) || 0;
-            const driverCash = parseFloat(updatedData.driverCash) || 0;
-
-            const totalAmt = quantity * rate;
-            const inclusiveTotal = totalAmt + driverCash;
-
-            updatedData.totalAmt = totalAmt;
-            updatedData.inclusiveTotal = inclusiveTotal;
-
-            return updatedData;
-        });
         setShowDropdownFuel(false);
-        setQuantity('');
-        setTotalAmt('');
-        setInclusiveTotal(''); // Reset inclusive total when fuel changes
-
     };
 
     useEffect(() => {
         const total = parseFloat(totalAmt) || 0;
         const cash = parseFloat(driverCash) || 0;
-        setInclusiveTotal((total + cash).toFixed(2));
+        setInclusiveTotal((total + cash).toFixed(5));
     }, [totalAmt, driverCash]);
 
     const handleQuantityChange = (e) => {
-        const quantityValue = e.target.value
+        let quantityValue = parseFloat(e.target.value);
+
+        if (isNaN(quantityValue)) {
+            quantityValue = ''; // Reset quantityValue if NaN (non-numeric input)
+        } else if (quantityValue > 20000) {
+            quantityValue = 20000;
+            setErrors((prev) => ({ ...prev, quantity: 'Quantity cannot exceed 20,000' }));
+        } else {
+            setErrors((prev) => ({ ...prev, quantity: '' }));
+        }
 
         setQuantity(quantityValue);
         calculateTotalAmt(quantityValue, rate);
+    };
 
 
+    const handleTotalAmtChange = (e) => {
+        let totalAmtValue = e.target.value;
+        const potentialQuantity = parseFloat(totalAmtValue) / parseFloat(rate);
+        if (potentialQuantity > 20000) {
+            totalAmtValue = 20000 * rate;
+            setErrors((prev) => ({ ...prev, totalAmt: 'Total amount results in quantity exceeding 20,000' }));
+        } else {
+            setErrors((prev) => ({ ...prev, totalAmt: '' }));
+        }
+        setTotalAmt(totalAmtValue);
+        calculateQuantity(totalAmtValue, rate);
+    };
+    const handleDriverCashChange = (e) => {
+        let driverCashValue = e.target.value;
+        if (driverCashValue > 10000000) {
+            driverCashValue = 10000000;
+            setErrors((prev) => ({ ...prev, driverCash: 'Driver Cash results in quantity exceeding 10,000,000' }));
+        } else {
+            setErrors((prev) => ({ ...prev, driverCash: '' }));
+        }
+        setDriverCash(driverCashValue);
     };
 
     const calculateTotalAmt = (quantity, rate) => {
         if (!isNaN(quantity) && !isNaN(rate)) {
             const total = parseFloat(quantity) * parseFloat(rate);
-            setTotalAmt(total.toFixed(2));
+            setTotalAmt(total.toFixed(5));
         } else {
             setTotalAmt('');
         }
     };
 
+    const calculateQuantity = (total, rate) => {
+        if (!isNaN(total) && !isNaN(rate)) {
+            let quantity = parseFloat(total) / parseFloat(rate);
+            if (quantity > 20000) {
+                quantity = 20000;
+                setErrors((prev) => ({ ...prev, quantity: 'Quantity cannot exceed 20,000' }));
+            } else {
+                setErrors((prev) => ({ ...prev, quantity: '' }));
+            }
+            setQuantity(quantity.toFixed(3));
+        } else {
+            setQuantity('');
+        }
+    };
+
+
+
 
     return (
 
-        <div className="h-screen flex overflow-hidden bg-gray-100">
+        <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
             {/* Sidebar */}
             <div className="hidden md:flex md:flex-shrink-0">
                 <div className="flex flex-col w-64">
@@ -636,7 +781,7 @@ function CreditSale({ petrodata }) {
                 </div>
                 <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none">
                     <div className="flex flex-wrap gap-3">
-                        <Button className="bg-navbar absolute w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
+                        <Button className="bg-navbar fixed  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
                             <img src={add} className="w-8 h-8" alt="" />
                         </Button>
                     </div>
@@ -661,9 +806,11 @@ function CreditSale({ petrodata }) {
                                                     </div>
                                                 </>
                                             )}
-                                            <div className="grid grid-cols-2 lg:grid-cols-3  gap-3">
+
+                                            {/* Customer */}
+                                            <div className="grid grid-cols-1 lg:grid-cols-3  gap-3">
                                                 {/* Customer */}
-                                                <div className="flex  col-span-2 lg:col-span-1 flex-col gap-1">
+                                                <div className="flex flex-col gap-1">
 
 
                                                     <label htmlFor="customer" className="block text-sm font-medium text-gray-700">
@@ -699,7 +846,7 @@ function CreditSale({ petrodata }) {
                                                     </div>
                                                 </div>
                                                 {/* Vehicle No. */}
-                                                <div className="flex  col-span-2 lg:col-span-1 flex-col gap-1">
+                                                <div className="flex flex-col gap-1">
                                                     <label htmlFor="vehicle">Vehicle No.</label>
 
                                                     <div className="mt-1 relative">
@@ -712,6 +859,7 @@ function CreditSale({ petrodata }) {
                                                                         onChange={(e) => setSearchQueryVehicle(e.target.value)}
                                                                         placeholder="Enter vehicle manually"
                                                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                                        maxLength={10}
                                                                     />
                                                                 ) : (
                                                                     <>
@@ -745,92 +893,86 @@ function CreditSale({ petrodata }) {
                                                                 onChange={(e) => setSelectedVehicle(e.target.value)}
                                                                 placeholder="Enter vehicle manually"
                                                                 className="block w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                                maxLength={10}
                                                             />
                                                         )}
 
                                                     </div>
 
                                                 </div>
+
                                                 {/* Fuel Type */}
-                                             
-                                                    <div className="flex flex-col col-span-1  gap-1">
-                                                        <label htmlFor="Fuel Type">Fuel Type</label>
-                                                        <div className="mt-1 relative">
-                                                            <input
-                                                                type="text"
-                                                                value={searchQueryFuel}
-                                                                onChange={handleSearchFuel}
-                                                                onClick={() => setShowDropdownFuel(true)}
-                                                                placeholder="Fuel"
-                                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
-                                                            />
-                                                            {errors.selectedFuel && <span className="text-red-500 text-sm">{errors.selectedFuel}</span>}
-
-                                                            {showDropdownFuel && noozleData && (
-                                                                <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                    {noozleData.length === 0 ? (
-                                                                        <li className="py-2 px-3 text-gray-500">No data available</li>
-                                                                    ) : (
-                                                                        noozleData
-                                                                            .filter(item => item.Nozzle.Item.name.toLowerCase().includes(searchQueryFuel.toLowerCase()))
-                                                                            .map((item) => (
-                                                                                <li key={item.NozzlesAssign.id} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectfuel(item.Nozzle.Item.name, item.rate)}>
-                                                                                    {item.Nozzle.Item.name}
-                                                                                </li>
-                                                                            ))
-                                                                    )}
-                                                                </ul>
+                                                <div className="flex flex-col col-span-1 gap-1">
+                                                    <label htmlFor="FuelType">Fuel Type</label>
+                                                    <div className="mt-1 relative">
+                                                        <select
+                                                            id="FuelType"
+                                                            value={selectedFuel}
+                                                            onChange={(e) => handleSelectfuel(e.target.value)}
+                                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        >
+                                                            <option value="">Select Fuel</option>
+                                                            {noozleData ? (
+                                                                noozleData.map((item) => (
+                                                                    <option key={item.NozzlesAssign.id} value={item.Nozzle.Item.name}>
+                                                                        {item.Nozzle.Item.name}
+                                                                    </option>
+                                                                ))
+                                                            ) : (
+                                                                <option disabled>Loading...</option>
                                                             )}
-                                                        </div>
-
-
+                                                        </select>
+                                                        {errors.selectedFuel && <span className="text-red-500 text-sm">{errors.selectedFuel}</span>}
                                                     </div>
-                                                    {/* Slip No */}
-                                                    <div className="flex flex-col col-span-1  gap-1">
-                                                        <label htmlFor="slip">Slip No</label>
+                                                </div>
+
+
+
+                                                {/* Slip No */}
+                                                <div className="flex flex-col col-span-1  gap-1">
+                                                    <label htmlFor="slip">Slip No</label>
+                                                    <input
+                                                        type="text"
+                                                        value={slipNo}
+                                                        onChange={(e) => setSlipNo(e.target.value)}
+                                                        id="slip"
+                                                        className="border p-2 border-gray-300 rounded"
+                                                        maxLength={5}
+                                                    />
+
+                                                </div>
+                                                {/* Coupen No */}
+                                                <div className="flex flex-col col-span-1  gap-1">
+                                                    <label htmlFor="coupen">Coupen No</label>
+                                                    <input
+                                                        type="text"
+                                                        value={coupenNo}
+                                                        onChange={(e) => setCoupenNo(e.target.value)}
+                                                        id="coupen"
+                                                        className="border p-2 border-gray-300 rounded"
+                                                        maxLength={5}
+                                                    />
+                                                </div>
+
+                                                {/* Rate */}
+                                                <div className="flex flex-col col-span-1  gap-1">
+                                                    <label htmlFor="rate">Rate</label>
+                                                    <div className="mt-1 relative">
                                                         <input
-                                                            type="text"
-                                                            value={slipNo}
-                                                            onChange={(e) => setSlipNo(e.target.value)}
-                                                            id="slip"
-                                                            className="border p-2 border-gray-300 rounded"
+                                                            type="number"
+                                                            value={rate}
+                                                            readOnly
+                                                            placeholder="Rate"
+                                                            className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
                                                         />
-
                                                     </div>
-                                                    {/* Coupen No */}
-                                                    <div className="flex flex-col col-span-1  gap-1">
-                                                        <label htmlFor="coupen">Coupen No</label>
-                                                        <input
-                                                            type="text"
-                                                            value={coupenNo}
-                                                            onChange={(e) => setCoupenNo(e.target.value)}
-                                                            id="coupen"
-                                                            className="border p-2 border-gray-300 rounded"
+                                                </div>
 
-                                                        />
-                                                    </div>
-
-                                                    {/* Rate */}
-                                                    <div className="flex flex-col col-span-1  gap-1">
-                                                        <label htmlFor="rate">Rate</label>
-                                                        <div className="mt-1 relative">
-                                                            <input
-                                                                type="number"
-                                                                value={rate}
-                                                                readOnly
-                                                                placeholder="Rate"
-                                                                className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-
-                                                            />
-                                                        </div>
-                                                    </div>
-                                              
                                                 {/* Quantity */}
                                                 <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
                                                     <label htmlFor="Quantity">Quantity</label>
-
                                                     <input
                                                         type="number"
                                                         id="Quantity"
@@ -841,8 +983,8 @@ function CreditSale({ petrodata }) {
 
                                                     />
                                                     {errors.quantity && <span className="text-red-500 text-sm">{errors.quantity}</span>}
-
                                                 </div>
+
 
                                                 {/* Total Amt */}
                                                 <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
@@ -850,24 +992,27 @@ function CreditSale({ petrodata }) {
                                                     <input
                                                         type="number"
                                                         value={totalAmt}
-                                                        onChange={(e) => setTotalAmt(e.target.value)}
+                                                        onChange={handleTotalAmtChange}
+                                                        disabled={!selectedFuel}
                                                         id="TOTAL AMT"
-                                                        readOnly
                                                         placeholder="Total Amt"
                                                         className="border p-2 border-gray-300 rounded"
-
                                                     />
+                                                    {errors.totalAmt && <span className="text-red-500 text-sm">{errors.totalAmt}</span>}
+
                                                 </div>
+
                                                 {/* Driver Cash */}
                                                 <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
                                                     <label htmlFor="Coupen">Driver Cash</label>
                                                     <input
                                                         type="number"
                                                         value={driverCash}
-                                                        onChange={(e) => setDriverCash(e.target.value)}
+                                                        onChange={handleDriverCashChange}
                                                         id="DRIVER CASH"
                                                         placeholder="Driver Cash"
                                                         className="border p-2 border-gray-300 rounded"
+
 
                                                     />
                                                     {errors.driverCash && <span className="text-red-500 text-sm">{errors.driverCash}</span>}
@@ -909,283 +1054,282 @@ function CreditSale({ petrodata }) {
 
                     <div className="m-5 grid grid-cols-1 mt-20 lg:grid-cols-2 gap-3">
                         {submittedData.map((data, index) => (
-                            <div key={index} className="block  lg:max-w-3xl	 max-w-sm lg:p-6 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-                                <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{data.selectedCustomer}</h5>
-                                <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                    <p className="text-gray-600 font-semibold text-sm">{data.selectedVehicle}</p>
-                                    <p className="text-gray-700 font-semibold">Fuel: <span className="font-bold">{data.selectedFuel}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Rate: <span className="font-bold">{data.rate}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Quantity: <span className="font-bold">{data.quantity}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Total Amt: <span className="font-bold">{data.totalAmt}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Driver Cash: <span className="font-bold">{data.driverCash}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Slip No: <span className="font-bold">{data.slipNo}</span> </p>
-                                    <p className="text-gray-700 font-semibold">Inclusive Total: <span className="font-bold">{data.inclusiveTotal}</span> </p>
+                            // Check if essential data fields are present before rendering the card
+                            data.selectedCustomer && (
+                                <div key={index} className=" flex flex-col justify-between lg:max-w-3xl max-w-sm lg:p-6 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+
+                                    <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{data.selectedCustomer}</h5>
+                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                        {data.selectedVehicle && <p className="text-orrange font-semibold text-base">{data.selectedVehicle}</p>}
+                                        {data.selectedFuel && <p className="text-gray-700 font-semibold">Fuel: <span className="font-bold">{data.selectedFuel}</span> </p>}
+                                        {data.rate && <p className="text-gray-700 font-semibold">Rate: <span className="font-bold">{data.rate}</span> </p>}
+                                        {data.quantity && <p className="text-gray-700 font-semibold">Quantity: <span className="font-bold">{data.quantity}</span> </p>}
+                                        {data.totalAmt && <p className="text-gray-700 font-semibold">Total Amt: <span className="font-bold">{data.totalAmt}</span> </p>}
+                                        {data.driverCash && <p className="text-gray-700 font-semibold">Driver Cash: <span className="font-bold">{data.driverCash}</span> </p>}
+                                        {data.slipNo && <p className="text-gray-700 font-semibold">Slip No: <span className="font-bold">{data.slipNo}</span> </p>}
+                                        {data.inclusiveTotal && <p className="text-gray-700 font-semibold">Inclusive Total: <span className="font-bold">{data.inclusiveTotal}</span> </p>}
+                                    </div>
+                                    <div className="flex flex-row justify-around mt-5">
+                                        <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" /></svg>
+                                        </button>
+                                        <button className="px-2 w-10 h-10" onClick={() => handleRemove(index)}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex flex-row justify-around mt-5">
-                                    <button className=" px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" /></svg>
-                                    </button>
-                                    <button className=" px-2 w-10 h-10" onClick={() => handleRemove(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" /></svg>
-                                    </button>
-                                </div>
-                            </div>
+                            )
                         ))}
+
 
                         {isEditModalOpen && (
                             <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-                                <div className="bg-white p-6 rounded-lg">
-                                    {/* Edit form */}
-                                    <form onSubmit={handleSubmitEdit}>
-                                        <div className="">
-                                            {creditdata.data && (
-                                                <>
-                                                    <div className="mb-4 flex justify-between">
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">
-                                                            Date: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.date}</span>
-                                                        </h2>
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.day_shift_no}</span></h2>
+                                <div className="rounded-lg">
+                                    <div className="flex p-5 flex-col text-2xl bg-navbar text-white gap-1">
+                                        Edit Credit Sale
+                                    </div>
+                                    <div className="bg-white p-6 ">
+                                        {/* Edit form */}
+                                        <form onSubmit={handleSubmitEdit}>
+                                            <div className="">
+                                                {creditdata.data && (
+                                                    <>
+                                                        <div className="mb-4 flex justify-between">
+                                                            <h2 className="block text-gray-700 text-lg font-bold mb-2">
+                                                                Date: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.date}</span>
+                                                            </h2>
+                                                            <h2 className="block text-gray-700 text-lg font-bold mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.day_shift_no}</span></h2>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {/* Customer */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="customer" className="block text-sm font-medium text-gray-700">Customer</label>
+                                                        <div className="mt-1 relative">
+                                                            <input
+                                                                type="text"
+                                                                value={editData.selectedCustomer}
+                                                                name="selectedCustomer"
+                                                                onChange={handleEditChange}
+                                                                onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
+                                                                placeholder="Search customers"
+                                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                            />
+                                                            {errorss.selectedCustomer && <span className="text-red-500 text-sm">{errorss.selectedCustomer}</span>}
+
+                                                            {showDropdown && (
+                                                                <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                                    {customerdata.length === 0 ? (
+                                                                        <li className="py-2 px-3 text-gray-500">No data available</li>
+                                                                    ) : (
+                                                                        customerdata
+                                                                            .filter(item => item.Ledger.name.toLowerCase().includes(editData.selectedCustomer.toLowerCase()))
+                                                                            .map((item) => (
+                                                                                <li key={item.Ledger.id} className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer(item)}>
+                                                                                    {item.Ledger.name}
+                                                                                </li>
+                                                                            ))
+                                                                    )}
+                                                                </ul>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </>
-                                            )}
-                                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                                                {/* Customer */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="customer" className="block text-sm font-medium text-gray-700">Customer</label>
-                                                    <div className="mt-1 relative">
-                                                        <input
-                                                            type="text"
-                                                            value={editData.selectedCustomer}
-                                                            name="selectedCustomer"
-                                                            onChange={handleEditChange}
-                                                            onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
-                                                            placeholder="Search customers"
-                                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
-                                                        />
-                                                        {errorss.selectedCustomer && <span className="text-red-500 text-sm">{errorss.selectedCustomer}</span>}
-
-                                                        {showDropdown && (
-                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                {customerdata.length === 0 ? (
-                                                                    <li className="py-2 px-3 text-gray-500">No data available</li>
-                                                                ) : (
-                                                                    customerdata
-                                                                        .filter(item => item.Ledger.name.toLowerCase().includes(editData.selectedCustomer.toLowerCase()))
-                                                                        .map((item) => (
-                                                                            <li key={item.Ledger.id} className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer(item)}>
-                                                                                {item.Ledger.name}
-                                                                            </li>
-                                                                        ))
-                                                                )}
-                                                            </ul>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Vehicle No. */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="vehicle">Vehicle No.</label>
-                                                    <div className="mt-1 relative">
-                                                        {vehicledata && (
-                                                            <>
-                                                                {vehicledata.length === 0 ? (
-                                                                    <input
-                                                                        type="text"
-                                                                        value={editData.selectedVehicle}
-                                                                        name="selectedVehicle"
-                                                                        onChange={handleEditChange}
-                                                                        placeholder="Enter vehicle manually"
-                                                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                    />
-                                                                ) : (
-                                                                    <>
+                                                    {/* Vehicle No. */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="vehicle">Vehicle No.</label>
+                                                        <div className="mt-1 relative">
+                                                            {vehicledata && (
+                                                                <>
+                                                                    {vehicledata.length === 0 ? (
                                                                         <input
                                                                             type="text"
                                                                             value={editData.selectedVehicle}
                                                                             name="selectedVehicle"
                                                                             onChange={handleEditChange}
-                                                                            onClick={() => setShowDropdownVehicle(true)}
-                                                                            placeholder="Search vehicle"
+                                                                            placeholder="Enter vehicle manually"
                                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                                            maxLength={10}
                                                                         />
+                                                                    ) : (
+                                                                        <>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editData.selectedVehicle}
+                                                                                name="selectedVehicle"
+                                                                                onChange={handleEditChange}
+                                                                                onClick={() => setShowDropdownVehicle(true)}
+                                                                                placeholder="Search vehicle"
+                                                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                                                maxLength={10}
+                                                                            />
 
-                                                                        {showDropdownVehicle && (
-                                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                                {Object.entries(vehicledata || {}) // Added null check here
-                                                                                    .filter(([key, value]) => key.toLowerCase().includes((editData.selectedVehicle || '').toLowerCase())) // Added null check here
-                                                                                    .map(([key, value]) => (
-                                                                                        <li key={key} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectVehicle(key)}>
-                                                                                            {value}
-                                                                                        </li>
-                                                                                    ))}
-                                                                            </ul>
-                                                                        )}
-                                                                    </>
-                                                                )}
-                                                            </>
-                                                        )}
-
+                                                                            {showDropdownVehicle && (
+                                                                                <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                                                    {Object.entries(vehicledata || {}) // Added null check here
+                                                                                        .filter(([key, value]) => key.toLowerCase().includes((editData.selectedVehicle || '').toLowerCase())) // Added null check here
+                                                                                        .map(([key, value]) => (
+                                                                                            <li key={key} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectVehicle(key)}>
+                                                                                                {value}
+                                                                                            </li>
+                                                                                        ))}
+                                                                                </ul>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
 
 
-                                                {/* Fuel Type */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="Fuel Type">Fuel Type</label>
-                                                    <div className="mt-1 relative">
+                                                    {/* Fuel Type */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="Fuel Type">Fuel Type</label>
+                                                        <div className="mt-1 relative">
+                                                            <input
+                                                                type="text"
+                                                                value={editData.selectedFuel}
+                                                                name="selectedFuel"
+                                                                onChange={handleEditChange}
+                                                                onClick={() => setShowDropdownFuel(true)}
+                                                                placeholder="Fuel"
+                                                                className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                            />
+                                                            {errorss.selectedFuel && <span className="text-red-500 text-sm">{errorss.selectedFuel}</span>}
+                                                            {showDropdownFuel && noozleData && (
+                                                                <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                                    {noozleData.length === 0 ? (
+                                                                        <li className="py-2 px-3 text-gray-500">No data available</li>
+                                                                    ) : (
+                                                                        noozleData
+                                                                            .filter(item => item.Nozzle.Item.name.toLowerCase().includes(editData.selectedFuel.toLowerCase()))
+                                                                            .map((item, index) => (
+                                                                                <li key={index} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectfuel(item.Nozzle.Item.name)}>
+                                                                                    {item.Nozzle.Item.name}
+                                                                                </li>
+                                                                            ))
+                                                                    )}
+                                                                </ul>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Slip No */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="slip">Slip No</label>
                                                         <input
                                                             type="text"
-                                                            value={editData.selectedFuel}
-                                                            name="selectedFuel"
+                                                            value={editData.slipNo}
+                                                            name="slipNo"
                                                             onChange={handleEditChange}
-                                                            onClick={() => setShowDropdownFuel(true)}
-                                                            placeholder="Fuel"
+                                                            id="slip"
+                                                            className="border p-2 border-gray-300 rounded"
+                                                            maxLength={5}
+                                                        />
+                                                    </div>
+
+                                                    {/* Coupen No */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="coupen">Coupen No</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editData.coupenNo}
+                                                            name="coupenNo"
+                                                            onChange={handleEditChange}
+                                                            id="coupen"
+                                                            className="border p-2 border-gray-300 rounded"
+                                                            maxLength={5}
+                                                        />
+                                                        {errorss.coupenNo && (
+                                                            <span className="text-red-500 text-sm">{errorss.coupenNo}</span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Quantity */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+                                                        <input
+                                                            type="number"
+                                                            value={editData.quantity}
+                                                            name="quantity"
+                                                            onChange={handleEditChange}
+                                                            placeholder="Quantity"
+                                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        />
+                                                        {errorss.quantity && <span className="text-red-500 text-sm">{errorss.quantity}</span>}
+                                                    </div>
+                                                    {/* Rate */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="rate">Rate</label>
+                                                        <div className="mt-1 relative">
+                                                            <input
+                                                                type="number"
+                                                                value={editData.rate}
+                                                                name="rate"
+                                                                readOnly
+                                                                placeholder="Rate"
+                                                                className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+
+                                                            />
+
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Total Amt */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="totalAmt" className="block text-sm font-medium text-gray-700">Total Amount</label>
+                                                        <input
+                                                            type="number"
+                                                            value={editData.totalAmt}
+                                                            name="totalAmt"
+                                                            onChange={handleEditChange}
+                                                            placeholder="Total Amount"
+                                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        />
+                                                        {errorss.totalAmt && <span className="text-red-500 text-sm">{errorss.totalAmt}</span>}
+                                                    </div>
+
+                                                    {/* Driver Cash */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="driverCash" className="block text-sm font-medium text-gray-700">Driver Cash</label>
+                                                        <input
+                                                            type="number"
+                                                            value={editData.driverCash}
+                                                            name="driverCash"
+                                                            onChange={handleEditChange}
+                                                            placeholder="Driver Cash"
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
                                                         />
-                                                        {errorss.selectedFuel && <span className="text-red-500 text-sm">{errorss.selectedFuel}</span>}
-                                                        {showDropdownFuel && noozleData && (
-                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                {noozleData.length === 0 ? (
-                                                                    <li className="py-2 px-3 text-gray-500">No data available</li>
-                                                                ) : (
-                                                                    noozleData
-                                                                        .filter(item => item.Nozzle.Item.name.toLowerCase().includes(editData.selectedFuel.toLowerCase()))
-                                                                        .map((item) => (
-                                                                            <li key={item.NozzlesAssign.id} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectfuel(item.Nozzle.Item.name, item.rate)}>
-                                                                                {item.Nozzle.Item.name}
-                                                                            </li>
-                                                                        ))
-                                                                )}
-                                                            </ul>
-                                                        )}
+                                                        {errorss.driverCash && <span className="text-red-500 text-sm">{errorss.driverCash}</span>}
                                                     </div>
-                                                </div>
 
-                                                {/* Slip No */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="slip">Slip No</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editData.slipNo}
-                                                        name="slipNo"
-                                                        onChange={handleEditChange}
-                                                        id="slip"
-                                                        className="border p-2 border-gray-300 rounded"
-
-                                                    />
-                                                </div>
-
-                                                {/* Coupen No */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="coupen">Coupen No</label>
-                                                    <input
-                                                        type="text"
-                                                        value={editData.coupenNo}
-                                                        name="coupenNo"
-                                                        onChange={handleEditChange}
-                                                        id="coupen"
-                                                        className="border p-2 border-gray-300 rounded"
-
-                                                    />
-                                                    {errorss.coupenNo && (
-                                                        <span className="text-red-500 text-sm">{errorss.coupenNo}</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Quantity */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="Quantity">Quantity</label>
-
-                                                    <input
-                                                        type="number"
-                                                        id="Quantity"
-                                                        value={editData.quantity}
-                                                        name="quantity"
-                                                        onChange={handleEditChange}
-                                                        disabled={!editData.selectedFuel}
-                                                        className="border p-2 border-gray-300 rounded"
-
-                                                    />
-                                                    {errorss.quantity && <span className="text-red-500 text-sm">{errorss.quantity}</span>}
-
-                                                </div>
-
-                                                {/* Rate */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="rate">Rate</label>
-                                                    <div className="mt-1 relative">
+                                                    {/* Inclusive Total */}
+                                                    <div className="flex flex-col gap-1">
+                                                        <label htmlFor="inclusiveTotal">Inclusive Total</label>
                                                         <input
                                                             type="number"
-                                                            value={editData.rate}
-                                                            name="rate"
+
+                                                            value={editData.inclusiveTotal}
+                                                            name="inclusiveTotal"
                                                             readOnly
-                                                            placeholder="Rate"
-                                                            className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-
+                                                            id="INCLUSIVE TOTAL"
+                                                            placeholder="Inclusive Total"
+                                                            className="border p-2 border-gray-300 rounded"
                                                         />
-
                                                     </div>
                                                 </div>
 
-                                                {/* Total Amt */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="totalAmt">Total Amt</label>
-                                                    <input
-                                                        type="number"
-                                                        value={editData.totalAmt}
-                                                        name="totalAmt"
-                                                        readOnly
-                                                        onChange={(e) => setTotalAmt(e.target.value)}
-                                                        id="TOTAL AMT"
-                                                        placeholder="Total Amt"
-                                                        className="border p-2 border-gray-300 rounded"
-
-                                                    />
-
-                                                </div>
-
-                                                {/* Driver Cash */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="driverCash">Driver Cash</label>
-                                                    <input
-                                                        type="number"
-                                                        value={editData.driverCash}
-                                                        name="driverCash"
-                                                        onChange={handleEditChange}
-                                                        id="DRIVER CASH"
-                                                        placeholder="Driver Cash"
-                                                        className="border p-2 border-gray-300 rounded"
-
-                                                    />
-                                                    {errorss.driverCash && <span className="text-red-500 text-sm">{errorss.driverCash}</span>}
-
-                                                </div>
-
-                                                {/* Inclusive Total */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="inclusiveTotal">Inclusive Total</label>
-                                                    <input
-                                                        type="number"
-
-                                                        value={editData.inclusiveTotal}
-                                                        name="inclusiveTotal"
-                                                        readOnly
-                                                        id="INCLUSIVE TOTAL"
-                                                        placeholder="Inclusive Total"
-                                                        className="border p-2 border-gray-300 rounded"
-                                                    />
-                                                </div>
                                             </div>
 
-                                        </div>
-
-                                        <div className="flex flex-row gap-5 mt-5">
-                                            <Button color="primary" type="submit">Save</Button>
-                                            <Button color="danger" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-                                        </div>
-                                    </form>
+                                            <div className="flex flex-row gap-5 mt-5">
+                                                <Button color="primary" type="submit">Save</Button>
+                                                <Button color="danger" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         )}

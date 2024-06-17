@@ -12,7 +12,7 @@ module.exports = {
       colors: {
         'redish': '#d1151b',
         'wheat': '#EEEEEE',
-        'orange': '#ec6713',
+        'orrange': '#ec6713',
         'navbar': '#171717',
         'card': '#fff',
       }
