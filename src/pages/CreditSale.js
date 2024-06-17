@@ -785,7 +785,7 @@ function CreditSale({ petrodata }) {
                             <img src={add} className="w-8 h-8" alt="" />
                         </Button>
                     </div>
-                    <Modal isOpen={isOpen} size="5xl" scrollBehavior="outside" isDismissable={false} isKeyboardDismissDisabled={true}
+                    <Modal isOpen={isOpen} size="5xl" scrollBehavior="outside" isDismissable={false} isKeyboardDismissDisabled={true} placement="top"
                         onOpenChange={onOpenChange}>
                         <ModalContent>
                             {(onClose) => (
