@@ -5,7 +5,6 @@
   font-family: "Figtree", sans-serif;
 }
 
-
 @import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
 @import url("https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap");
@@ -20,6 +19,20 @@
   src: url("./fonts/Metropolis.otf");
 }
 
-.home{
-    font-family: "Raleway", sans-serif;
+.home {
+  font-family: "Raleway", sans-serif;
+}
+
+/* src/index.css */
+
+/* Hide increment/decrement buttons in Webkit browsers */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide increment/decrement buttons in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
