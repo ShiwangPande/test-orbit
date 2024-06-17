@@ -13,7 +13,9 @@ import {
     useDisclosure,
 } from "@nextui-org/react";
 import add from "../images/add.svg"
-import Logout from "./Logout.js";
+import Logout from "../components/Logout";
+import { motion, useAnimation } from 'framer-motion';
+
 import React from "react";
 function CreditSale({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -306,8 +308,7 @@ function CreditSale({ petrodata }) {
             setSubmittedData(existingData);
             setSelectedVehicle('');
             setSelectedCustomer('');
-            setSelectedFuel('');
-            setRate('');
+
             setQuantity('');
             setTotalAmt('');
             setDriverCash('');
@@ -617,14 +618,47 @@ function CreditSale({ petrodata }) {
         }
     };
 
+    const controls = useAnimation();
 
+    useEffect(() => {
+        if (showMobileMenu) {
+            controls.start({ x: 0 });
+        } else {
+            controls.start({ x: '-80vw' });
+        }
+    }, [showMobileMenu, controls]);
 
+    const handleDragEnd = (event, info) => {
+        if (info.offset.x < -50) {
+            setShowMobileMenu(false);
+        } else if (info.offset.x > 50) {
+            setShowMobileMenu(true);
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (event.target.closest('.navbar') === null) {
+                setShowMobileMenu(false);
+            }
+        };
+
+        if (showMobileMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showMobileMenu]);
 
     return (
 
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
             {/* Sidebar */}
-            <div className="hidden md:flex md:flex-shrink-0">
+            <div className="hidden lg:fixed h-screen md:flex md:flex-shrink-0">
                 <div className="flex flex-col w-64">
                     <div className="h-0 flex-1 flex flex-col pt-10 pb-4 overflow-y-auto bg-navbar">
                         {/* Sidebar Links */}
@@ -679,8 +713,17 @@ function CreditSale({ petrodata }) {
 
             {/* Mobile Menu */}
             <div className={`lg:hidden fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
-                <div className="flex items-center justify-start h-full">
-                    <div className="bg-navbar h-full w-full p-8 flex flex-col">
+                <div className="flex items-center justify-start h-full backdrop-blur-sm">
+                    <motion.div
+                        className={`bg-navbar h-full fixed w-[80vw] p-8 flex flex-col navbar`}
+                        initial={{ x: '-80vw' }}
+                        animate={controls}
+                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        onDragEnd={handleDragEnd}
+                        style={{ cursor: 'grab', left: 0 }}
+                    >
                         <div className="flex justify-end">
                             <button
                                 onClick={() => setShowMobileMenu(!showMobileMenu)}
@@ -703,8 +746,15 @@ function CreditSale({ petrodata }) {
                                 </svg>
                             </button>
                         </div>
-                        <div className="mt-5 flex-1 flex flex-col">
-                            <nav className="flex-1 px-2 flex gap-[3rem] flex-col mt-14 bg-navbar space-y-1">
+                        <div className="mt-2 flex-1 flex flex-col">
+                            <nav className="flex-1 px-2 flex gap-[3rem] flex-col mt-8 bg-navbar space-y-1">
+                                <div className="flex items-center flex-shrink-0 px-4">
+                                    <img
+                                        className="h-10 mx-auto w-auto "
+                                        src={logo}
+                                        alt="Your Company"
+                                    />
+                                </div>
                                 <Link
                                     to="/noozle-reading"
                                     className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-lg font-medium"
@@ -741,16 +791,16 @@ function CreditSale({ petrodata }) {
                                 </div>
                             </nav>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
             {/* Content area */}
-            <div className="flex flex-col w-0 flex-1 overflow-hidden">
-                <div className="relative z-10 flex-shrink-0 flex h-16 bg-navbar border-b border-gray-200 lg:hidden">
+            <div className="flex flex-col ml-0 lg:ml-[17%] w-0 flex-1 overflow-hidden">
+                <div className="w-screen z-10 flex-shrink-0  fixed flex h-16 bg-navbar border-b border-gray-200 lg:hidden">
                     <button
                         onClick={() => setShowMobileMenu(!showMobileMenu)}
                         type="button"
-                        className="inline-flex items-center justify-center p-2 text-gray-400 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                        className="inline-flex items-center justify-center p-2 text-gray-400 rounded-md focus:outline-none focus:white focus:ring-inset focus:white"
                         aria-controls="mobile-menu"
                         aria-expanded={showMobileMenu ? 'true' : 'false'}
                     >
@@ -1052,7 +1102,7 @@ function CreditSale({ petrodata }) {
                     </Modal>
 
 
-                    <div className="m-5 grid grid-cols-1 mt-20 lg:grid-cols-2 gap-3">
+                    <div className="m-5 grid grid-cols-1 lg:mt-7 lg:grid-cols-2 gap-3 lg:gap-10">
                         {submittedData.map((data, index) => (
                             // Check if essential data fields are present before rendering the card
                             data.selectedCustomer && (

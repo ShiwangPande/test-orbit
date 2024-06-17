@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Logout from "./Logout.js";
+import Logout from "../components/Logout.js";
 function Expenses() {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
 
