@@ -810,7 +810,7 @@ function CreditSale({ petrodata }) {
                                             {/* Customer */}
                                             <div className="grid grid-cols-1 lg:grid-cols-3  gap-3">
                                                 {/* Customer */}
-                                                <div className="flex flex-col gap-1">
+                                                <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
 
 
                                                     <label htmlFor="customer" className="block text-sm font-medium text-gray-700">
@@ -971,7 +971,7 @@ function CreditSale({ petrodata }) {
                                                 </div>
 
                                                 {/* Quantity */}
-                                                <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
+                                                <div className="flex flex-col col-span-1  gap-1">
                                                     <label htmlFor="Quantity">Quantity</label>
                                                     <input
                                                         type="number"
@@ -987,7 +987,7 @@ function CreditSale({ petrodata }) {
 
 
                                                 {/* Total Amt */}
-                                                <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
+                                                <div className="flex flex-col col-span-1 gap-1">
                                                     <label htmlFor="Coupen">Total Amt</label>
                                                     <input
                                                         type="number"
@@ -1003,7 +1003,7 @@ function CreditSale({ petrodata }) {
                                                 </div>
 
                                                 {/* Driver Cash */}
-                                                <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
+                                                <div className="flex flex-col col-span-1  gap-1">
                                                     <label htmlFor="Coupen">Driver Cash</label>
                                                     <input
                                                         type="number"
