@@ -933,7 +933,7 @@ function CreditSale({ petrodata }) {
                                                 <div className="flex flex-col col-span-1  gap-1">
                                                     <label htmlFor="slip">Slip No</label>
                                                     <input
-                                                        type="text"
+                                                        type="number"
                                                         value={slipNo}
                                                         onChange={(e) => setSlipNo(e.target.value)}
                                                         id="slip"
@@ -946,7 +946,7 @@ function CreditSale({ petrodata }) {
                                                 <div className="flex flex-col col-span-1  gap-1">
                                                     <label htmlFor="coupen">Coupen No</label>
                                                     <input
-                                                        type="text"
+                                                        type="number"
                                                         value={coupenNo}
                                                         onChange={(e) => setCoupenNo(e.target.value)}
                                                         id="coupen"

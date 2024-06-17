@@ -63,7 +63,7 @@ function LoginPage({ data }) {
                             <label htmlFor="mobile" className="block mb-1 text-black">Mobile Number</label>
                             <div className="relative">
                                 <input
-                                    type="text"
+                                    type="number"
                                     id="mobile"
                                     {...register('mobile')}
                                     placeholder="Enter your mobile number"
