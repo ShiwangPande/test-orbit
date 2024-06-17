@@ -288,7 +288,7 @@ function NoozleReading({ petrodata }) {
 
                             return (
                                 <div key={item.NozzlesAssign.id} className="py-6">
-                                    <div className="max-w-5xl mx-auto sm:px-6 lg:px-8">
+                                    <div className="max-w-96 lg:max-w-5xl mx-auto sm:px-6 lg:px-8">
                                         <form className="bg-card grid grid-cols-2  gap-5 lg:gap-10 lg:px-10 lg:py-14 shadow-md rounded px-4 pt-6 pb-5  lg:mb-4">
                                             {/* <div className="mb-4 flex justify-between"> */}
                                             <h2 className="block text-gray-700  text-base lg:text-lg font-bold mb-4">
