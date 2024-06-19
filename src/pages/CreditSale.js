@@ -98,12 +98,15 @@ function CreditSale({ petrodata }) {
             if (name === 'totalAmt') {
                 if (!isNaN(parsedValue)) {
                     const potentialQuantity = parsedValue / updatedData.rate;
+                    if (parsedValue <= 0) {
+                        errorss.driverCash = "Total amount must be grater than 0";
+                    }
                     if (potentialQuantity > 20000) {
                         updatedData.totalAmt = (20000 * updatedData.rate).toFixed(2);
                         errorss.totalAmt = "Total amount results in quantity exceeding 20,000";
                     } else {
                         errorss.totalAmt = "";
-                        updatedData.totalAmt = parsedValue.toFixed(2);
+                        // updatedData.totalAmt = parsedValue.toFixed(2);
                         updatedData.quantity = potentialQuantity.toFixed(2); // Round to 2 decimal places
                     }
                 }
@@ -172,6 +175,9 @@ function CreditSale({ petrodata }) {
             newErrors.quantity = 'Quantity must be greater than 0';
         } else if (editData.quantity > 20000) {
             newErrors.quantity = 'Quantity cannot exceed 20,000';
+        }
+        if (!editData.totalAmt || editData.totalAmt <= 0) {
+            newErrors.totalAmt = 'Total Amount must be greater than 0';
         }
 
         // Check if driverCash is negative only if a vehicle is selected
@@ -571,14 +577,17 @@ function CreditSale({ petrodata }) {
     const handleTotalAmtChange = (e) => {
         let totalAmtValue = e.target.value;
         const potentialQuantity = parseFloat(totalAmtValue) / parseFloat(rate);
-        if (potentialQuantity > 20000) {
-            totalAmtValue = 20000 * rate;
-            setErrors((prev) => ({ ...prev, totalAmt: 'Total amount results in quantity exceeding 20,000' }));
-        } else {
-            setErrors((prev) => ({ ...prev, totalAmt: '' }));
+        if (isNaN(totalAmtValue)) {
+            totalAmtValue = '';
+            if (potentialQuantity > 20000) {
+                totalAmtValue = 20000 * rate;
+                setErrors((prev) => ({ ...prev, totalAmt: 'Total amount results in quantity exceeding 20,000' }));
+            } else {
+                setErrors((prev) => ({ ...prev, totalAmt: '' }));
+            }
+            setTotalAmt(totalAmtValue);
+            calculateQuantity(totalAmtValue, rate);
         }
-        setTotalAmt(totalAmtValue);
-        calculateQuantity(totalAmtValue, rate);
     };
     const handleDriverCashChange = (e) => {
         let driverCashValue = e.target.value;
@@ -955,6 +964,7 @@ function CreditSale({ petrodata }) {
                                                         <select
                                                             id="FuelType"
                                                             value={selectedFuel}
+
                                                             onChange={(e) => handleSelectfuel(e.target.value)}
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         >
@@ -1009,6 +1019,7 @@ function CreditSale({ petrodata }) {
                                                             type="number"
                                                             value={rate}
                                                             readOnly
+                                                            disabled
                                                             placeholder="Rate"
                                                             className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
@@ -1034,7 +1045,7 @@ function CreditSale({ petrodata }) {
 
                                                 {/* Total Amt */}
                                                 <div className="flex flex-col col-span-1 gap-1">
-                                                    <label htmlFor="Coupen">Total Amt</label>
+                                                    <label htmlFor="Coupen">Total Amount</label>
                                                     <input
                                                         type="number"
                                                         value={totalAmt}
@@ -1073,6 +1084,7 @@ function CreditSale({ petrodata }) {
                                                         readOnly
                                                         id="INCLUSIVE TOTAL"
                                                         placeholder="Inclusive Total"
+                                                        disabled
                                                         className="border p-2 border-gray-300 rounded"
                                                     />
                                                 </div>
@@ -1238,6 +1250,7 @@ function CreditSale({ petrodata }) {
                                                                 type="text"
                                                                 value={editData.selectedFuel}
                                                                 name="selectedFuel"
+
                                                                 onChange={handleEditChange}
                                                                 onClick={() => setShowDropdownFuel(true)}
                                                                 placeholder="Fuel"
@@ -1315,6 +1328,7 @@ function CreditSale({ petrodata }) {
                                                                 value={editData.rate}
                                                                 name="rate"
                                                                 readOnly
+                                                                disabled
                                                                 placeholder="Rate"
                                                                 className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 
@@ -1363,6 +1377,7 @@ function CreditSale({ petrodata }) {
                                                             readOnly
                                                             id="INCLUSIVE TOTAL"
                                                             placeholder="Inclusive Total"
+                                                            disabled
                                                             className="border p-2 border-gray-300 rounded"
                                                         />
                                                     </div>
