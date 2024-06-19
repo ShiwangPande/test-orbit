@@ -47,6 +47,7 @@ function CashSale() {
         };
     }, [showMobileMenu]);
     return (
+
         <div className="h-screen flex overflow-hidden bg-gray-100">
             <div className="hidden lg:fixed h-screen md:flex md:flex-shrink-0">
                 <div className="flex flex-col w-64">

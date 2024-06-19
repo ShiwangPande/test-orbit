@@ -43,3 +43,24 @@ input[type="number"] {
 .navbar-visible {
   transform: translateX(0);
 }
+
+/* Hide the scrollbar */
+::-webkit-scrollbar {
+  width: 8px; /* width of the scrollbar */
+}
+
+/* Track (the background of the scrollbar) */
+::-webkit-scrollbar-track {
+  background: #fff; /* white background */
+}
+
+/* Handle (the draggable part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+  background: #000; /* black handle */
+  border-radius: 10px; /* roundness of the handle */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* darker black on hover */
+}

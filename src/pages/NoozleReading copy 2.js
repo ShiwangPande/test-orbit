@@ -11,22 +11,28 @@ const MyComponent = ({ petrodata }) => {
     const [noozleData, setNoozleData] = useState([]);
     const [readings, setReadings] = useState({});
     const base_url = process.env.REACT_APP_API_URL;
-
+    const [submittedData, setSubmittedData] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editIndex, setEditIndex] = useState(null);
+    const [startReading, setStartReading] = useState('');
     const [totalSale, setTotalSale] = useState('');
     const [rate, setRate] = useState('');
     const [amount, setAmount] = useState('');
     const [editingIndex, setEditingIndex] = useState(null);
     const [errors, setErrors] = useState({});
-
-    const [submittedData, setSubmittedData] = useState(() => {
-        const storedData = JSON.parse(localStorage.getItem('submittedData')) || [];
-        return storedData;
+    const [editData, setEditData] = useState({
+        startReading,
+        totalSale,
+        rate,
+        amount,
+        readings,
     });
     useEffect(() => {
-        localStorage.setItem('submittedData', JSON.stringify(submittedData));
-    }, [submittedData]);
+        const storedData = JSON.parse(localStorage.getItem('submittedData'));
+        if (storedData) {
+            setSubmittedData(storedData);
+        }
+    }, []);
     useEffect(() => {
         axios.post(
             `${base_url}/petro_cake/petroAppEmployees/assignNozzleList/1`,
@@ -42,44 +48,28 @@ const MyComponent = ({ petrodata }) => {
                 const data = response.data.data;
                 setNoozleData(data);
                 const initialReadings = {};
-
                 data.forEach(item => {
                     initialReadings[item.NozzlesAssign.id] = {
-                        startReading: item.start_reading,
                         closeReading: item.start_reading,
                         testing: 0,
-                        nozzleId: item.NozzlesAssign.id,
-                        rate: item.NozzlesAssign.rate,
-                        maxReading: item.NozzlesAssign.max_reading,
-
                     };
                 });
                 setReadings(initialReadings);
-
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
     }, [petrodata, base_url]);
-    const handleCalculation = (startReading, closeReading, testing, rate, maxReading) => {
-        // Ensure all inputs are numeric
-        startReading = parseFloat(startReading) || 0;
-        closeReading = parseFloat(closeReading) || 0;
-        testing = parseInt(testing) || 0;
-        rate = parseFloat(rate) || 0;
 
-        // Handle case where closeReading is less than startReading
+    const handleCalculation = (startReading, closeReading, testing, rate, maxReading) => {
         if (closeReading < startReading) {
             closeReading += maxReading;
         }
-
-        // Calculate sale and amount
+        testing = parseInt(testing);
         const sale = Math.max(0, closeReading - startReading - testing);
         const amount = sale * rate;
-
         return { sale, amount };
     };
-
 
     const handleInputChange = (id, type, value, maxReading) => {
         value = Math.min(maxReading, Math.max(0, Number(value)));
@@ -95,72 +85,65 @@ const MyComponent = ({ petrodata }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // Calculate totalSale, rate, and amount for each nozzle
-        const nozzleIds = Object.keys(readings);
-        const newData = nozzleIds.map(nozzleId => {
-            const { startReading, closeReading, testing } = readings[nozzleId];
-            const item = noozleData.find(data => data.NozzlesAssign.id === parseInt(nozzleId));
-            const rate = item.rate;
-            const maxReading = item.Nozzle.max_reading;
-
-            const { sale, amount } = handleCalculation(startReading, closeReading, testing, rate, maxReading);
-
-            return {
-                nozzleName: item.Nozzle.name,
-                startReading,
-                closeReading,
-                testing,
-                sale,
-                rate,
-                amount,
-            };
-        });
+        const newData = {
+            startReading,
+            totalSale,
+            rate,
+            amount,
+            readings,
+        }
         const existingData = JSON.parse(localStorage.getItem('submittedData')) || [];
-        localStorage.setItem('submittedData', JSON.stringify([...existingData, newData]));
-
-
-        // Update submittedData based on editingIndex or add new data
+        localStorage.setItem('submittedData', JSON.stringify(existingData));
         if (editingIndex !== null && editingIndex !== undefined) {
+            existingData[editingIndex] = newData;
+        } else {
+            existingData.push(newData);
+        }
+        if (editIndex !== null) {
             setSubmittedData(prevState => {
                 const newState = [...prevState];
-                newState[editingIndex] = { readings: newData };
+                newState[editIndex] = { readings };
                 return newState;
             });
-        } else {
-            setSubmittedData(prevState => [
-                ...prevState,
-                { readings: newData },
-            ]);
-        }
 
-        // Clear input fields and reset states
+        } else {
+            setSubmittedData(prevState => [...prevState, { readings }]);
+        }
+        setStartReading('');
         setAmount('');
         setRate('');
-        setTotalSale('');
+        setTotalSale('')
+        setReadings('');
         setEditingIndex(null);
         setIsEditModalOpen(false);
         setEditIndex(null);
+        console.log(readings)
     };
 
+    const handleEditChange = (e) => {
+        const { name, value } = e.target;
+        const parsedValue = parseFloat(value);
 
+        setEditData(prevData => {
+            let updatedData = { ...prevData };
+            let errorss = { ...errors };
 
+            // Update the value in updatedData
+            updatedData[name] = value;
+            return updatedData;
+        });
+    };
 
     const handleEdit = (index) => {
         console.log("Editing index:", index);
         const dataToEdit = submittedData[index];
         console.log("Data to edit:", dataToEdit);
 
-
+        setEditData({ ...dataToEdit, index }); // Pass the index with the data
         setEditingIndex(index);
         setIsEditModalOpen(true);
     };
-    const handleDelete = (index) => {
-        const newData = [...submittedData];
-        newData.splice(index, 1);
-        localStorage.setItem('submittedData', JSON.stringify(newData));
-        setSubmittedData(newData);
-    };
+
     const controls = useAnimation();
 
     useEffect(() => {
@@ -196,7 +179,6 @@ const MyComponent = ({ petrodata }) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showMobileMenu]);
-
 
     return (
         <div className="h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
@@ -394,8 +376,8 @@ const MyComponent = ({ petrodata }) => {
                     {noozleData && noozleData.length > 0 ? (
                         noozleData.map((item) => {
                             const nozzleId = item?.NozzlesAssign?.id;
-                            const { closeReading, startReading, testing } = readings[nozzleId] || {};
-                            // const startReading = item?.start_reading || 0;
+                            const { closeReading, testing } = readings[nozzleId] || {};
+                            const startReading = item?.start_reading || 0;
                             const rate = item?.rate || 0;
                             const maxReading = item?.Nozzle?.max_reading || 0;
                             const { sale, amount } = handleCalculation(startReading, closeReading, testing, rate, maxReading);
@@ -428,8 +410,8 @@ const MyComponent = ({ petrodata }) => {
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         readOnly
-                                                                        value={startReading}
-                                                                        onChange={(e) => handleInputChange('startReading', e.target.value)}
+                                                                        value={item.start_reading}
+                                                                        onChange={(e) => setStartReading(e.target.value)}
                                                                     />
                                                                 </div>
                                                                 <div className="mb-2">
@@ -441,7 +423,6 @@ const MyComponent = ({ petrodata }) => {
                                                                         type="number"
                                                                         value={closeReading}
                                                                         onChange={(e) => handleInputChange(item.NozzlesAssign.id, 'closeReading', e.target.value, item.Nozzle.max_reading)}
-                                                                        // onChange={(e) =>}
                                                                         required
                                                                     />
                                                                 </div>
@@ -466,7 +447,7 @@ const MyComponent = ({ petrodata }) => {
                                                                         type="number"
                                                                         readOnly
                                                                         value={sale}
-                                                                        onChange={(e) => handleInputChange('totalSale', e.target.value)}
+                                                                        onChange={(e) => setTotalSale(e.target.value)}
                                                                     />
                                                                 </div>
                                                                 <div className="mb-2">
@@ -478,7 +459,7 @@ const MyComponent = ({ petrodata }) => {
                                                                         type="number"
                                                                         readOnly
                                                                         value={item.rate}
-                                                                        onChange={(e) => handleInputChange('rate', e.target.value)}
+                                                                        onChange={(e) => setRate(e.target.value)}
                                                                     />
                                                                 </div>
                                                                 <div className="mb-2">
@@ -490,7 +471,7 @@ const MyComponent = ({ petrodata }) => {
                                                                         type="number"
                                                                         readOnly
                                                                         value={amount}
-                                                                        onChange={(e) => handleInputChange('amount', e.target.value)}
+                                                                        onChange={(e) => setAmount(e.target.value)}
                                                                     />
                                                                 </div>
                                                             </form>
@@ -508,55 +489,44 @@ const MyComponent = ({ petrodata }) => {
                     )}
                     {isEditModalOpen && (
                         <div className='mb-8'>
-                            <button className='bg-red-500  relative lg:left-[10%] hover:bg-red-400 mx-5 text-white p-2 rounded-lg text-lg font-semibold' onClick={() => setIsEditModalOpen(false)}>Close</button>
+                            <button className='bg-red-500 relative lg:left-[10%] hover:bg-red-400 mx-5 text-white p-2 rounded-lg text-lg font-semibold' onClick={() => setIsEditModalOpen(false)}>Close</button>
                             <button className="bg-gray-800 relative lg:left-[75%] hover:bg-gray-600 text-white p-2 rounded-lg text-lg font-semibold" type="submit" form="my-form">
                                 Submit
                             </button>
                         </div>
                     )}
-                    {!isEditModalOpen && (
-                        <>
-                            <h2 className="text-2xl font-semibold mt-6 mb-4">Submitted Data</h2>
-                            <div className='m-5 grid grid-cols-1 lg:mt-7 lg:grid-cols-2 gap-3 lg:gap-10'>
+                    <div>
+                        {submittedData.map((data, index) => (
+                            <>
+                                <h2 className="text-2xl font-semibold mt-6 mb-4">Submitted Data</h2>
+                                <div key={index} className="bg-white p-4 rounded-lg shadow-md mb-4">
+                                    <h3 className="text-lg font-bold mb-2">Submission {index + 1}</h3>
+                                    {Object.entries(data.readings).map(([nozzleId, reading]) => {
+                                        const nozzleData = noozleData.find(item => item?.NozzlesAssign?.id === nozzleId) || {};
+                                        const { Nozzle = {} } = nozzleData;
+                                        const { start_reading = 0, rate = 0, max_reading = 0 } = Nozzle;
+                                        const { sale, amount } = handleCalculation(start_reading, reading.closeReading, reading.testing, rate, max_reading);
 
-                                {submittedData.length > 0 ? (
-                                    submittedData.map((data, index) => (
-                                        <div key={index} className='bg-white border flex justify-around flex-col border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'>
-
-                                            <div className="flex justify-around min-h-max	lg:max-w-3xl max-w-sm lg:p-3 p-2   ">
-                                                {data && data.readings && Object.entries(data.readings).map(([nozzleId, reading]) => (
-                                                    <div key={nozzleId} className='lg:my-2 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs'>
-                                                        {reading.nozzleName && <p className="text-orrange  font-semibold">{reading.nozzleName}</p>}
-                                                        {reading.startReading !== 0 && <p className="text-gray-700 font-semibold">Start reading: {reading.startReading}</p>}
-                                                        {reading.closeReading !== 0 && <p className="text-gray-700 font-semibold">Closing Reading: {reading.closeReading}</p>}
-                                                        {reading.testing !== 0 && <p className="text-gray-700 font-semibold">Testing: {reading.testing}</p>}
-                                                        {reading.sale !== 0 && <p className="text-gray-700 font-semibold">Total Sale: {reading.sale}</p>}
-                                                        {reading.rate !== 0 && <p className="text-gray-700 font-semibold">Rate: {reading.rate}</p>}
-                                                        {reading.amount !== 0 && <p className="text-gray-700 font-semibold">Amount: {reading.amount}</p>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="flex flex-row justify-around my-5">
-                                                <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" />
-                                                    </svg>
-                                                </button>
-                                                <button className="px-2 w-10 h-10" onClick={() => handleDelete(index)}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" />
-                                                    </svg>
+                                        return (
+                                            <div key={nozzleId}>
+                                                <p className='text-xl'>Nozzle ID: {nozzleId}</p>
+                                                <p className='text-xl'>Closing Reading: {reading.closeReading}</p>
+                                                <p className='text-xl'>Testing: {reading.testing}</p>
+                                                <p className='text-xl'>Starting Reading: {start_reading}</p>
+                                                <p className='text-xl'>Total Sale: {sale}</p>
+                                                <p className='text-xl'>Rate: {rate}</p>
+                                                <p className='text-xl'>Amount: {amount}</p>
+                                                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => handleEdit(index)}>
+                                                    Edit
                                                 </button>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p>No data available</p>
-                                )}
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        ))}
 
-                            </div>
-                        </>
-                    )}
+                    </div>
                 </main>
             </div >
         </div >

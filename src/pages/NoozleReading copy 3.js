@@ -11,7 +11,7 @@ const MyComponent = ({ petrodata }) => {
     const [noozleData, setNoozleData] = useState([]);
     const [readings, setReadings] = useState({});
     const base_url = process.env.REACT_APP_API_URL;
-
+    const [submittedData, setSubmittedData] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editIndex, setEditIndex] = useState(null);
     const [totalSale, setTotalSale] = useState('');
@@ -19,14 +19,15 @@ const MyComponent = ({ petrodata }) => {
     const [amount, setAmount] = useState('');
     const [editingIndex, setEditingIndex] = useState(null);
     const [errors, setErrors] = useState({});
-
-    const [submittedData, setSubmittedData] = useState(() => {
-        const storedData = JSON.parse(localStorage.getItem('submittedData')) || [];
-        return storedData;
+    const [editData, setEditData] = useState({
+        totalSale: '',
+        amount: '',
     });
     useEffect(() => {
-        localStorage.setItem('submittedData', JSON.stringify(submittedData));
-    }, [submittedData]);
+        // Fetch data from localStorage on component mount
+        const storedData = (localStorage.getItem('submittedData')) || [];
+        setSubmittedData(storedData);
+    }, []); // Empty dependency array ensures this runs once on mount
     useEffect(() => {
         axios.post(
             `${base_url}/petro_cake/petroAppEmployees/assignNozzleList/1`,
@@ -145,13 +146,26 @@ const MyComponent = ({ petrodata }) => {
 
 
 
+    const handleEditChange = (e) => {
+        const { name, value } = e.target;
+        const parsedValue = parseFloat(value);
+
+        setEditData(prevData => {
+            let updatedData = { ...prevData };
+            let errorss = { ...errors };
+
+            // Update the value in updatedData
+            updatedData[name] = value;
+            return updatedData;
+        });
+    };
 
     const handleEdit = (index) => {
         console.log("Editing index:", index);
         const dataToEdit = submittedData[index];
         console.log("Data to edit:", dataToEdit);
 
-
+        setEditData({ ...dataToEdit, index }); // Pass the index with the data
         setEditingIndex(index);
         setIsEditModalOpen(true);
     };
@@ -200,143 +214,7 @@ const MyComponent = ({ petrodata }) => {
 
     return (
         <div className="h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
-            <div className="hidden lg:fixed h-screen md:flex md:flex-shrink-0">
-                <div className="flex flex-col w-64">
-                    <div className="h-0 flex-1 flex flex-col pt-10 pb-4 overflow-y-auto bg-navbar">
-                        {/* Sidebar Links */}
-                        <div className="flex items-center flex-shrink-0 px-4">
-                            <img
-                                className="h-10 mx-auto w-auto "
-                                src={logo}
-                                alt="Your Company"
-                            />
-                        </div>
-                        <div className="mt-5 flex-1 flex flex-col">
-                            <nav className="flex-1 px-4 flex flex-col gap-10 mt-7 bg-navbar space-y-1">
-                                <Link
-                                    to="/noozle-reading"
-                                    className="bg-wheat text-black block rounded-md px-3 py-2 text-md font-medium"
-                                    aria-current="page"
-                                >
-                                    Noozle reading
-                                </Link>
-                                <Link
-                                    to="/credit-sale"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-md font-medium"
-                                >
-                                    Credit Sale
-                                </Link>
-                                <Link
-                                    to="/cash-sale"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-md font-medium"
-                                >
-                                    Cash Sale
-                                </Link>
-                                <Link
-                                    to="/expenses"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-md font-medium"
-                                >
-                                    Expenses
-                                </Link>
-                                <Link
-                                    to="/receipt"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-md font-medium"
-                                >
-                                    Receipt
-                                </Link>
-                                <div className='px-3 '>
-                                    <Logout />
-                                </div>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Menu */}
-            <div className={`lg:hidden fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
-                <div className="flex items-center justify-start h-full backdrop-blur-sm">
-                    <motion.div
-                        className={`bg-navbar h-full fixed w-[80vw] p-8 flex flex-col navbar`}
-                        initial={{ x: '-80vw' }}
-                        animate={controls}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        drag="x"
-                        dragConstraints={{ left: 0, right: 0 }}
-                        onDragEnd={handleDragEnd}
-                        style={{ cursor: 'grab', left: 0 }}
-                    >
-                        <div className="flex justify-end">
-                            <button
-                                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                                type="button"
-                                className="text-gray-300 hover:text-white focus:outline-none focus:text-white"
-                                aria-controls="mobile-menu"
-                                aria-expanded={showMobileMenu ? 'true' : 'false'}
-                            >
-                                <span className="sr-only">Close main menu</span>
-                                {/* Close Icon */}
-                                <svg
-                                    className={`h-6 w-6`}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    aria-hidden="true"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="mt-2 flex-1 flex flex-col">
-                            <nav className="flex-1 px-2 flex gap-[3rem] flex-col mt-8 bg-navbar space-y-1">
-                                <div className="flex items-center flex-shrink-0 px-4">
-                                    <img
-                                        className="h-10 mx-auto w-auto "
-                                        src={logo}
-                                        alt="Your Company"
-                                    />
-                                </div>
-                                <Link
-                                    to="/noozle-reading"
-                                    className="bg-wheat text-black block rounded-md px-3 py-2 text-lg font-medium"
-                                    aria-current="page"
-                                >
-                                    Noozle reading
-                                </Link>
-                                <Link
-                                    to="/credit-sale"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-lg font-medium"
-                                >
-                                    Credit Sale
-                                </Link>
-                                <Link
-                                    to="/cash-sale"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-lg font-medium"
-                                >
-                                    Cash Sale
-                                </Link>
-                                <Link
-                                    to="/expenses"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-lg font-medium"
-                                >
-                                    Expenses
-                                </Link>
-                                <Link
-                                    to="/receipt"
-                                    className="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-lg font-medium"
-                                >
-                                    Receipt
-                                </Link>
-                                <div className='px-3'>
-                                    <Logout />
-                                </div>
-                            </nav>
-                        </div>
-                    </motion.div>
-                </div>
-            </div>
-
+         
             {/* Content area */}
             <div className="flex flex-col ml-0 lg:ml-[17%] w-0 flex-1 overflow-hidden">
                 <div className="w-screen z-10 flex-shrink-0  fixed flex h-16 bg-navbar border-b border-gray-200 lg:hidden">
@@ -508,55 +386,46 @@ const MyComponent = ({ petrodata }) => {
                     )}
                     {isEditModalOpen && (
                         <div className='mb-8'>
-                            <button className='bg-red-500  relative lg:left-[10%] hover:bg-red-400 mx-5 text-white p-2 rounded-lg text-lg font-semibold' onClick={() => setIsEditModalOpen(false)}>Close</button>
+                            <button className='bg-red-500 relative lg:left-[10%] hover:bg-red-400 mx-5 text-white p-2 rounded-lg text-lg font-semibold' onClick={() => setIsEditModalOpen(false)}>Close</button>
                             <button className="bg-gray-800 relative lg:left-[75%] hover:bg-gray-600 text-white p-2 rounded-lg text-lg font-semibold" type="submit" form="my-form">
                                 Submit
                             </button>
                         </div>
                     )}
-                    {!isEditModalOpen && (
-                        <>
-                            <h2 className="text-2xl font-semibold mt-6 mb-4">Submitted Data</h2>
-                            <div className='m-5 grid grid-cols-1 lg:mt-7 lg:grid-cols-2 gap-3 lg:gap-10'>
+                    <div className='flex flex-row gap-4 m-4'>
+                        {submittedData.map((data, index) => (
+                            <div className=''>
+                                <h2 className="text-2xl font-semibold mt-6 mb-4">Submitted Data</h2>
+                                <div key={index} className="bg-white flex flex-row  p-4 w-fit rounded-lg shadow-md mb-4">
 
-                                {submittedData.length > 0 ? (
-                                    submittedData.map((data, index) => (
-                                        <div key={index} className='bg-white border flex justify-around flex-col border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'>
+                                    {Object.entries(data.readings).map(([nozzleId, reading]) => {
+                                        return (
+                                            <div key={nozzleId}>
+                                                <p className='text-lg'>Nozzle ID: {reading.nozzleName}</p>
+                                                <p className='text-lg'>Start reading: {reading.startReading}</p>
+                                                <p className='text-lg'>Closing Reading: {reading.closeReading}</p>
+                                                <p className='text-lg'>Testing: {reading.testing}</p>
+                                                <p className='text-lg'>Total Sale: {reading.sale}</p>
+                                                <p className='text-lg'>Rate: {reading.rate}</p>
+                                                <p className='text-lg'>Amount: {reading.amount}</p>
 
-                                            <div className="flex justify-around min-h-max	lg:max-w-3xl max-w-sm lg:p-3 p-2   ">
-                                                {data && data.readings && Object.entries(data.readings).map(([nozzleId, reading]) => (
-                                                    <div key={nozzleId} className='lg:my-2 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs'>
-                                                        {reading.nozzleName && <p className="text-orrange  font-semibold">{reading.nozzleName}</p>}
-                                                        {reading.startReading !== 0 && <p className="text-gray-700 font-semibold">Start reading: {reading.startReading}</p>}
-                                                        {reading.closeReading !== 0 && <p className="text-gray-700 font-semibold">Closing Reading: {reading.closeReading}</p>}
-                                                        {reading.testing !== 0 && <p className="text-gray-700 font-semibold">Testing: {reading.testing}</p>}
-                                                        {reading.sale !== 0 && <p className="text-gray-700 font-semibold">Total Sale: {reading.sale}</p>}
-                                                        {reading.rate !== 0 && <p className="text-gray-700 font-semibold">Rate: {reading.rate}</p>}
-                                                        {reading.amount !== 0 && <p className="text-gray-700 font-semibold">Amount: {reading.amount}</p>}
-                                                    </div>
-                                                ))}
                                             </div>
-                                            <div className="flex flex-row justify-around my-5">
-                                                <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" />
-                                                    </svg>
-                                                </button>
-                                                <button className="px-2 w-10 h-10" onClick={() => handleDelete(index)}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p>No data available</p>
-                                )}
+                                        );
+                                    })}
+                                </div>
+                                <div className="flex flex-row justify-around mt-5">
+                                    <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" /></svg>
+                                    </button>
+                                    <button className="px-2 w-10 h-10" onClick={() => handleDelete(index)}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" /></svg>
+                                    </button>
+                                </div>
 
                             </div>
-                        </>
-                    )}
+                        ))}
+
+                    </div>
                 </main>
             </div >
         </div >

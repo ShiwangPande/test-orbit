@@ -20,7 +20,7 @@ import React from "react";
 function CreditSale({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-    const [creditdata, setCreditata] = useState([]);
+    const [creditdata, setCreditData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchQueryVehicle, setSearchQueryVehicle] = useState("");
     const [searchQueryFuel, setSearchQueryFuel] = useState("");
@@ -61,7 +61,10 @@ function CreditSale({ petrodata }) {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // Function to open edit modal and populate with data
-
+    const formatDate = (dateString) => {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+    };
     const base_url = process.env.REACT_APP_API_URL;
     // Function to handle changes in edit modal
     const handleEditChange = (e) => {
@@ -114,7 +117,7 @@ function CreditSale({ petrodata }) {
                         errorss.quantity = "Quantity cannot exceed 20,000";
                     } else {
                         errorss.quantity = "";
-                        updatedData.quantity = parsedValue.toFixed(2); // Round to 2 decimal places
+                        // updatedData.quantity = parsedValue.toFixed(2);
                     }
                     // Update total amount based on new quantity
                     updatedData.totalAmt = (updatedData.quantity * updatedData.rate).toFixed(2); // Round to 2 decimal places
@@ -124,7 +127,7 @@ function CreditSale({ petrodata }) {
             // Handle driverCash change
             if (name === 'driverCash') {
                 if (!isNaN(parsedValue)) {
-                    if (parsedValue < 0) {
+                    if (parsedValue <= 0) {
                         errorss.driverCash = "Driver cash cannot be negative";
                     } else if (parsedValue > 10000000) {
                         updatedData.driverCash = 10000000;
@@ -150,11 +153,6 @@ function CreditSale({ petrodata }) {
             return updatedData;
         });
     };
-
-
-
-
-
 
     const validateEditForm = () => {
         const newErrors = {};
@@ -183,20 +181,18 @@ function CreditSale({ petrodata }) {
 
             newErrors.driverCash = 'Driver cash cannot exceed 10,000,000';
         }
+        if (parseFloat(editData.driverCash) === 0) {
+            newErrors.driverCash = 'cannot be zero';
 
+        }
         // Check if driverCash is greater than 0 and no vehicle is selected
-        if (parseFloat(editData.driverCash) > 0 && !editData.selectedVehicle) {
+        if (parseFloat(editData.driverCash) >= 0 && !editData.selectedVehicle) {
             newErrors.driverCash = 'If driver cash is greater than 0, a vehicle must be selected';
         }
 
         setErrorss(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-
-
-
-
-
     const handleSubmitEdit = (e) => {
         e.preventDefault(); // Prevent default form submission
         if (validateEditForm()) {
@@ -225,9 +221,6 @@ function CreditSale({ petrodata }) {
             setEditingIndex(null);
         }
     };
-
-
-
     const dropdownRef = useRef(null);
     useEffect(() => {
         const storedData = JSON.parse(localStorage.getItem('submittedData'));
@@ -251,6 +244,9 @@ function CreditSale({ petrodata }) {
         if (quantity <= 0) {
             newErrors.quantity = 'Quantity must be greater than 0';
         }
+        if (!quantity) {
+            newErrors.quantity = 'Quantity is required';
+        }
 
         const vehicleToUse = selectedVehicle || searchQueryVehicle.trim();
 
@@ -261,7 +257,7 @@ function CreditSale({ petrodata }) {
             newErrors.driverCash = 'Driver Cash cannot be negative';
         } else if (parsedDriverCash > 10000000) {
             newErrors.driverCash = 'Driver Cash cannot exceed 10,000,000';
-        } else if (parsedDriverCash > 0 && !vehicleToUse) {
+        } else if (parsedDriverCash >= 0 && !vehicleToUse) {
             newErrors.driverCash = 'If driver cash is greater than 0, a vehicle must be selected or entered manually';
         }
 
@@ -375,6 +371,7 @@ function CreditSale({ petrodata }) {
                 setNoozleData(data);
                 // Initialize readings state
                 console.log(data)
+
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
@@ -470,22 +467,22 @@ function CreditSale({ petrodata }) {
         axios.post(
             `${base_url}/petro_cake/petroAppEmployees/empcurrentShiftData/7/24/1`,
             {
-                "shift": 11,
-                "emp_id": "24",
-                "date": "2024-04-11",
-                "petro_id": petrodata.petro_id,
-                "day_shift": petrodata.daily_shift,
+                shift: 11,
+                emp_id: "24",
+                date: "2024-04-11",
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
             }
         )
             .then(response => {
-                // console.log('data:', response.data);
-                setCreditata(response.data);
+                const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                const formattedDate = formatDate(date);
+                setCreditData({ shift, day_shift_no, date: formattedDate });
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
     }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
-
     const handleSearchChange = (event) => {
         const query = event.target.value.toLowerCase();
         setShowDropdown(true); // Show dropdown when input value changes
@@ -551,7 +548,7 @@ function CreditSale({ petrodata }) {
     useEffect(() => {
         const total = parseFloat(totalAmt) || 0;
         const cash = parseFloat(driverCash) || 0;
-        setInclusiveTotal((total + cash).toFixed(5));
+        setInclusiveTotal((total + cash).toFixed(2));
     }, [totalAmt, driverCash]);
 
     const handleQuantityChange = (e) => {
@@ -597,7 +594,7 @@ function CreditSale({ petrodata }) {
     const calculateTotalAmt = (quantity, rate) => {
         if (!isNaN(quantity) && !isNaN(rate)) {
             const total = parseFloat(quantity) * parseFloat(rate);
-            setTotalAmt(total.toFixed(5));
+            setTotalAmt(total.toFixed(2));
         } else {
             setTotalAmt('');
         }
@@ -612,7 +609,7 @@ function CreditSale({ petrodata }) {
             } else {
                 setErrors((prev) => ({ ...prev, quantity: '' }));
             }
-            setQuantity(quantity.toFixed(3));
+            setQuantity(quantity.toFixed(2));
         } else {
             setQuantity('');
         }
@@ -846,16 +843,15 @@ function CreditSale({ petrodata }) {
                                     <form onSubmit={handleSubmit}>
                                         <ModalBody className="px-4 lg:px-8">
 
-                                            {creditdata.data && (
-                                                <>
-                                                    <div className="mb-4 flex justify-between">
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
-                                                            Date: <span className='text-red-500 font-medium'>       {creditdata.data.DailyShift.date}</span>
-                                                        </h2>
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.data.DailyShift.day_shift_no}</span></h2>
-                                                    </div>
-                                                </>
-                                            )}
+                                            <>
+                                                <div className="mb-4 flex justify-between">
+                                                    <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
+                                                        Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
+                                                    </h2>
+                                                    <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
+                                                </div>
+                                            </>
+
 
                                             {/* Customer */}
                                             <div className="grid grid-cols-1 lg:grid-cols-3  gap-3">
@@ -1030,7 +1026,7 @@ function CreditSale({ petrodata }) {
                                                         onChange={handleQuantityChange}
                                                         disabled={!selectedFuel}
                                                         className="border p-2 border-gray-300 rounded"
-
+                                                    // required
                                                     />
                                                     {errors.quantity && <span className="text-red-500 text-sm">{errors.quantity}</span>}
                                                 </div>
@@ -1383,9 +1379,6 @@ function CreditSale({ petrodata }) {
                                 </div>
                             </div>
                         )}
-
-
-
                     </div>
                 </main >
             </div >
