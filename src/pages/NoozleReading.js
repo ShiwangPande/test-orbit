@@ -21,11 +21,11 @@ const MyComponent = ({ petrodata }) => {
     const [errors, setErrors] = useState({});
 
     const [submittedData, setSubmittedData] = useState(() => {
-        const storedData = JSON.parse(localStorage.getItem('submittedData')) || [];
+        const storedData = JSON.parse(localStorage.getItem('submittedNozzleData')) || [];
         return storedData;
     });
     useEffect(() => {
-        localStorage.setItem('submittedData', JSON.stringify(submittedData));
+        localStorage.setItem('submittedNozzleData', JSON.stringify(submittedData));
     }, [submittedData]);
     useEffect(() => {
         axios.post(
@@ -116,8 +116,8 @@ const MyComponent = ({ petrodata }) => {
                 amount,
             };
         });
-        const existingData = JSON.parse(localStorage.getItem('submittedData')) || [];
-        localStorage.setItem('submittedData', JSON.stringify([...existingData, newData]));
+        const existingData = JSON.parse(localStorage.getItem('submittedNozzleData')) || [];
+        localStorage.setItem('submittedNozzleData', JSON.stringify([...existingData, newData]));
 
 
         // Update submittedData based on editingIndex or add new data
@@ -158,7 +158,7 @@ const MyComponent = ({ petrodata }) => {
     const handleDelete = (index) => {
         const newData = [...submittedData];
         newData.splice(index, 1);
-        localStorage.setItem('submittedData', JSON.stringify(newData));
+        localStorage.setItem('submittedNozzleData', JSON.stringify(newData));
         setSubmittedData(newData);
     };
     const controls = useAnimation();
