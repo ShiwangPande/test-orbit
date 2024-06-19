@@ -1098,7 +1098,7 @@ function CreditSale({ petrodata }) {
                     </Modal>
 
 
-                    <div className="m-5 grid grid-cols-1 lg:mt-7 lg:grid-cols-2 gap-3 lg:gap-10">
+                    <div className=" mt-20 mx-5 grid grid-cols-1 lg:mt-7 lg:grid-cols-2 gap-3 lg:gap-10">
                         {submittedData.map((data, index) => (
                             // Check if essential data fields are present before rendering the card
                             data.selectedCustomer && (
