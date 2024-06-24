@@ -1,6 +1,7 @@
-import React from 'react';
-import './App.css';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import "./App.css"
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import NoozleReading from './pages/NoozleReading';
@@ -8,50 +9,68 @@ import Receipt from './pages/Receipt';
 import Expenses from './pages/Expenses';
 import CreditSale from './pages/CreditSale';
 import CashSale from './pages/CashSale';
-import Layout from './components/Layout';
-import axios from 'axios';
-import { useEffect } from 'react';
-import { useState } from 'react';
-
+import DashBoard from './pages/DashBoard';
+import MPINLogin from './components/MPINLogin';
+import SetupMPIN from './components/SetupMPIN';
+import ResetMPIN from './components/ResetMPIN';
+import Logout from "./components/Logout";
+import CardWallet from './pages/CardWallet';
 function App() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const base_url = process.env.REACT_APP_API_URL;
+
   useEffect(() => {
-    axios.post(
-      `${base_url}/petro_cake/petroAppEmployees/login/1`,
-      {
-        "mobile_no": 8459795840,
-        "password": "12345678"
-      }
-    )
-      .then(response => {
-        console.log(data.mobile_no)
-        console.log('data:', response.data); // Log the received data
+    const fetchData = async () => {
+      try {
+        const response = await axios.post(
+          `${base_url}/petro_cake/petroAppEmployees/login/1`,
+          {
+            "mobile_no": 8459795840,
+            "password": "12345678"
+          }
+        );
+        console.log('Login successful. Data:', response.data);
         setData(response.data);
-        // Set loading state to false when data is received
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-        // Set loading state to false in case of error
-      });
-  }, [base_url, data.mobile_no]);
+        setIsAuthenticated(true);
+        localStorage.setItem('isAuthenticated', 'true');
+      } catch (error) {
+        console.error('Error logging in:', error);
+      }
+    };
 
+    fetchData();
+  }, [base_url, setIsAuthenticated]);
 
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  if (data === null) {
+    return <p>Loading...</p>; // Add loading indicator or spinner here
+  }
 
   return (
     <div className="App">
       <Router>
-        {/* <Navbar /> */}
         <Routes>
-          <Route path="/" element={<Layout />} >
-            <Route path="/" element={<Home data={data} />} />
-            <Route path="/login" element={<LoginPage data={data} />} />
-            <Route path="/receipt" element={<Receipt />} />
-            <Route path="/noozle-reading" element={<NoozleReading petrodata={data} />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/credit-sale" element={<CreditSale petrodata={data} />} />
-            <Route path="/cash-sale" element={<CashSale />} />
-          </Route>
+          <Route path="/" element={<Home data={data} />} />
+          <Route path="/login" element={<LoginPage data={data} setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/receipt" element={isAuthenticated ? <Receipt petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/reset-mpin" element={<ResetMPIN />} />
+          <Route path="/setup-mpin" element={<SetupMPIN />} />
+          <Route path="/logout" element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/mpin-login" element={<MPINLogin setIsAuthenticated={setIsAuthenticated} petrodata={data} />} />
+          <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/credit-sale" element={isAuthenticated ? <CreditSale petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/cash-sale" element={isAuthenticated ? <CashSale petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/dashboard" element={isAuthenticated ? <DashBoard petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="/cardwallet" element={isAuthenticated ? <CardWallet petrodata={data} /> : <Navigate to="/mpin-login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </div>

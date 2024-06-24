@@ -17,7 +17,7 @@ import add from "../images/add.svg"
 
 import React from "react";
 
-function Reciept({ petrodata }) {
+function CardWallet({ petrodata }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [creditdata, setCreditData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -103,7 +103,7 @@ function Reciept({ petrodata }) {
             updatedData[editingIndex] = editData;
 
             // Update local storage
-            localStorage.setItem('submittedRecieptData', JSON.stringify(updatedData));
+            localStorage.setItem('submittedCardWalletData', JSON.stringify(updatedData));
 
             // Update state with the edited data
             setSubmittedData(updatedData);
@@ -117,7 +117,7 @@ function Reciept({ petrodata }) {
     };
     const dropdownRef = useRef(null);
     useEffect(() => {
-        const storedData = JSON.parse(localStorage.getItem('submittedRecieptData'));
+        const storedData = JSON.parse(localStorage.getItem('submittedCardWalletData'));
         if (storedData) {
             setSubmittedData(storedData);
         }
@@ -159,7 +159,7 @@ function Reciept({ petrodata }) {
             };
 
             // Update or add the new data to localStorage
-            const existingData = JSON.parse(localStorage.getItem('submittedRecieptData')) || [];
+            const existingData = JSON.parse(localStorage.getItem('submittedCardWalletData')) || [];
 
             if (editingIndex !== null && editingIndex !== undefined) {
                 existingData[editingIndex] = newData; // Update existing data if editing
@@ -168,7 +168,7 @@ function Reciept({ petrodata }) {
             }
 
             // Save updated data back to localStorage
-            localStorage.setItem('submittedRecieptData', JSON.stringify(existingData));
+            localStorage.setItem('submittedCardWalletData', JSON.stringify(existingData));
 
             // Update state variables and UI after successful submission
             setSubmittedData(existingData);
@@ -200,7 +200,7 @@ function Reciept({ petrodata }) {
 
     const handleRemove = (index) => {
         const updatedData = submittedData.filter((_, i) => i !== index);
-        localStorage.setItem('submittedRecieptData', JSON.stringify(updatedData));
+        localStorage.setItem('submittedCardWalletData', JSON.stringify(updatedData));
         setSubmittedData(updatedData);
     };
 
@@ -337,7 +337,7 @@ function Reciept({ petrodata }) {
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
             <Navbar />
             <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none">
-                <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>Receipt</h1>
+                <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>Card/Wallet</h1>
                 <div className="flex flex-wrap gap-3">
                     <Button className="bg-navbar fixed  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
                         <img src={add} className="w-8 h-8" alt="" />
@@ -456,15 +456,15 @@ function Reciept({ petrodata }) {
                 </Modal>
 
                 {!isEditModalOpen && (
-                    <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-3 lg:px-8 py-2 lg:py-5 '><div className="  flex justify-between">
-                        <h2 className="block  text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
+                    <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-8 py-5 '><div className="  flex justify-between">
+                        <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                             Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
                         </h2>
-                        <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
+                        <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
                     </div>
                     </div>
                 )}
-                <div className=" mt-16 mx-5 grid grid-cols-1 lg:mt-20 lg:grid-cols-2 gap-3 lg:gap-10">
+                <div className=" mt-36 mx-5 grid grid-cols-1 lg:mt-20 lg:grid-cols-2 gap-3 lg:gap-10">
                     {submittedData.map((data, index) => (
                         // Check if essential data fields are present before rendering the card
                         data?.selectedLedgerName && (
@@ -594,4 +594,4 @@ function Reciept({ petrodata }) {
     );
 }
 
-export default Reciept;
+export default CardWallet;

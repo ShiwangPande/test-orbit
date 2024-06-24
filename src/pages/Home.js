@@ -9,7 +9,7 @@ import wave from "../images/wave.svg";
 function Home({ data }) {
     const navigate = useNavigate();
     const handleclick = () => {
-        navigate("/login");
+        navigate("/mpin-login");
     };
 
     const floatVariants = {
@@ -25,7 +25,7 @@ function Home({ data }) {
         },
     };
     return (
-        <div className="h-screen home bg-wheat overflow-hidden">
+        <div className="h-screen home bg-wheat overflow-hidden" >
             <div className=" w-screen  flex justify-center flex-col items-center">
                 <img className="mt-10 w-32 h-32 lg:w-52 lg:h-52" src={Logo} alt="" />
                 <div className="mt-20 flex flex-col lg:flex-row gap-3  mx-3 text-center  my-5">
