@@ -141,8 +141,8 @@ function Navbar({ petrodata }) {
             </div>
 
             {/* Mobile Menu */}
-            <div className={`lg:hidden fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
-                <div className="flex items-center justify-start h-full backdrop-blur-sm">
+            <div className={`lg:hidden  fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
+                <div className="flex items-center  justify-start h-full backdrop-blur-lg	">
                     <motion.div
                         className={`bg-navbar h-full fixed w-[80vw] py-5 px-8 flex flex-col navbar`}
                         initial={{ x: '-80vw' }}
@@ -153,7 +153,7 @@ function Navbar({ petrodata }) {
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab', left: 0 }}
                     >
-                        <div className="flex justify-end">
+                        <div className="flex relative z-50 justify-end bg-navbar">
                             <button
                                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                                 type="button"
@@ -164,7 +164,7 @@ function Navbar({ petrodata }) {
                                 <span className="sr-only">Close main menu</span>
                                 {/* Close Icon */}
                                 <svg
-                                    className={`h-6 w-6`}
+                                    className={`h-8 w-8`}
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -176,7 +176,7 @@ function Navbar({ petrodata }) {
                             </button>
                         </div>
 
-                        <div className="mt-1 flex-1 flex flex-col">
+                        <div className="mt-1 flex-1 flex flex-col ">
                             <nav className="flex-1 px-2 flex gap-[2rem] flex-col mt-8 bg-navbar space-y-1">
                                 <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
@@ -246,7 +246,7 @@ function Navbar({ petrodata }) {
             </div>
 
             {/* Hamburger Icon for Mobile */}
-            <div className="flex flex-col ml-0 lg:ml-[17%] mix-blend-overlay   fixed z-50  w-0 flex-1 overflow-hidden">
+            <div className="flex flex-col ml-0 lg:ml-[17%] mix-blend-hue   fixed z-50  w-0 flex-1 overflow-hidden">
                 <div className="w-screen  flex-shrink-0 fixed z-50	  flex h-14 bg-navbar  border-black lg:hidden">
                     <h1 className='block fixed w-[80vw] lg:hidden text-white mx-10 text-center top-4 text-2xl z-50'>{getPageName(location.pathname)}</h1>
 
