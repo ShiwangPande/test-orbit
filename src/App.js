@@ -16,42 +16,38 @@ import ResetMPIN from './components/ResetMPIN';
 import Logout from "./components/Logout";
 import CardWallet from './pages/CardWallet';
 import Navbar from './components/Navbar';
+
 function App() {
-  const [data, setData] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [data, setData] = useState(JSON.parse(localStorage.getItem('userData')) || null);
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   const [userMobile, setUserMobile] = useState(localStorage.getItem('userMobile') || '');
   const base_url = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.post(
-          `${base_url}/login/1`,
-          {
-            "mobile_no": userMobile,
-            "password": "12345678"
-          }
-        );
-        console.log('Login successful. Data:', response.data);
-        setData(response.data);
-        setIsAuthenticated(true);
-        localStorage.setItem('isAuthenticated', 'true');
-      } catch (error) {
-        console.error('Error logging in:', error);
-      }
-    };
-
-    if (userMobile) {
+    if (isAuthenticated && !data) {
+      const fetchData = async () => {
+        try {
+          const response = await axios.post(
+            `${base_url}/login/1`,
+            {
+              "mobile_no": userMobile,
+              "password": "12345678" // Adjust this if needed
+            }
+          );
+          console.log('Login successful. Data:', response.data);
+          setData(response.data);
+          localStorage.setItem('userData', JSON.stringify(response.data));
+        } catch (error) {
+          console.error('Error logging in:', error);
+          setIsAuthenticated(false);
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('userMobile');
+          localStorage.removeItem('userData');
+        }
+      };
       fetchData();
     }
-  }, [base_url, userMobile]);
-
-  useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
+  }, [base_url, isAuthenticated, userMobile, data]);
 
   if (data === null && isAuthenticated) {
     return <p>Loading...</p>;
@@ -61,14 +57,13 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-
           <Route path="/" element={<Home data={data} />} />
           <Route path="/login" element={<LoginPage setUserMobile={setUserMobile} setIsAuthenticated={setIsAuthenticated} setData={setData} />} />
           <Route path="/receipt" element={isAuthenticated ? <Receipt petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/reset-mpin" element={<ResetMPIN petrodata={data} />} />
-          <Route path="/setup-mpin" element={<SetupMPIN petrodata={data} />} />
+          <Route path="/reset-mpin" element={isAuthenticated ? <ResetMPIN petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/setup-mpin" element={isAuthenticated ? <SetupMPIN petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/logout" element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/credit-sale" element={isAuthenticated ? <CreditSale petrodata={data} /> : <Navigate to="/login" />} />

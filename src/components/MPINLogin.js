@@ -10,7 +10,7 @@ const mpinSchema = yup.object().shape({
     mpin: yup.string().required('MPIN is required').matches(/^[0-9]{4}$/, 'MPIN must be 4 digits'),
 });
 
-function MPINLogin({ petrodata, isAuthenticated }) {
+function MPINLogin({ petrodata }) {
     const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors } } = useForm({
@@ -92,7 +92,7 @@ function MPINLogin({ petrodata, isAuthenticated }) {
                         </button>
 
                     </div>
-                    <hr className='my-5 border-2   border-gray-200' />
+                    <hr className='my-5 border-1   border-gray-200' />
                     <div className='flex items-center  mx-auto'>
                         <button type="button" className="mt-3 font-bold mx-auto rounded-lg px-2 outline-double outline-3 outline-offset-2"
                             onClick={handlelogin}>

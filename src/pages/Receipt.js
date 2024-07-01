@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-
+import { useMediaQuery } from 'react-responsive';
+import { motion } from 'framer-motion';
 import axios from "axios";
 import { useEffect } from "react";
 import Navbar from "../components/Navbar";
@@ -353,11 +354,39 @@ function Receipt({ petrodata }) {
         }
         setamount(amountValue);
     };
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false, isSwipedLeft: false }));
+    const containerRef = useRef(null);
+    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+
+    useEffect(() => {
+        if (containerRef.current) {
+            const containerWidth = containerRef.current.offsetWidth;
+            setDragConstraints({
+                left: -containerWidth / 10,
+                right: containerWidth / 10,
+            });
+        }
+    }, [containerRef.current]);
+    // Function to handle drag end
+    const handleDragEnd = (index, event, info) => {
+        if (isMobile) {
+            const updatedSwipeStates = [...swipeStates];
+            if (info.point.x > 100) {
+                updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
+            } else if (info.point.x < -100) {
+                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: true };
+            } else {
+                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+            }
+            setSwipeStates(updatedSwipeStates);
+        }
+    };
 
     return (
-        <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
-            <Navbar petrodata={petrodata}  />
-            <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none">
+        <div className="h-full min-h-screen flex  overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
+            <Navbar petrodata={petrodata} />
+            <main className="flex-1 relative z-0 overflow-x-hidden overflow-y-auto focus:outline-none">
                 <h1 className="relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20">
                     Receipt
                 </h1>
@@ -518,7 +547,7 @@ function Receipt({ petrodata }) {
                 </Modal>
 
                 {!isEditModalOpen && (
-                    <div className="w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-8 py-5 ">
+                    <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:fixed relative lg:mt-5 mt-16 mx-5  rounded-md px-8 py-5 '>
                         <div className="  flex justify-between">
                             <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                                 Date:{" "}
@@ -538,64 +567,103 @@ function Receipt({ petrodata }) {
                         </div>
                     </div>
                 )}
-                <div className=" mt-28 mx-5 grid grid-cols-1 lg:mt-20 lg:grid-cols-2 gap-3 lg:gap-10">
+                <div className=" mt-5 mx-5 grid  grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
                     {submittedData.map(
                         (data, index) =>
                             // Check if essential data fields are present before rendering the card
                             data?.selectedLedgerName && (
-                                <div
-                                    key={index}
-                                    className=" flex flex-col mt-5 lg:mt-10 justify-between lg:max-w-3xl max-w-sm lg:p-6 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                                >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {data.selectedLedgerName}
-                                    </h5>
-                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        {data.amount && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Amount: <span className="font-bold">{data.amount}</span>{" "}
-                                            </p>
+                                <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
+                                    {isMobile && (
+                                        <>
+                                            {swipeStates[index] && swipeStates[index].isSwipedRight && (
+                                                <button className=" h-full flex flex-row rounded-lg bg-navbar justify-around  " onClick={() => handleEdit(index)}>
+                                                    <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                            <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
+                                                        </svg>
+                                                    </div>
+
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <motion.div
+
+                                        className="flex select-none w-full flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                        initial={{ x: 0 }}
+                                        animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : swipeStates[index]?.isSwipedLeft ? -10 : 0) }}
+                                        drag={isMobile ? "x" : false}
+                                        dragConstraints={dragConstraints}
+                                        onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                    >
+                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                            {data.selectedLedgerName}
+                                        </h5>
+                                        <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                            {data.amount && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Amount: <span className="font-bold">{data.amount}</span>{" "}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                            {data.narration && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Narration:{" "}
+                                                    <span className="font-normal break-words">{data.narration}</span>{" "}
+                                                </p>
+                                            )}
+                                        </div>
+                                        {!isMobile && (
+                                            <div className="flex flex-row justify-around mt-5">
+                                                <button
+                                                    className="px-2 w-10 h-10"
+                                                    color="primary"
+                                                    onClick={() => handleEdit(index)}
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
+                                                            fill="#000"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    className="px-2 w-10 h-10"
+                                                    onClick={() => handleRemove(index)}
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z"
+                                                            fill="#F44336"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         )}
-                                    </div>
-                                    <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        {data.narration && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Narration:{" "}
-                                                <span className="font-normal break-words">{data.narration}</span>{" "}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-row justify-around mt-5">
-                                        <button
-                                            className="px-2 w-10 h-10"
-                                            color="primary"
-                                            onClick={() => handleEdit(index)}
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
-                                                    fill="#000"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            className="px-2 w-10 h-10"
-                                            onClick={() => handleRemove(index)}
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z"
-                                                    fill="#F44336"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
+
+
+                                    </motion.div>
+                                    {isMobile && (
+                                        <>
+                                            {swipeStates[index] && swipeStates[index].isSwipedLeft && (
+                                                <button className=" h-full flex flex-row rounded-lg bg-redish justify-around  " onClick={() => handleRemove(index)}>
+                                                    <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                            <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                        </svg>
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
                                 </div>
                             )
                     )}

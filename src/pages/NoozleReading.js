@@ -236,10 +236,10 @@ const NoozleReading = ({ petrodata }) => {
 
     return (
         <div className="h-full min-h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
-            <Navbar petrodata={petrodata}  />
-            <main className="flex-1  focus:outline-none">
-                <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>Nozzle Reading</h1>
-                <div className='pt-14 lg:pt-10 relative z-0 overflow-y-auto'>
+            <Navbar petrodata={petrodata} />
+            <main className="flex-1 overflow-x-hidden focus:outline-none">
+
+                <div className=' relative z-0 overflow-y-auto'>
 
                     {isEditModalOpen && (
                         <div className="flex flex-row justify-between items-center px-4 max-w-96 mx-auto rounded-lg lg:max-w-5xl lg:px-8 p-5  bg-navbar text-white gap-1">
@@ -259,7 +259,7 @@ const NoozleReading = ({ petrodata }) => {
                             </div>
                         </div>
                     )}
-                    {noozleData && noozleData.length > 0 ? (
+                    {noozleData && (
                         noozleData.map((item) => {
                             const nozzleId = item?.NozzlesAssign.id;
                             const { closeReading, startReading, testing } = readings[nozzleId] || {};
@@ -387,13 +387,12 @@ const NoozleReading = ({ petrodata }) => {
                                 </React.Fragment>
                             );
                         })
-                    ) : (
-                        <div className="text-center py-10">
-                            <p>Loading...</p>
-                        </div>
+
                     )}
                     {!isEditModalOpen && (
-                        <div className='w-[90%] h-auto bg-navbar rounded-md px-8 py-5 mx-auto lg:mx-10'><div className="  flex justify-between">
+                        <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:fixed relative lg:mt-5 mt-16 mx-5  rounded-md px-8 py-5 '><div className="  flex justify-between">
+
+
                             <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                                 Date: <span className='text-red-500 font-medium'>        {shiftdata.date}</span>
                             </h2>
@@ -402,7 +401,7 @@ const NoozleReading = ({ petrodata }) => {
                         </div>
                     )}
                     {!isEditModalOpen && (
-                        <div className="flex  flex-col w-full h-[90%] gap-2 py-2">
+                        <div className="flex justify-center items-center flex-col w-full h-[80vh] lg:h-[90vh] gap-2 py-2">
                             {submittedData && submittedData.map((data, index) => (
                                 <div key={index} className="bg-white mx-auto mt-10 lg:my-auto flex rounded-lg flex-col gap-8 justify-center w-4/5 lg:w-1/2 h-fit p-4 shadow">
                                     <div className='flex flex-col lg:flex-row select-none justify-around mt-5 gap-5 h-full w-full'>

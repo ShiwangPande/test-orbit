@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+
 import logo from "../images/navlogo.svg";
 import axios from 'axios';
 import add from "../images/add.svg";
@@ -10,6 +11,7 @@ import Logout from "../components/Logout";
 function Navbar({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const controls = useAnimation();
+    const location = useLocation();
 
     useEffect(() => {
         if (showMobileMenu) {
@@ -44,9 +46,26 @@ function Navbar({ petrodata }) {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showMobileMenu]);
-
+    const getPageName = (pathname) => {
+        switch (pathname) {
+            case '/dashboard':
+                return 'Dashboard';
+            case '/noozle-reading':
+                return 'Noozle Reading';
+            case '/credit-sale':
+                return 'Credit/Cash Sale';
+            case '/expenses':
+                return 'Expenses';
+            case '/receipt':
+                return 'Receipt';
+            case '/cardwallet':
+                return 'Card/Wallet';
+            default:
+                return '';
+        }
+    };
     return (
-        <div className='lg:mr-[17%]'>
+        <div className='lg:mr-[17%] relative z-20'>
             {/* Desktop Navbar */}
             <div className="hidden lg:fixed h-screen md:flex md:flex-shrink-0">
                 <div className="flex flex-col w-64">
@@ -159,12 +178,14 @@ function Navbar({ petrodata }) {
 
                         <div className="mt-1 flex-1 flex flex-col">
                             <nav className="flex-1 px-2 flex gap-[2rem] flex-col mt-8 bg-navbar space-y-1">
-                                <div className="flex items-center flex-shrink-0 px-4">
+                                <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
-                                        className="h-9 mx-auto w-auto "
+                                        className="h-9 mx-auto w-auto mb-5"
                                         src={logo}
                                         alt="Your Company"
                                     />
+                                    <h2 className="block    text-white text-md lg:text-xl font-normal mb-0  lg:mb-1" >Hey {petrodata.name}</h2>
+                                    <h2 className="block    text-white text-md lg:text-xl font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
                                 </div>
                                 <Link
                                     to="/dashboard"
@@ -225,8 +246,11 @@ function Navbar({ petrodata }) {
             </div>
 
             {/* Hamburger Icon for Mobile */}
-            <div className="flex flex-col ml-0 lg:ml-[17%] mix-blend-overlay  fixed z-50  w-0 flex-1 overflow-hidden">
-                <div className="w-screen  flex-shrink-0 z-50	 fixed flex h-14 bg-navbar  border-black lg:hidden">
+            <div className="flex flex-col ml-0 lg:ml-[17%] mix-blend-overlay   fixed z-50  w-0 flex-1 overflow-hidden">
+                <div className="w-screen  flex-shrink-0 fixed z-50	  flex h-14 bg-navbar  border-black lg:hidden">
+                    <h1 className='block fixed w-[80vw] lg:hidden text-white mx-10 text-center top-4 text-2xl z-50'>{getPageName(location.pathname)}</h1>
+
+
                     <button
                         onClick={() => setShowMobileMenu(!showMobileMenu)}
                         type="button"
