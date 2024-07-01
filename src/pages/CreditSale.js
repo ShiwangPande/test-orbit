@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { motion } from 'framer-motion';
 
 import axios from "axios";
 import { useEffect } from "react";
@@ -13,6 +14,7 @@ import {
     useDisclosure,
 } from "@nextui-org/react";
 import add from "../images/add.svg"
+import { useMediaQuery } from 'react-responsive';
 
 
 import React from "react";
@@ -28,6 +30,7 @@ function CreditSale({ petrodata }) {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [selectedFuel, setSelectedFuel] = useState(null);
     const [vehicledata, setVehicledata] = useState([])
+    const [ItemName, setItemName] = useState([])
     const [customerdata, setCustomerdata] = useState([])
     const [ledgerId, setLedgerId] = useState(null); // New state for ledger ID
     const [noozleData, setNoozleData] = useState([]);
@@ -37,6 +40,8 @@ function CreditSale({ petrodata }) {
     const [rate, setRate] = useState(''); // State to toggle the dropdown visibility
     const [quantity, setQuantity] = useState('');
     const [totalAmt, setTotalAmt] = useState('');
+    const [sgst, setSgst] = useState("");
+    const [cgst, setCgst] = useState("");
     const [driverCash, setDriverCash] = useState('');
     const [inclusiveTotal, setInclusiveTotal] = useState('');
     const [submittedData, setSubmittedData] = useState([]);
@@ -54,6 +59,8 @@ function CreditSale({ petrodata }) {
         coupenNo: '',
         quantity: 0,
         rate: 0,
+        cgst: 0,
+        sgst: 0,
         totalAmt: 0,
         driverCash: 0,
         inclusiveTotal: 0
@@ -80,11 +87,23 @@ function CreditSale({ petrodata }) {
 
             // Update rate when fuel type changes
             if (name === 'selectedFuel') {
-                const selectedFuelData = noozleData.find(item => item.Nozzle.Item.name.toLowerCase() === value.toLowerCase());
-                if (selectedFuelData) {
-                    updatedData.rate = selectedFuelData.rate;
+                const selectedNoozleData = noozleData.find(item => item.Nozzle.Item.name.toLowerCase() === value.toLowerCase());
+                const selectedItemData = ItemName.find(item => item.Item.name.toLowerCase() === value.toLowerCase());
+
+                if (selectedNoozleData || selectedItemData) {
+                    updatedData.rate = selectedNoozleData.rate;
+                    updatedData.mrp = selectedItemData.mrp;
                 } else {
-                    updatedData.rate = 0; // Default rate if fuel type not found
+                    updatedData.rate = 0;
+                    updatedData.mrp = 0;
+                }
+            }
+
+            // Handle rate change
+            if (name === 'rate') {
+                if (!isNaN(parsedValue)) {
+                    updatedData.rate = value;
+                    updatedData.totalAmt = (updatedData.quantity * value).toFixed(2);
                 }
             }
 
@@ -93,31 +112,23 @@ function CreditSale({ petrodata }) {
                 updatedData.selectedCustomer = value;
                 updatedData.selectedVehicle = ''; // Reset selectedVehicle when editing selectedCustomer
                 if (selectedCustomer !== searchQuery) {
-                    errorss.selectedCustomer = "invalid customer name";
+                    errorss.selectedCustomer = "Invalid customer name";
                 }
             }
-
-
 
             // Handle total amount change
             if (name === 'totalAmt') {
                 if (!isNaN(parsedValue)) {
                     const potentialQuantity = parseFloat(parsedValue) / parseFloat(updatedData.rate);
                     if (parsedValue <= 0) {
-                        errorss.driverCash = "Total amount must be grater than 0";
+                        errorss.driverCash = "Total amount must be greater than 0";
                     }
-                    // 
-                    // if (parseFloat(totalAmt) <= 2065000) {
-                    //     updatedData.totalAmt = (updatedData.quantity * updatedData.rate)
-                    // }
                     if (potentialQuantity > 20000) {
                         updatedData.totalAmt = (20000 * parseFloat(updatedData.rate));
-                        updatedData.quantity = (updatedData.totalAmt / parseFloat(updatedData.rate))
+                        updatedData.quantity = (updatedData.totalAmt / parseFloat(updatedData.rate));
                         errorss.totalAmt = "Total amount results in quantity exceeding 20,000";
                     } else {
                         errorss.totalAmt = "";
-
-                        // updatedData.totalAmt = parsedValue.toFixed(2);
                         updatedData.quantity = potentialQuantity.toFixed(2); // Round to 2 decimal places
                     }
                 }
@@ -153,13 +164,37 @@ function CreditSale({ petrodata }) {
                 }
             }
 
-            // Calculate inclusiveTotal
-            updatedData.inclusiveTotal = (parseFloat(updatedData.totalAmt || 0) + parseFloat(updatedData.driverCash || 0)).toFixed(2);
+            // Calculate CGST and SGST amounts
+            const total = parseFloat(updatedData.totalAmt) || 0;
+            const cash = parseFloat(updatedData.driverCash) || 0;
+            const cgstItem = ItemName.find(item => item.GstMaster.cgst !== null);
+            const sgstItem = ItemName.find(item => item.GstMaster.sgst !== null);
+            const cgstPercentage = parseFloat(cgstItem?.GstMaster?.cgst) || 0;
+            const sgstPercentage = parseFloat(sgstItem?.GstMaster?.sgst) || 0;
+
+            const cgstAmount = total * (cgstPercentage / 100);
+            const sgstAmount = total * (sgstPercentage / 100);
+
+            updatedData.cgst = cgstAmount.toFixed(2);
+            updatedData.sgst = sgstAmount.toFixed(2);
+
+            // Calculate inclusive total based on customer selection
+            let inclusiveTotal = 0;
+            if (selectedFuel === 'HSD' || selectedFuel === 'MS') {
+                inclusiveTotal = (total + cash).toFixed(2);
+            } else {
+                inclusiveTotal = (total + cash - cgstAmount - sgstAmount).toFixed(2);
+            }
+
+            updatedData.inclusiveTotal = inclusiveTotal;
 
             // Update the corresponding state variables for UI
-            if (name === 'totalAmt' || name === 'quantity') {
+            if (name === 'totalAmt' || name === 'quantity' || name === 'rate' || name === 'driverCash') {
                 setQuantity(updatedData.quantity);
                 setTotalAmt(updatedData.totalAmt);
+                setCgst(updatedData.cgst);
+                setSgst(updatedData.sgst);
+                setInclusiveTotal(updatedData.inclusiveTotal);
             }
 
             setErrors(errorss);
@@ -167,6 +202,8 @@ function CreditSale({ petrodata }) {
             return updatedData;
         });
     };
+
+
 
     const validateEditForm = () => {
         const newErrors = {};
@@ -316,6 +353,8 @@ function CreditSale({ petrodata }) {
                 driverCash,
                 inclusiveTotal,
                 slipNo,
+                cgst,
+                sgst,
                 coupenNo,
             };
 
@@ -346,7 +385,8 @@ function CreditSale({ petrodata }) {
             setShowDropdown(false);
             setSearchQuery('');
             setSearchQueryVehicle('');
-
+            setCgst('');
+            setSgst('');
             console.log('Form submitted successfully');
             console.log(existingData);
 
@@ -388,7 +428,7 @@ function CreditSale({ petrodata }) {
 
     useEffect(() => {
         axios.post(
-            `${base_url}/petro_cake/petroAppEmployees/assignNozzleList/1`,
+            `${base_url}/assignNozzleList/1`,
             {
                 "shift": 11,
                 "emp_id": "24",
@@ -409,7 +449,7 @@ function CreditSale({ petrodata }) {
             });
     }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
     useEffect(() => {
-        axios.post(`${base_url}/petro_cake/PetroAppEmployees/getSundryDebtorsLedgerList/1`, {
+        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
             "petro_id": petrodata.petro_id,
         })
             .then(response => {
@@ -428,7 +468,7 @@ function CreditSale({ petrodata }) {
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
-            axios.post(`${base_url}/petro_cake/PetroAppEmployees/customervehList/1`, {
+            axios.post(`${base_url}/customervehList/1`, {
                 "petro_id": petrodata.petro_id,
                 "ledger_id": ledgerId, // Use the dynamic ledgerId
             })
@@ -444,6 +484,15 @@ function CreditSale({ petrodata }) {
 
     // Function to handle selection of customer
     const handleSelectCustomer = (customer) => {
+        if (selectedCustomer !== 'Cash') {
+            // Reset to default rate
+            const selectedNoozleItem = noozleData.find(item => item.Nozzle.Item.name === selectedFuel);
+            const selectedItem = ItemName.find(item => item.Item.name === selectedFuel);
+            const defaultRate = selectedNoozleItem ? selectedNoozleItem.rate : (selectedItem ? selectedItem.Item.mrp : '');
+            setRate(defaultRate);
+        } else {
+            setRate(''); // Reset rate if no fuel is selected
+        }
         setSelectedCustomer(customer.Ledger.name);
         setLedgerId(customer.Ledger.id); // Update the ledger ID
         setSearchQuery(customer.Ledger.name);
@@ -459,7 +508,7 @@ function CreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(`${base_url}/petro_cake/PetroAppEmployees/getSundryDebtorsLedgerList/1`, {
+        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
             "petro_id": petrodata.petro_id,
         })
             .then(response => {
@@ -478,7 +527,7 @@ function CreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(`${base_url}/petro_cake/PetroAppEmployees/customervehList/1`, {
+        axios.post(`${base_url}/customervehList/1`, {
             "petro_id": petrodata.petro_id,
             "ledger_id": 800,
         })
@@ -491,10 +540,23 @@ function CreditSale({ petrodata }) {
                 console.error('Error fetching data:', error);
             });
     }, [petrodata.petro_id, base_url]);
+    useEffect(() => {
+        axios.post(`${base_url}/searchItemByName/1`, {
+            "petro_id": petrodata.petro_id,
+        })
+            .then(response => {
+                console.log("setItemName", response.data.data);
+                setItemName(response.data.data);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    }, [petrodata.petro_id, base_url]);
+
 
     useEffect(() => {
         axios.post(
-            `${base_url}/petro_cake/petroAppEmployees/empcurrentShiftData/7/24/1`,
+            `${base_url}/empcurrentShiftData/7/24/1`,
             {
                 shift: 11,
                 emp_id: "24",
@@ -556,31 +618,100 @@ function CreditSale({ petrodata }) {
         }
     }, [noozleData]);
 
+
     const handleSelectfuel = (selectedValue) => {
-        // Find the selected item in noozleData
-        const selectedItem = noozleData.find(item => item.Nozzle.Item.name === selectedValue);
+        const selectedNoozleItem = noozleData.find(item => item.Nozzle.Item.name === selectedValue);
+        const selectedItem = ItemName.find(item => item.Item.name === selectedValue);
+        const rate = selectedNoozleItem ? selectedNoozleItem.rate : (selectedItem ? selectedItem.Item.mrp : '');
 
-        // If selectedItem is found, update state with selectedFuel and rate
-        if (selectedItem) {
+        if (selectedNoozleItem || selectedItem) {
             setSelectedFuel(selectedValue);
-            setRate(selectedItem.rate);
+            setRate(rate);
 
-            // Update other state values as needed
             setEditData(prevData => ({
                 ...prevData,
                 selectedFuel: selectedValue,
-                rate: selectedItem.rate
+                rate: selectedNoozleItem ? selectedNoozleItem.rate : '',
+                mrp: selectedItem ? selectedItem.Item.mrp : ''
             }));
+
+            // Recalculate only the total amount based on the current quantity and new rate
+            calculateTotalAmt(quantity, rate, selectedItem ? selectedItem.Item.mrp : '');
         }
 
         setShowDropdownFuel(false);
     };
 
+
+
+    // useEffect(() => {
+    //     const total = parseFloat(totalAmt) || 0;
+    //     const cash = parseFloat(driverCash) || 0;
+    //     setInclusiveTotal((total + cash).toFixed(2));
+    // }, [totalAmt, driverCash]);
+
     useEffect(() => {
         const total = parseFloat(totalAmt) || 0;
         const cash = parseFloat(driverCash) || 0;
-        setInclusiveTotal((total + cash).toFixed(2));
-    }, [totalAmt, driverCash]);
+        const cgstItem = ItemName.find(item => item.GstMaster.cgst !== null);
+        const sgstItem = ItemName.find(item => item.GstMaster.sgst !== null);
+        const cgstPercentage = parseFloat(cgstItem?.GstMaster?.cgst) || 0;
+        const sgstPercentage = parseFloat(sgstItem?.GstMaster?.sgst) || 0;
+        const gstItem = ItemName.find(item => item.GstMaster.gst_percentage !== null);
+        const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
+        // Calculate CGST and SGST amounts
+        let cgstAmount = 0;
+        let sgstAmount = 0;
+
+        const baseAmount = (total * gst_percentage) / (100 + gst_percentage)
+        // If customer is 'Cash', calculate only CGST and SGST
+
+        cgstAmount = baseAmount / 2;
+        sgstAmount = baseAmount / 2;
+
+
+        // Calculate inclusive total based on customer selection
+        let inclusiveTotal = 0;
+        if (selectedFuel === 'HSD' || selectedFuel === 'MS') {
+            // Otherwise, add cash amount to total
+            const cash = parseFloat(driverCash) || 0;
+            inclusiveTotal = (total + cash).toFixed(2);
+
+        } else {
+            inclusiveTotal = (total + cash - cgstAmount - sgstAmount).toFixed(2);
+        }
+
+        setInclusiveTotal(inclusiveTotal);
+    }, [totalAmt, driverCash, ItemName, selectedFuel]);
+
+    useEffect(() => {
+        const cgstItem = ItemName.find(item => item.GstMaster.cgst !== null);
+        const sgstItem = ItemName.find(item => item.GstMaster.sgst !== null);
+        const gstItem = ItemName.find(item => item.GstMaster.gst_percentage !== null);
+
+
+        if (cgstItem) {
+            // const cgstPercentage = parseFloat(cgstItem.GstMaster.cgst) || 0;
+            const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
+            const total = parseFloat(totalAmt) || 0;
+            const precalculatedCgst = (total * gst_percentage) / (100 + gst_percentage);
+            const calculatedCgst = precalculatedCgst / 2;
+            setCgst(calculatedCgst.toFixed(2));
+        } else {
+            setCgst(0); // Handle case when no item with cgst is found
+        }
+        if (sgstItem) {
+            const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
+            const total = parseFloat(totalAmt) || 0;
+            const precalculatedCgst = (total * gst_percentage) / (100 + gst_percentage);
+            const calculatedCgst = precalculatedCgst / 2;
+            setSgst(calculatedCgst.toFixed(2));
+        } else {
+            setSgst(0); // Handle case when no item with cgst is found
+        }
+
+    }, [totalAmt, ItemName]);
+
 
     const handleQuantityChange = (e) => {
         let quantityValue = parseFloat(e.target.value);
@@ -595,15 +726,16 @@ function CreditSale({ petrodata }) {
         }
 
         setQuantity(quantityValue);
-        calculateTotalAmt(quantityValue, rate);
+        calculateTotalAmt(quantityValue, rate, editData.mrp);
     };
+
 
 
     const handleTotalAmtChange = (e) => {
         let totalAmtValue = e.target.value;
-        const potentialQuantity = parseFloat(totalAmtValue) / parseFloat(rate);
+        const potentialQuantity = parseFloat(totalAmtValue) / parseFloat(rate || editData.mrp);
         if (potentialQuantity > 20000) {
-            totalAmtValue = 20000 * rate;
+            totalAmtValue = 20000 * (rate || editData.mrp);
             setErrors((prev) => ({ ...prev, totalAmt: 'Total amount results in quantity exceeding 20,000' }));
         } else {
             setErrors((prev) => ({ ...prev, totalAmt: '' }));
@@ -611,6 +743,7 @@ function CreditSale({ petrodata }) {
         setTotalAmt(totalAmtValue);
         calculateQuantity(totalAmtValue, rate);
     };
+
     const handleDriverCashChange = (e) => {
         let driverCashValue = e.target.value;
         if (driverCashValue > 10000000) {
@@ -622,18 +755,25 @@ function CreditSale({ petrodata }) {
         setDriverCash(driverCashValue);
     };
 
+
     const calculateTotalAmt = (quantity, rate) => {
-        if (!isNaN(quantity) && !isNaN(rate)) {
-            const total = parseFloat(quantity) * parseFloat(rate);
+        const effectiveRate = rate || editData.mrp;
+        if (!isNaN(quantity) && !isNaN(effectiveRate)) {
+            const total = parseFloat(quantity) * parseFloat(effectiveRate);
+            const gstAmount = (total * (sgst + cgst)) / (100 + sgst + cgst);
+            const inclusiveTotal = total - gstAmount;
             setTotalAmt(total.toFixed(2));
+            setInclusiveTotal(inclusiveTotal.toFixed(2));
         } else {
             setTotalAmt('');
+            setInclusiveTotal('');
         }
     };
 
     const calculateQuantity = (total, rate) => {
-        if (!isNaN(total) && !isNaN(rate)) {
-            let quantity = parseFloat(total) / parseFloat(rate);
+        const effectiveRate = rate || editData.mrp;
+        if (!isNaN(total) && !isNaN(effectiveRate)) {
+            let quantity = parseFloat(total) / parseFloat(effectiveRate);
             if (quantity > 20000) {
                 quantity = 20000;
                 setErrors((prev) => ({ ...prev, quantity: 'Quantity cannot exceed 20,000' }));
@@ -647,12 +787,58 @@ function CreditSale({ petrodata }) {
     };
 
 
+    const handleClear = () => {
+        setSelectedCustomer("");
+        setLedgerId(""); // Update the ledger ID
+        setSearchQuery("");
+        setSearchQueryVehicle(""); // Clear the vehicle number
+        setSelectedVehicle(null); // Clear the selected vehicle
+        setShowDropdown(true); // Hide the dropdown after selecting
+        setEditData((prevState) => ({
+            ...prevState,
+            selectedCustomer: ""
+        }));
+    };
+    const [isSwipedRight, setIsSwipedRight] = useState(false);
+    const [isSwipedLeft, setIsSwipedLeft] = useState(false);
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+
+    // Reference for the parent container to calculate drag constraints
+    const containerRef = useRef(null);
+    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+
+    // Calculate drag constraints based on container width
+    useEffect(() => {
+        if (containerRef.current) {
+            const containerWidth = containerRef.current.offsetWidth;
+            setDragConstraints({
+                left: -containerWidth / 10, // Adjust as per your requirement
+                right: containerWidth / 10 // Adjust as per your requirement
+            });
+        }
+    }, [containerRef.current,]);
+
+    // Function to handle drag end
+    const handleDragEnd = (event, info) => {
+        if (isMobile) {
+            if (info.point.x > 100) {
+                setIsSwipedRight(!isSwipedRight);
+                setIsSwipedLeft(false);
+            } else if (info.point.x < -100) {
+                setIsSwipedRight(false);
+                setIsSwipedLeft(!isSwipedLeft);
+            } else {
+                setIsSwipedRight(false);
+                setIsSwipedLeft(false);
+            }
+        }
+    };
     return (
 
-        <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
-            <Navbar />
-            <main className="flex-1 relative z-0 overflow-y-auto focus:outline-none">
-                <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>Credit Sale</h1>
+        <div className="h-full  min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
+            <Navbar petrodata={petrodata}  />
+            <main className="flex-1 relative z-0 overflow-x-hidden overflow-y-auto focus:outline-none">
+                <h1 className='block fixed w-screen lg:hidden text-white  mx-auto   text-center top-4 text-2xl z-50'>Credit Sale</h1>
                 <div className="flex flex-wrap gap-3">
                     <Button className="bg-navbar fixed  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
                         <img src={add} className="w-8 h-8" alt="" />
@@ -699,14 +885,24 @@ function CreditSale({ petrodata }) {
 
                                                     />
                                                     {errors.selectedCustomer && <span className="text-red-500 text-sm">{errors.selectedCustomer}</span>}
-
-                                                    {showDropdown && ( // Show dropdown only if showDropdown is true
-                                                        <ul ref={dropdownRef} className="mt-1  capitalize  absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                    {selectedCustomer && (
+                                                        <button
+                                                            onClick={handleClear}
+                                                            className="absolute top-1 w-8 h-8 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-1"
+                                                        >
+                                                            &#x2715;
+                                                        </button>
+                                                    )}
+                                                    {showDropdown && (
+                                                        <ul ref={dropdownRef} className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                            <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'cash', name: 'Cash' } })}>
+                                                                Cash
+                                                            </li>
                                                             {customerdata.length === 0 ? (
                                                                 <li className="py-2 px-3 text-gray-500">No data available</li>
                                                             ) : (
                                                                 customerdata
-                                                                    .filter(item => item.Ledger.name.toLowerCase().includes(searchQuery.toLowerCase())) // Filter based on search query
+                                                                    .filter(item => item.Ledger.name.toLowerCase().includes(searchQuery.toLowerCase()))
                                                                     .map((item) => (
                                                                         <li key={item.Ledger.id} className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer(item)}>
                                                                             {item.Ledger.name}
@@ -732,7 +928,7 @@ function CreditSale({ petrodata }) {
                                                                     onChange={(e) => setSearchQueryVehicle(e.target.value)}
                                                                     placeholder="Enter vehicle manually"
                                                                     className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                    maxLength={10}
+                                                                    maxLength="10"
                                                                 />
                                                             ) : (
                                                                 <>
@@ -767,7 +963,7 @@ function CreditSale({ petrodata }) {
                                                             onChange={(e) => setSelectedVehicle(e.target.value)}
                                                             placeholder="Enter vehicle manually"
                                                             className="block w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                            maxLength={10}
+                                                            maxLength="10"
                                                         />
                                                     )}
 
@@ -776,28 +972,36 @@ function CreditSale({ petrodata }) {
                                             </div>
 
                                             {/* Fuel Type */}
-
                                             <div className="flex flex-col col-span-1 gap-1">
-                                                <label htmlFor="FuelType">Fuel Type</label>
+                                                <label htmlFor="itemOrFuelType">{selectedCustomer === 'Cash' ? 'Item' : 'Fuel Type'}</label>
                                                 <div className="mt-1 relative">
                                                     <select
-                                                        id="FuelType"
+                                                        id="itemOrFuelType"
                                                         value={selectedFuel}
-
                                                         onChange={(e) => handleSelectfuel(e.target.value)}
                                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                     >
-                                                        <option value="">Select Fuel</option>
-                                                        {noozleData ? (
-                                                            noozleData.map((item) => (
-                                                                <option key={item.NozzlesAssign.id} value={item.Nozzle.Item.name}>
-                                                                    {item.Nozzle.Item.name}
-                                                                </option>
-                                                            ))
-                                                        ) : (
-                                                            <option disabled>Loading...</option>
-                                                        )}
+                                                        <option value="">Select {selectedCustomer === 'Cash' ? 'Item' : 'Fuel'}</option>
+                                                        {selectedCustomer !== 'Cash' && (
+                                                            <>
+                                                                {noozleData.map((item) => (
+
+                                                                    <option key={item.NozzlesAssign.id} value={item.Nozzle.Item.name}>
+                                                                        {item.Nozzle.Item.name}
+                                                                    </option>
+
+                                                                ))
+
+                                                                }
+                                                            </>)}
+                                                        {ItemName.map((item) => (
+                                                            <option key={item.Item.id} value={item.Item.name}>
+                                                                {item.Item.name}
+                                                            </option>
+                                                        ))
+                                                        }
                                                     </select>
+                                                    {/* {selectedCustomer} */}
                                                     {errors.selectedFuel && <span className="text-red-500 text-sm">{errors.selectedFuel}</span>}
                                                 </div>
                                             </div>
@@ -808,7 +1012,7 @@ function CreditSale({ petrodata }) {
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Slip No</label>
                                                 <input
-                                                    type="number"
+                                                    type="text"
                                                     value={slipNo}
                                                     onChange={(e) => setSlipNo(e.target.value)}
                                                     id="slip"
@@ -821,7 +1025,7 @@ function CreditSale({ petrodata }) {
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="coupen">Coupen No</label>
                                                 <input
-                                                    type="number"
+                                                    type="text"
                                                     value={coupenNo}
                                                     onChange={(e) => setCoupenNo(e.target.value)}
                                                     id="coupen"
@@ -829,22 +1033,29 @@ function CreditSale({ petrodata }) {
                                                     maxLength={5}
                                                 />
                                             </div>
-
-                                            {/* Rate */}
-                                            <div className="flex flex-col col-span-1  gap-1">
+                                            {/* rate */}
+                                            <div className="flex flex-col col-span-1 gap-1">
                                                 <label htmlFor="rate">Rate</label>
                                                 <div className="mt-1 relative">
                                                     <input
                                                         type="number"
                                                         value={rate}
-                                                        readOnly
-                                                        disabled
+                                                        readOnly={selectedFuel === 'HSD' || selectedFuel === 'MS'}
+                                                        disabled={selectedFuel === 'HSD' || selectedFuel === 'MS'}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (value.length <= 7) {
+                                                                setRate(value);
+                                                                // Recalculate the total amount based on the new rate
+                                                                calculateTotalAmt(quantity, value, editData.mrp);
+                                                            }
+                                                        }}
                                                         placeholder="Rate"
                                                         className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-
                                                     />
                                                 </div>
                                             </div>
+
 
                                             {/* Quantity */}
                                             <div className="flex flex-col col-span-1  gap-1">
@@ -877,8 +1088,6 @@ function CreditSale({ petrodata }) {
                                                 {errors.totalAmt && <span className="text-red-500 text-sm">{errors.totalAmt}</span>}
 
                                             </div>
-
-                                            {/* Driver Cash */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="Coupen">Driver Cash</label>
                                                 <input
@@ -894,8 +1103,41 @@ function CreditSale({ petrodata }) {
                                                 {errors.driverCash && <span className="text-red-500 text-sm">{errors.driverCash}</span>}
 
                                             </div>
+                                            {(selectedFuel !== 'HSD' && selectedFuel !== 'MS') &&
+                                                <div className="flex flex-col col-span-1  gap-1">
+                                                    <label htmlFor="sgst">SGST</label>
+                                                    <input
+                                                        type="number"
+                                                        id="sgst"
+                                                        value={sgst}
+                                                        readOnly
+                                                        className="border p-2 border-gray-300 rounded"
+                                                    // required
+                                                    />
+                                                    {errors.sgst && <span className="text-red-500 text-sm">{errors.sgst}</span>}
+                                                </div>
+
+                                            }
+
+                                            {(selectedFuel !== 'HSD' && selectedFuel !== 'MS') &&
+                                                <div className="flex flex-col col-span-1  gap-1">
+                                                    <label htmlFor="cgst">CGST</label>
+                                                    <input
+                                                        type="number"
+                                                        id="cgst"
+                                                        value={cgst}
+                                                        readOnly
+                                                        className="border p-2 border-gray-300 rounded"
+                                                    // required
+                                                    />
+                                                    {errors.cgst && <span className="text-red-500 text-sm">{errors.cgst}</span>}
+                                                </div>
+
+                                            }
+                                            {/* Driver Cash */}
+
                                             {/* Inclusive Total */}
-                                            <div className="flex flex-col col-span-2 lg:col-span-3 gap-1">
+                                            <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
                                                 <label htmlFor="Coupen">Inclusive Total</label>
                                                 <input
                                                     type="number"
@@ -929,7 +1171,9 @@ function CreditSale({ petrodata }) {
                 </Modal>
 
                 {!isEditModalOpen && (
-                    <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-20 mx-5 fixed rounded-md px-8 py-5 '><div className="  flex justify-between">
+                    <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:fixed relative lg:mt-5 mt-8 mx-5  rounded-md px-8 py-5 '><div className="  flex justify-between">
+                      
+                    
                         <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                             Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
                         </h2>
@@ -937,32 +1181,62 @@ function CreditSale({ petrodata }) {
                     </div>
                     </div>
                 )}
-                <div className=" mt-36 mx-5 grid grid-cols-1 lg:mt-20 lg:grid-cols-2 gap-3 lg:gap-10">
+                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-2 gap-3 lg:gap-5">
                     {submittedData.map((data, index) => (
                         // Check if essential data fields are present before rendering the card
                         data?.selectedCustomer && (
-                            <div key={index} className=" flex select-none flex-col mt-10 justify-between lg:max-w-3xl max-w-sm lg:p-6 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                            <div ref={containerRef} className="relative flex flex-row overflow-hidden">
+                                {isMobile && (
+                                    <>
+                                        {isSwipedRight && (
+                                            <button className=" h-full flex flex-row rounded-lg bg-navbar justify-around  " onClick={() => handleEdit(index)}>
+                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
+                                                    </svg>
+                                                </div>
 
-                                <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{data.selectedCustomer}</h5>
-                                <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                    {data.selectedVehicle && <p className="text-orrange font-semibold text-base">{data.selectedVehicle}</p>}
-                                    {data.selectedFuel && <p className="text-gray-700 font-semibold">Fuel: <span className="font-bold">{data.selectedFuel}</span> </p>}
-                                    {data.rate && <p className="text-gray-700 font-semibold">Rate: <span className="font-bold">{data.rate}</span> </p>}
-                                    {data.quantity && <p className="text-gray-700 font-semibold">Quantity: <span className="font-bold">{data.quantity}</span> </p>}
-                                    {data.totalAmt && <p className="text-gray-700 font-semibold">Total Amt: <span className="font-bold">{data.totalAmt}</span> </p>}
-                                    {data.driverCash && <p className="text-gray-700 font-semibold">Driver Cash: <span className="font-bold">{data.driverCash}</span> </p>}
-                                    {data.slipNo && <p className="text-gray-700 font-semibold">Slip No: <span className="font-bold">{data.slipNo}</span> </p>}
-                                    {data.coupenNo && <p className="text-gray-700 font-semibold">Coupen No: <span className="font-bold">{data.coupenNo}</span> </p>}
-                                    {data.inclusiveTotal && <p className="text-gray-700 font-semibold">Inclusive Total: <span className="font-bold">{data.inclusiveTotal}</span> </p>}
-                                </div>
-                                <div className="flex flex-row justify-around mt-5">
-                                    <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" /></svg>
-                                    </button>
-                                    <button className="px-2 w-10 h-10" onClick={() => handleRemove(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" /></svg>
-                                    </button>
-                                </div>
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                                <motion.div
+                                    key={index}
+                                    className="flex select-none flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                    initial={{ x: 0 }}
+                                    animate={{ x: isSwipedRight ? 100 : isSwipedLeft ? -100 : 0 }}
+                                    drag={isMobile ? "x" : false}
+                                    dragConstraints={dragConstraints}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                        {data.selectedCustomer}
+                                    </h5>
+                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                        {data.selectedVehicle && <p className="text-orrange font-semibold text-base">{data.selectedVehicle}</p>}
+                                        {data.selectedFuel && <p className="text-gray-700 font-semibold">Fuel: <span className="font-bold">{data.selectedFuel}</span></p>}
+                                        {data.rate && <p className="text-gray-700 font-semibold">Rate: <span className="font-bold">{data.rate}</span></p>}
+                                        {data.quantity && <p className="text-gray-700 font-semibold">Quantity: <span className="font-bold">{data.quantity}</span></p>}
+                                        {data.totalAmt && <p className="text-gray-700 font-semibold">Total Amt: <span className="font-bold">{data.totalAmt}</span></p>}
+                                        {data.driverCash && <p className="text-gray-700 font-semibold">Driver Cash: <span className="font-bold">{data.driverCash}</span></p>}
+                                        {data.slipNo && <p className="text-gray-700 font-semibold">Slip No: <span className="font-bold">{data.slipNo}</span></p>}
+                                        {data.coupenNo && <p className="text-gray-700 font-semibold">Coupen No: <span className="font-bold">{data.coupenNo}</span></p>}
+                                        {data.inclusiveTotal && <p className="text-gray-700 font-semibold">Inclusive Total: <span className="font-bold">{data.inclusiveTotal}</span></p>}
+                                    </div>
+                                </motion.div>
+                                {isMobile && (
+                                    <>
+                                        {isSwipedLeft && (
+                                            <button className=" h-full flex flex-row rounded-lg bg-redish justify-around  " onClick={() => handleRemove(index)}>
+                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         )
                     ))}
@@ -991,6 +1265,7 @@ function CreditSale({ petrodata }) {
                                                 {/* Customer */}
                                                 <div className="flex flex-col gap-1">
                                                     <label htmlFor="customer" className="block text-sm font-medium text-gray-700">Customer</label>
+
                                                     <div className="mt-1 relative">
                                                         <input
                                                             type="text"
@@ -1000,11 +1275,23 @@ function CreditSale({ petrodata }) {
                                                             onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
                                                             placeholder="Search customers"
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+
                                                         />
-                                                        {errorss.selectedCustomer && <span className="text-red-500 text-sm">{errorss.selectedCustomer}</span>}
+                                                        {errors.selectedCustomer && <span className="text-red-500 text-sm">{errors.selectedCustomer}</span>}
+                                                        {selectedCustomer && (
+                                                            <button
+                                                                onClick={handleClear}
+                                                                className="absolute top-1 w-8 h-8 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-1"
+                                                            >
+                                                                &#x2715;
+                                                            </button>
+                                                        )}
 
                                                         {showDropdown && (
-                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                            <ul ref={dropdownRef} className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                                <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'cash', name: 'Cash' } })}>
+                                                                    Cash
+                                                                </li>
                                                                 {customerdata.length === 0 ? (
                                                                     <li className="py-2 px-3 text-gray-500">No data available</li>
                                                                 ) : (
@@ -1033,7 +1320,7 @@ function CreditSale({ petrodata }) {
                                                                         onChange={handleEditChange}
                                                                         placeholder="Enter vehicle manually"
                                                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                        maxLength={10}
+                                                                        maxLength="10"
                                                                     />
 
                                                                 ) : (
@@ -1046,7 +1333,7 @@ function CreditSale({ petrodata }) {
                                                                             placeholder="Search vehicle"
                                                                             name="selectedVehicle"
                                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                            maxLength={10}
+                                                                            maxLength="10"
                                                                         />
                                                                         {showDropdownVehicle && (
                                                                             <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
@@ -1071,7 +1358,7 @@ function CreditSale({ petrodata }) {
                                                                 placeholder="Enter vehicle manually"
                                                                 name="SearchQueryVehicle"
                                                                 className="block w-full border p-2 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                                maxLength={10}
+                                                                maxLength="10"
                                                             />
 
                                                         )}
@@ -1082,38 +1369,40 @@ function CreditSale({ petrodata }) {
                                                 </div>
 
                                                 {/* Fuel Type */}
-                                                <div className="flex flex-col gap-1">
-                                                    <label htmlFor="Fuel Type">Fuel Type</label>
-                                                    <div className="mt-1 relative">
-                                                        <input
-                                                            type="text"
-                                                            value={editData.selectedFuel}
-                                                            name="selectedFuel"
+                                                <div className="flex flex-col col-span-1 gap-1">
 
-                                                            onChange={handleEditChange}
-                                                            onClick={() => setShowDropdownFuel(true)}
-                                                            placeholder="Fuel"
+                                                    <label htmlFor="itemOrFuelType">{selectedCustomer === 'Cash' ? 'Item' : 'Fuel Type'}</label>
+                                                    <div className="mt-1 relative">
+                                                        <select
+                                                            id="itemOrFuelType"
+                                                            value={editData.selectedFuel}
+                                                            onChange={(e) => handleSelectfuel(e.target.value)}
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                        />
-                                                        {errorss.selectedFuel && <span className="text-red-500 text-sm">{errorss.selectedFuel}</span>}
-                                                        {showDropdownFuel && noozleData && (
-                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                {noozleData.length === 0 ? (
-                                                                    <li className="py-2 px-3 text-gray-500">No data available</li>
-                                                                ) : (
-                                                                    noozleData
-                                                                        .filter(item => item.Nozzle.Item.name.toLowerCase().includes(editData.selectedFuel.toLowerCase()))
-                                                                        .map((item, index) => (
-                                                                            <li key={index} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectfuel(item.Nozzle.Item.name)}>
-                                                                                {item.Nozzle.Item.name}
-                                                                            </li>
-                                                                        ))
-                                                                )}
-                                                            </ul>
-                                                        )}
+                                                        >
+                                                            <option value="">Select {selectedCustomer === 'Cash' ? 'Item' : 'Fuel'}</option>
+                                                            {selectedCustomer !== 'Cash' && (
+                                                                <>
+                                                                    {noozleData.map((item) => (
+
+                                                                        <option key={item.NozzlesAssign.id} value={item.Nozzle.Item.name}>
+                                                                            {item.Nozzle.Item.name}
+                                                                        </option>
+
+                                                                    ))
+
+                                                                    }
+                                                                </>)}
+                                                            {ItemName.map((item) => (
+                                                                <option key={item.Item.id} value={item.Item.name}>
+                                                                    {item.Item.name}
+                                                                </option>
+                                                            ))
+                                                            }
+                                                        </select>
+                                                        {/* {selectedCustomer} */}
+                                                        {errors.selectedFuel && <span className="text-red-500 text-sm">{errors.selectedFuel}</span>}
                                                     </div>
                                                 </div>
-
                                                 {/* Slip No */}
                                                 <div className="flex flex-col gap-1">
                                                     <label htmlFor="slip">Slip No</label>
@@ -1124,7 +1413,7 @@ function CreditSale({ petrodata }) {
                                                         onChange={handleEditChange}
                                                         id="slip"
                                                         className="border p-2 border-gray-300 rounded"
-                                                        maxLength={5}
+                                                        maxLength="5"
                                                     />
                                                 </div>
 
@@ -1138,7 +1427,7 @@ function CreditSale({ petrodata }) {
                                                         onChange={handleEditChange}
                                                         id="coupen"
                                                         className="border p-2 border-gray-300 rounded"
-                                                        maxLength={5}
+                                                        maxLength="5"
                                                     />
                                                     {errorss.coupenNo && (
                                                         <span className="text-red-500 text-sm">{errorss.coupenNo}</span>
@@ -1159,22 +1448,23 @@ function CreditSale({ petrodata }) {
                                                     {errorss.quantity && <span className="text-red-500 text-sm">{errorss.quantity}</span>}
                                                 </div>
                                                 {/* Rate */}
-                                                <div className="flex flex-col gap-1">
+                                                <div className="flex flex-col col-span-1 gap-1">
                                                     <label htmlFor="rate">Rate</label>
                                                     <div className="mt-1 relative">
                                                         <input
                                                             type="number"
-                                                            value={editData.rate}
                                                             name="rate"
-                                                            readOnly
-                                                            disabled
+                                                            value={editData.rate || editData.mrp}
+                                                            readOnly={selectedFuel === 'HSD' || selectedFuel === 'MS'}
+                                                            disabled={selectedFuel === 'HSD' || selectedFuel === 'MS'}
+                                                            onChange={handleEditChange}
                                                             placeholder="Rate"
                                                             className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-
                                                         />
-
                                                     </div>
                                                 </div>
+
+
 
                                                 {/* Total Amt */}
                                                 <div className="flex flex-col gap-1">
@@ -1204,7 +1494,37 @@ function CreditSale({ petrodata }) {
                                                     />
                                                     {errorss.driverCash && <span className="text-red-500 text-sm">{errorss.driverCash}</span>}
                                                 </div>
+                                                {(selectedFuel !== 'HSD' && selectedFuel !== 'MS') &&
+                                                    <div className="flex flex-col col-span-1  gap-1">
+                                                        <label htmlFor="sgst">SGST</label>
+                                                        <input
+                                                            type="number"
+                                                            id="sgst"
+                                                            value={editData.sgst}
+                                                            readOnly
+                                                            className="border p-2 border-gray-300 rounded"
+                                                        // required
+                                                        />
+                                                        {errors.sgst && <span className="text-red-500 text-sm">{errors.sgst}</span>}
+                                                    </div>
 
+                                                }
+
+                                                {(selectedFuel !== 'HSD' && selectedFuel !== 'MS') &&
+                                                    <div className="flex flex-col col-span-1  gap-1">
+                                                        <label htmlFor="cgst">CGST</label>
+                                                        <input
+                                                            type="number"
+                                                            id="cgst"
+                                                            value={editData.cgst}
+                                                            readOnly
+                                                            className="border p-2 border-gray-300 rounded"
+                                                        // required
+                                                        />
+                                                        {errors.cgst && <span className="text-red-500 text-sm">{errors.cgst}</span>}
+                                                    </div>
+
+                                                }
                                                 {/* Inclusive Total */}
                                                 <div className="flex flex-col gap-1">
                                                     <label htmlFor="inclusiveTotal">Inclusive Total</label>

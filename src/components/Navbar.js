@@ -7,7 +7,7 @@ import add from "../images/add.svg";
 import { motion, useAnimation } from 'framer-motion';
 import Logout from "../components/Logout";
 
-function Navbar() {
+function Navbar({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const controls = useAnimation();
 
@@ -52,14 +52,16 @@ function Navbar() {
                 <div className="flex flex-col w-64">
                     <div className="h-0 flex-1 flex flex-col pt-10 pb-4 overflow-y-auto bg-navbar">
                         {/* Sidebar Links */}
-                        <div className="flex items-center flex-shrink-0 px-4">
+                        <div className="flex flex-col items-start flex-shrink-0 px-5">
                             <img
-                                className="h-10 mx-auto w-auto"
+                                className="h-10 mb-5 w-auto"
                                 src={logo}
                                 alt="Your Company"
                             />
+                            <h2 className="block    text-white text-md lg:text-xl font-normal mb-0  lg:mb-1" >Hey {petrodata.name}</h2>
+                            <h2 className="block    text-white text-md lg:text-xl font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
                         </div>
-                        <div className="mt-5 flex-1 flex flex-col">
+                        <div className="mt-2 flex-1 flex flex-col">
                             <nav className="flex-1 px-4 flex flex-col gap-7 mt-7 bg-navbar space-y-1">
                                 <Link
                                     to="/dashboard"
@@ -80,15 +82,15 @@ function Navbar() {
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/credit-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
                                     aria-current={window.location.pathname === '/credit-sale' ? 'page' : undefined}
                                 >
-                                    Credit Sale
+                                    Credit/Cash Sale
                                 </Link>
-                                <Link
+                                {/* <Link
                                     to="/cash-sale"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/cash-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
                                     aria-current={window.location.pathname === '/cash-sale' ? 'page' : undefined}
                                 >
                                     Cash Sale
-                                </Link>
+                                </Link> */}
                                 <Link
                                     to="/expenses"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/expenses' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
@@ -183,15 +185,15 @@ function Navbar() {
                                     className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/credit-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
                                     aria-current={window.location.pathname === '/credit-sale' ? 'page' : undefined}
                                 >
-                                    Credit Sale
+                                    Credit/Cash Sale
                                 </Link>
-                                <Link
+                                {/* <Link
                                     to="/cash-sale"
                                     className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/cash-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
                                     aria-current={window.location.pathname === '/cash-sale' ? 'page' : undefined}
                                 >
                                     Cash Sale
-                                </Link>
+                                </Link> */}
                                 <Link
                                     to="/expenses"
                                     className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/expenses' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
@@ -223,8 +225,8 @@ function Navbar() {
             </div>
 
             {/* Hamburger Icon for Mobile */}
-            <div className="flex flex-col ml-0 lg:ml-[17%] w-0 flex-1 overflow-hidden">
-                <div className="w-screen z-10 flex-shrink-0 mix-blend-overlay	 fixed flex h-14 bg-navbar  border-black lg:hidden">
+            <div className="flex flex-col ml-0 lg:ml-[17%] mix-blend-overlay  fixed z-50  w-0 flex-1 overflow-hidden">
+                <div className="w-screen  flex-shrink-0 z-50	 fixed flex h-14 bg-navbar  border-black lg:hidden">
                     <button
                         onClick={() => setShowMobileMenu(!showMobileMenu)}
                         type="button"

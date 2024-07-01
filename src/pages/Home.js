@@ -34,7 +34,8 @@ function Home({ data }) {
                     </h2>
                     <h1 className="font-extrabold text-4xl lg:text-5xl">
                         {" "}
-                        {data.petro_name}
+
+                        orbit pump
                     </h1>
                 </div>
 

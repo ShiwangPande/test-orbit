@@ -38,7 +38,7 @@ const NoozleReading = ({ petrodata }) => {
 
     useEffect(() => {
         axios.post(
-            `${base_url}/petro_cake/petroAppEmployees/assignNozzleList/1`,
+            `${base_url}/assignNozzleList/1`,
             {
                 "shift": 11,
                 "emp_id": "24",
@@ -169,7 +169,7 @@ const NoozleReading = ({ petrodata }) => {
 
     useEffect(() => {
         axios.post(
-            `${base_url}/petro_cake/petroAppEmployees/empcurrentShiftData/7/24/1`,
+            `${base_url}/empcurrentShiftData/7/24/1`,
             {
                 shift: 11,
                 emp_id: "24",
@@ -235,8 +235,8 @@ const NoozleReading = ({ petrodata }) => {
     };
 
     return (
-        <div className="h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
-            <Navbar />
+        <div className="h-full min-h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
+            <Navbar petrodata={petrodata}  />
             <main className="flex-1  focus:outline-none">
                 <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>Nozzle Reading</h1>
                 <div className='pt-14 lg:pt-10 relative z-0 overflow-y-auto'>
@@ -393,7 +393,7 @@ const NoozleReading = ({ petrodata }) => {
                         </div>
                     )}
                     {!isEditModalOpen && (
-                        <div className='w-[90%] bg-navbar rounded-md px-8 py-5 mx-auto lg:mx-10'><div className="  flex justify-between">
+                        <div className='w-[90%] h-auto bg-navbar rounded-md px-8 py-5 mx-auto lg:mx-10'><div className="  flex justify-between">
                             <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                                 Date: <span className='text-red-500 font-medium'>        {shiftdata.date}</span>
                             </h2>
@@ -402,7 +402,7 @@ const NoozleReading = ({ petrodata }) => {
                         </div>
                     )}
                     {!isEditModalOpen && (
-                        <div className="flex flex-col w-full h-[90%] gap-2 py-2">
+                        <div className="flex  flex-col w-full h-[90%] gap-2 py-2">
                             {submittedData && submittedData.map((data, index) => (
                                 <div key={index} className="bg-white mx-auto mt-10 lg:my-auto flex rounded-lg flex-col gap-8 justify-center w-4/5 lg:w-1/2 h-fit p-4 shadow">
                                     <div className='flex flex-col lg:flex-row select-none justify-around mt-5 gap-5 h-full w-full'>

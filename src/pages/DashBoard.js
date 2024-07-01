@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-function DashBoard({ petrodata }) {
+function DashBoard({ petrodata, }) {
     const [creditdata, setCreditData] = useState([]);
     const nozzleData = JSON.parse(localStorage.getItem('submittedNozzleData')) || [];
     const CreditData = JSON.parse(localStorage.getItem('submittedData')) || [];
+    const ExpensesData = JSON.parse(localStorage.getItem('submittedExpensesData')) || [];
+    const RecieptData = JSON.parse(localStorage.getItem('submittedReceiptData')) || [];
     const hasValidReadings = (data) => {
         if (!data || !data.readings) return false;
         return Object.values(data.readings).some(
@@ -44,8 +46,14 @@ function DashBoard({ petrodata }) {
     }
     const hasValidData = (data) => data?.selectedCustomer;
 
+    const hasValidExpenseData = (data) => data?.selectedLedgerName;
+    const hasValidRecieptData = (data) => data?.selectedLedgerName;
+
     const filteredData = nozzleData.filter(hasValidReadings);
     const filteredCreditData = CreditData.filter(hasValidData);
+    const filteredExpensesData = ExpensesData.filter(hasValidExpenseData);
+    const filteredRecieptData = RecieptData.filter(hasValidRecieptData);
+
 
 
     let totalAmount = 0;
@@ -64,13 +72,28 @@ function DashBoard({ petrodata }) {
 
     let total_credit_amount = 0;
     let total_driver_cash = 0;
+    let total_expenses = 0;
+    let total_receipt = 0;
     filteredCreditData.forEach(data => {
-        if (data.driverCash) {
-            total_driver_cash += parseFloat(data.driverCash);
-        }
+
         if (data.totalAmt) {
             total_credit_amount += parseFloat(data.totalAmt);
 
+        }
+    });
+    filteredCreditData.forEach(data => {
+        if (data.driverCash > 0) {
+            total_driver_cash += parseFloat(data.driverCash);
+        }
+    });
+    filteredExpensesData.forEach(data => {
+        if (data.amount) {
+            total_expenses += parseFloat(data.amount);
+        }
+    });
+    filteredRecieptData.forEach(data => {
+        if (data.amount) {
+            total_receipt += parseFloat(data.amount);
         }
     });
     total_credit_amount = parseFloat(total_credit_amount).toFixed(2)
@@ -84,7 +107,7 @@ function DashBoard({ petrodata }) {
     const formattedtotalAmount = customFormat(totalAmount)
     useEffect(() => {
         axios.post(
-            `${base_url}/petro_cake/petroAppEmployees/empcurrentShiftData/7/24/1`,
+            `${base_url}/empcurrentShiftData/7/24/1`,
             {
                 shift: 11,
                 emp_id: "24",
@@ -103,25 +126,28 @@ function DashBoard({ petrodata }) {
             });
     }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
     let cashBalance = 0
-    cashBalance = cashsale - total_driver_cash
+    cashBalance = cashsale - total_driver_cash - total_expenses + total_receipt;
     const formattedcashBalance = customFormat(cashBalance);
     const formattedtotal_credit_amount = customFormat(total_credit_amount);
     const formattedcashsale = customFormat(cashsale);
     const formattedtotal_driver_cash = customFormat(total_driver_cash);
+    const formattedtotal_expenses = customFormat(total_expenses);
+    const formattedtotal_receipt = customFormat(total_receipt);
     return (
         <div className="h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
 
-            <Navbar />
+            <Navbar petrodata={petrodata}/>
             <main className="flex-1 relative z-0 overflow-y-auto  focus:outline-none">
                 <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>DashBoard</h1>
-                <div className='w-[90vw] lg:w-[80.5vw]  bg-navbar lg:mt-5 mt-20 mx-5 fixed rounded-md px-8 py-5 '><div className="  flex justify-between">
+                <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-8 py-5 '><div className="  flex justify-between">
                     <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
                         Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
                     </h2>
                     <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
                 </div>
                 </div>
-                <div className='flex flex-col bg-white border-3 drop-shadow-2xl  border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 mt-40 lg:mt-28'>
+                <h1 className='text-2xl w-full text-center mt-40 font-bold'>Hey, {petrodata.name}</h1>
+                <div className='flex flex-col bg-white border-3 drop-shadow-2xl  border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 mt-40 lg:mt-14'>
 
                     <div className='flex flex-col  px-4 lg:px-10 w-full'>
 
@@ -129,10 +155,10 @@ function DashBoard({ petrodata }) {
 
 
                             <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-2xl font-semibold">Total Sale Amount</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-2xl" >:</div>
+                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
 
-                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-2xl" >   ₹{formattedtotalAmount}</h1>
+                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >   ₹{formattedtotalAmount}</h1>
                             </div>
                         )}
 
@@ -142,11 +168,11 @@ function DashBoard({ petrodata }) {
 
                                 <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
 
-                                    <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-2xl font-semibold">
+                                    <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">
                                         Total Credit Amount
                                     </h2>
-                                    <div className="font-bold text-xl col-span-1 lg:text-2xl" >:</div>
-                                    <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-2xl" >    ₹{formattedtotal_credit_amount} </h1>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                                    <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >    ₹{formattedtotal_credit_amount} </h1>
                                 </div>
 
 
@@ -157,11 +183,11 @@ function DashBoard({ petrodata }) {
 
                             <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
 
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-2xl font-semibold">
+                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">
                                     Cash Sale Amount
                                 </h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-2xl" >:</div>
-                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-2xl" >    ₹{formattedcashsale} </h1>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >    ₹{formattedcashsale} </h1>
 
                             </div>
 
@@ -172,9 +198,34 @@ function DashBoard({ petrodata }) {
                             <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
 
 
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-2xl font-semibold"> Driver Cash </h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-2xl" >:</div>
-                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-2xl" >   ₹{formattedtotal_driver_cash} </h1>
+                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold"> Driver Cash </h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >   ₹{formattedtotal_driver_cash} </h1>
+                            </div>
+
+
+                        )}
+
+                        {filteredExpensesData.length > 0 && (
+
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
+
+
+                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold"> Total Expense </h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >   ₹{formattedtotal_expenses} </h1>
+                            </div>
+
+
+                        )}
+                        {filteredRecieptData.length > 0 && (
+
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
+
+
+                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold"> Total Reciept </h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                                <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" >   ₹{formattedtotal_receipt} </h1>
                             </div>
 
 
@@ -182,11 +233,10 @@ function DashBoard({ petrodata }) {
                         <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full  gap-2  my-5 '>
 
 
-                            <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-2xl font-semibold"> Balance Cash </h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-2xl" >:</div>
-                            <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-2xl" > ₹{formattedcashBalance} </h1>
+                            <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">  Cash Balance </h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl" >:</div>
+                            <h1 className="font-bold text-lg  col-span-4 lg:col-span-3 text-end	  lg:text-xl" > ₹{formattedcashBalance} </h1>
                         </div>
-
                     </div>
 
                 </div>

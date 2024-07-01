@@ -4,29 +4,53 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import navlogo from "../images/loginlogo.svg";
+import axios from 'axios';
 
 const mpinSchema = yup.object().shape({
     mpin: yup.string().required('MPIN is required').matches(/^[0-9]{4}$/, 'MPIN must be 4 digits'),
     confirmMpin: yup.string().oneOf([yup.ref('mpin'), null], 'MPINs must match')
 });
 
-function SetupMPIN({ mobile }) {
+function SetupMPIN({ petrodata }) {
+    const mobile = JSON.parse(localStorage.getItem('userMobile')) || '';
+
     const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: yupResolver(mpinSchema),
     });
     const [setupError, setSetupError] = useState('');
+    const base_url = process.env.REACT_APP_API_URL;
 
-    const onSubmit = (formData) => {
+    const onSubmit = async (formData) => {
         const { mpin } = formData;
+        if (petrodata.mpin === null) {
+            try {
+                const response = await axios.post(
+                    `${base_url}/addMpin/1`,
+                    {
+                        "user_id": petrodata.user_id,
+                        "mpin": mpin
+                    }
+                );
 
-        // Save MPIN securely
-        localStorage.setItem(`${mobile}_mpin`, mpin);
-        navigate('/dashboard');
+                if (response.data.status === 201 && response.data.msg === "SUCCESSFUL") {
+                    navigate('/dashboard');
+                } else {
+                    setSetupError('Failed to set up MPIN. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error setting up MPIN:', error);
+                setSetupError('Failed to set up MPIN. Please try again.');
+            }
+        } else {
+            setSetupError("MPIN is already set");
+        }
     };
-
+    const handleback = () => {
+        navigate('/mpin-login')
+    }
     return (
-        <div className='overflow-hidden bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 h-screen'>
+        <div className='overflow-hidden w-full bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 h-screen'>
             <div className='mx-auto flex justify-center items-center h-[90vh]'>
                 <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gradient-to-b from-amber-200 to-orange-400 mx-5 max-w-sm p-8 rounded-lg shadow-md">
                     <img className='mt-5 mb-8 mx-auto' src={navlogo} alt="" />
@@ -64,6 +88,12 @@ function SetupMPIN({ mobile }) {
                         Set MPIN
                     </button>
                 </form>
+                <div className='flex items-center mx-auto'>
+                    <button type="button" className="w-fit p-5 mx-auto bg-black text-white py-2 rounded-lg hover:bg-black focus:outline-none"
+                        onClick={handleback}>
+                        Back
+                    </button>
+                </div>
             </div>
         </div>
     );

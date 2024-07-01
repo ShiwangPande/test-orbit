@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function LogoutButton({ setIsAuthenticated }) {
-  
+
 
     const navigate = useNavigate();
 
@@ -11,9 +11,12 @@ function LogoutButton({ setIsAuthenticated }) {
         // For example, if using localStorage to store authentication token:
         localStorage.removeItem('submittedNozzleData');
         localStorage.removeItem('submittedData');
+        localStorage.removeItem('submittedRecieptData');
+        localStorage.removeItem('submittedExpensesData');
 
         // Redirect to the login page or any other appropriate page
-        // setIsAuthenticated(false);
+        // localStorage.removeItem('isAuthenticated');
+    
         navigate('/');
     };
 
