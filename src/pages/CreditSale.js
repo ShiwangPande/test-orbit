@@ -855,7 +855,7 @@ function CreditSale({ petrodata }) {
 
             <Navbar petrodata={petrodata} />
 
-            <main className="flex-1 relative z-0 overflow-x-hidden overflow-y-auto focus:outline-none">
+            <main className="flex-1 relative z-0  overflow-y-auto focus:outline-none">
 
                 <div className="flex flex-wrap gap-3">
                     <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
@@ -1220,7 +1220,7 @@ function CreditSale({ petrodata }) {
                                 <motion.div
                                     className="flex select-none flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
-                                    animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : swipeStates[index]?.isSwipedLeft ? -10 : 0) }}
+                                    animate={{ x: (swipeStates[index]?.isSwipedLeft ? -10 : swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     drag={isMobile ? "x" : false}
                                     dragConstraints={dragConstraints}
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
@@ -1275,7 +1275,6 @@ function CreditSale({ petrodata }) {
                                         </div>
                                     )}
                                 </motion.div>
-
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedLeft && (
@@ -1289,6 +1288,7 @@ function CreditSale({ petrodata }) {
                                         )}
                                     </>
                                 )}
+
                             </div>
                         )
                     ))}
