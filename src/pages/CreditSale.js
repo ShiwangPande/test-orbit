@@ -810,7 +810,6 @@ function CreditSale({ petrodata }) {
         }
     };
 
-
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false, isSwipedLeft: false }));
     const containerRef = useRef(null);
@@ -820,16 +819,16 @@ function CreditSale({ petrodata }) {
         if (containerRef.current) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
-                left: -containerWidth / 4,  // Adjust this value based on your swipe threshold
-                right: containerWidth / 4,  // Adjust this value based on your swipe threshold
+                left: -containerWidth / 4,
+                right: containerWidth / 4,
             });
         }
-    }, [submittedData.length]); // Dependency array to update when data length changes
+    }, [submittedData.length, containerRef.current]);
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
             const updatedSwipeStates = [...swipeStates];
-            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this threshold dynamically based on container width
+            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this dynamically based on container width
 
             if (info.point.x > swipeThreshold) {
                 updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
@@ -843,15 +842,17 @@ function CreditSale({ petrodata }) {
         }
     };
 
+
+
+
     const handleCardClick = (index) => {
         const updatedSwipeStates = [...swipeStates];
         updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
         setSwipeStates(updatedSwipeStates);
     };
-
     return (
 
-        <div className="h-full  min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
+        <div className="h-full  min-h-screen flex   bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
 
             <Navbar petrodata={petrodata} />
 
@@ -1202,7 +1203,7 @@ function CreditSale({ petrodata }) {
                 <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-2 gap-3 lg:gap-5">
                     {submittedData.map((data, index) => (
                         data?.selectedCustomer && (
-                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
+                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row ">
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
@@ -1214,6 +1215,8 @@ function CreditSale({ petrodata }) {
                                                 </div>
                                             </button>
                                         )}
+
+
                                     </>
                                 )}
 
@@ -1275,18 +1278,14 @@ function CreditSale({ petrodata }) {
                                         </div>
                                     )}
                                 </motion.div>
-                                {isMobile && (
-                                    <>
-                                        {swipeStates[index] && swipeStates[index].isSwipedLeft && (
-                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
-                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
-                                                    </svg>
-                                                </div>
-                                            </button>
-                                        )}
-                                    </>
+                                {swipeStates[index] && swipeStates[index].isSwipedLeft && (
+                                    <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                        <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                            </svg>
+                                        </div>
+                                    </button>
                                 )}
 
                             </div>
