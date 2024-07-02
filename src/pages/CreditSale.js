@@ -1278,16 +1278,19 @@ function CreditSale({ petrodata }) {
                                         </div>
                                     )}
                                 </motion.div>
-                                {swipeStates[index] && swipeStates[index].isSwipedLeft && (
-                                    <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
-                                        <div className="px-2 w-10 h-10 my-auto" color="primary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
-                                            </svg>
-                                        </div>
-                                    </button>
+                                {isMobile && (
+                                    <>
+                                        {swipeStates[index] && swipeStates[index].isSwipedLeft && (
+                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                        )}
+                                    </>
                                 )}
-
                             </div>
                         )
                     ))}
