@@ -825,12 +825,12 @@ function CreditSale({ petrodata }) {
                 right: containerWidth / 10,
             });
         }
-    }, [containerRef.current]);
+    }, [submittedData.length]); // Updated dependency array to run only once or when submittedData length changes
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
             const updatedSwipeStates = [...swipeStates];
-            const swipeThreshold = 100; // Adjust this threshold as needed
+            const swipeThreshold = 10; // Adjust this threshold as needed
 
             if (info.point.x > swipeThreshold) {
                 updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
@@ -843,6 +843,13 @@ function CreditSale({ petrodata }) {
             setSwipeStates(updatedSwipeStates);
         }
     };
+
+    const handleCardClick = (index) => {
+        const updatedSwipeStates = [...swipeStates];
+        updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+        setSwipeStates(updatedSwipeStates);
+    };
+
     return (
 
         <div className="h-full  min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
@@ -1195,32 +1202,30 @@ function CreditSale({ petrodata }) {
                 )}
                 <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-2 gap-3 lg:gap-5">
                     {submittedData.map((data, index) => (
-
                         data?.selectedCustomer && (
                             <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
-                                            <button className=" h-full flex flex-row rounded-lg bg-navbar justify-around  " onClick={() => handleEdit(index)}>
+                                            <button className="h-full flex flex-row rounded-lg bg-navbar justify-around" onClick={() => handleEdit(index)}>
                                                 <div className="px-2 w-10 h-10 my-auto" color="primary">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                         <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
                                                     </svg>
                                                 </div>
-
                                             </button>
                                         )}
                                     </>
                                 )}
 
                                 <motion.div
-
                                     className="flex select-none flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
                                     animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : swipeStates[index]?.isSwipedLeft ? -10 : 0) }}
                                     drag={isMobile ? "x" : false}
                                     dragConstraints={dragConstraints}
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                    onClick={() => handleCardClick(index)} // Added onClick handler
                                 >
                                     <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                                         {data.selectedCustomer}
@@ -1270,14 +1275,12 @@ function CreditSale({ petrodata }) {
                                             </button>
                                         </div>
                                     )}
-
-
                                 </motion.div>
 
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedLeft && (
-                                            <button className=" h-full flex flex-row rounded-lg bg-redish justify-around  " onClick={() => handleRemove(index)}>
+                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
                                                 <div className="px-2 w-10 h-10 my-auto" color="primary">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                         <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
@@ -1287,7 +1290,6 @@ function CreditSale({ petrodata }) {
                                         )}
                                     </>
                                 )}
-
                             </div>
                         )
                     ))}

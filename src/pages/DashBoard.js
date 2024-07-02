@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import { Device } from '@capacitor/device';
 
 function DashBoard({ petrodata }) {
     const [creditdata, setCreditData] = useState([]);
@@ -8,7 +9,21 @@ function DashBoard({ petrodata }) {
     const CreditData = JSON.parse(localStorage.getItem('submittedData')) || [];
     const ExpensesData = JSON.parse(localStorage.getItem('submittedExpensesData')) || [];
     const RecieptData = JSON.parse(localStorage.getItem('submittedReceiptData')) || [];
+    const [imei, setImei] = useState('');
 
+
+    useEffect(() => {
+        const getDeviceInfo = async () => {
+            try {
+                const info = await Device.getId();
+                setImei(info.identifier); // This might not return IMEI directly but a unique ID
+            } catch (e) {
+                console.error('Error getting device info:', e);
+            }
+        };
+
+        getDeviceInfo();
+    }, []);
     const hasValidReadings = (data) => {
         if (!data || !data.readings) return false;
         return Object.values(data.readings).some(
@@ -141,7 +156,7 @@ function DashBoard({ petrodata }) {
     });
 
     return (
-        <div className="h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
+        <div className="h-screen   flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">
             <Navbar petrodata={petrodata} />
             <main className="flex-1 relative z-0 overflow-y-auto overflow-x-hidden  focus:outline-none">
                 <h1 className='relative block  lg:hidden text-white mx-auto w-[70%] text-center top-4 text-2xl z-20'>DashBoard</h1>
@@ -153,7 +168,13 @@ function DashBoard({ petrodata }) {
                         <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.day_shift_no}</span></h2>
                     </div>
                 </div>
-                <h1 className='text-2xl w-full text-center mt-28 mb-1 lg:mt-28 font-bold'>Hey, {petrodata.name}</h1>
+                <div className=' mx-auto w-[90%] lg:w-1/2 lg:mx-auto my- rounded border-white p-5 mt-28 mb-1 lg:mt-28  bg-navbar'>
+                    <h1 className='text-2xl w-full text-white mb-2 lg:hidden block text-center font-bold'>Hey, {petrodata.name}</h1>
+                    <h1 className='text-xl lg:text-2xl w-full text-white  text-center font-bold'>Welcome to {petrodata.petro_name}</h1>
+                    <h1 className='text-xl lg:text-2xl w-full text-white  text-center font-bold'>Unique ID: {imei}</h1>
+
+
+                </div>
                 <div className='flex flex-col bg-white border-3 drop-shadow-2xl border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-10'>
                     <div className='flex flex-col px-4 lg:px-10 w-full'>
                         {filteredData.length > 0 && (

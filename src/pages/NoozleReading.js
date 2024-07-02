@@ -239,7 +239,7 @@ const NoozleReading = ({ petrodata }) => {
             <Navbar petrodata={petrodata} />
             <main className="flex-1 overflow-x-hidden focus:outline-none">
 
-                <div className=' relative z-0 overflow-y-auto'>
+                <div className=' relative z-0 overflow-x-hidden overflow-y-auto'>
 
                     {isEditModalOpen && (
                         <div className="flex flex-row justify-between items-center px-4 max-w-96 mx-auto rounded-lg lg:max-w-5xl lg:px-8 p-5  bg-navbar text-white gap-1">

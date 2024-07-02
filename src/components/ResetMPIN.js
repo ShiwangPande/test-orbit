@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,12 +15,49 @@ const schema = yup.object().shape({
 function ResetMPIN({ petrodata }) {
     const navigate = useNavigate();
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     });
-    const [resetError, setResetError] = useState('');
 
+    const [resetError, setResetError] = useState('');
+    const [oldMpin, setOldMpin] = useState(['', '', '', '']);
+    const [newMpin, setNewMpin] = useState(['', '', '', '']);
+    const [confirmMpin, setConfirmMpin] = useState(['', '', '', '']);
     const base_url = process.env.REACT_APP_API_URL;
+
+    const oldMpinRefs = useRef([]);
+    const newMpinRefs = useRef([]);
+    const confirmMpinRefs = useRef([]);
+
+    const handlePinChange = (value, index, pinType) => {
+        const newPin = pinType === 'oldMpin' ? [...oldMpin] :
+            pinType === 'newMpin' ? [...newMpin] :
+                [...confirmMpin];
+
+        newPin[index] = value;
+
+        if (pinType === 'oldMpin') {
+            setOldMpin(newPin);
+            setValue('oldMpin', newPin.join(''), { shouldValidate: true });
+            handleFocusChange(oldMpinRefs, value, index);
+        } else if (pinType === 'newMpin') {
+            setNewMpin(newPin);
+            setValue('newMpin', newPin.join(''), { shouldValidate: true });
+            handleFocusChange(newMpinRefs, value, index);
+        } else {
+            setConfirmMpin(newPin);
+            setValue('confirmMpin', newPin.join(''), { shouldValidate: true });
+            handleFocusChange(confirmMpinRefs, value, index);
+        }
+    };
+
+    const handleFocusChange = (refs, value, index) => {
+        if (value === '' && index > 0) {
+            refs.current[index - 1].focus();
+        } else if (value !== '' && index < 3) {
+            refs.current[index + 1]?.focus();
+        }
+    };
 
     const onSubmit = async (formData) => {
         const { oldMpin, newMpin } = formData;
@@ -54,37 +91,59 @@ function ResetMPIN({ petrodata }) {
 
                     <div className="mb-4 lg:mb-8">
                         <label htmlFor="oldMpin" className="block mb-1 text-black">Old MPIN</label>
-                        <input
-                            type="password"
-                            id="oldMpin"
-                            {...register('oldMpin')}
-                            placeholder="Enter old MPIN"
-                            className={`w-full py-2 px-3 border ${errors.oldMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
-                        />
+                        <div className="flex justify-center">
+                            {oldMpin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (oldMpinRefs.current[index] = el)}
+                                    type="text"
+                                    maxLength="1"
+                                    pattern="\d{1}"
+                                    min={1}
+                                    max={9}
+                                    onChange={(e) => handlePinChange(e.target.value, index, 'oldMpin')}
+                                    className={`w-12 h-12 mx-1 text-center text-2xl border ${errors.oldMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
+                                />
+                            ))}
+                        </div>
                         {errors.oldMpin && <p className="text-red-500 text-sm mt-1">{errors.oldMpin.message}</p>}
                     </div>
 
                     <div className="mb-4 lg:mb-8">
                         <label htmlFor="newMpin" className="block mb-1 text-black">New MPIN</label>
-                        <input
-                            type="password"
-                            id="newMpin"
-                            {...register('newMpin')}
-                            placeholder="Enter new MPIN"
-                            className={`w-full py-2 px-3 border ${errors.newMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
-                        />
+                        <div className="flex justify-center">
+                            {newMpin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (newMpinRefs.current[index] = el)}
+                                    type="text"
+                                    pattern="[0-9]*"
+                                    inputMode="numeric"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handlePinChange(e.target.value, index, 'newMpin')}
+                                    className={`w-12 h-12 mx-1 text-center text-2xl border ${errors.newMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
+                                />
+                            ))}
+                        </div>
                         {errors.newMpin && <p className="text-red-500 text-sm mt-1">{errors.newMpin.message}</p>}
                     </div>
 
                     <div className="mb-6 lg:mb-8">
                         <label htmlFor="confirmMpin" className="block mb-1 text-black">Confirm MPIN</label>
-                        <input
-                            type="password"
-                            id="confirmMpin"
-                            {...register('confirmMpin')}
-                            placeholder="Confirm new MPIN"
-                            className={`w-full py-2 px-3 border ${errors.confirmMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
-                        />
+                        <div className="flex justify-center">
+                            {confirmMpin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (confirmMpinRefs.current[index] = el)}
+                                    type="text"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handlePinChange(e.target.value, index, 'confirmMpin')}
+                                    className={`w-12 h-12 mx-1 text-center text-2xl border ${errors.confirmMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
+                                />
+                            ))}
+                        </div>
                         {errors.confirmMpin && <p className="text-red-500 text-sm mt-1">{errors.confirmMpin.message}</p>}
                     </div>
 

@@ -15,7 +15,7 @@ import SetupMPIN from './components/SetupMPIN';
 import ResetMPIN from './components/ResetMPIN';
 import Logout from "./components/Logout";
 import CardWallet from './pages/CardWallet';
-import Navbar from './components/Navbar';
+
 
 function App() {
   const [data, setData] = useState(JSON.parse(localStorage.getItem('userData')) || null);
@@ -63,7 +63,7 @@ function App() {
           <Route path="/reset-mpin" element={isAuthenticated ? <ResetMPIN petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/setup-mpin" element={isAuthenticated ? <SetupMPIN petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/logout" element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/credit-sale" element={isAuthenticated ? <CreditSale petrodata={data} /> : <Navigate to="/login" />} />

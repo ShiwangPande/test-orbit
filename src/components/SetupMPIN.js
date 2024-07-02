@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -13,13 +13,38 @@ const mpinSchema = yup.object().shape({
 
 function SetupMPIN({ petrodata }) {
     const mobile = JSON.parse(localStorage.getItem('userMobile')) || '';
-
     const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors } } = useForm({
+
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(mpinSchema),
     });
+
     const [setupError, setSetupError] = useState('');
+    const [mpin, setMpin] = useState(['', '', '', '']);
+    const [confirmMpin, setConfirmMpin] = useState(['', '', '', '']);
     const base_url = process.env.REACT_APP_API_URL;
+
+    const mpinRefs = useRef([]);
+    const confirmMpinRefs = useRef([]);
+
+    const handlePinChange = (value, index, pinType) => {
+        const newPin = pinType === 'mpin' ? [...mpin] : [...confirmMpin];
+        newPin[index] = value;
+
+        if (pinType === 'mpin') {
+            setMpin(newPin);
+            setValue('mpin', newPin.join(''), { shouldValidate: true });
+        } else {
+            setConfirmMpin(newPin);
+            setValue('confirmMpin', newPin.join(''), { shouldValidate: true });
+        }
+
+        if (value === '' && index > 0) {
+            pinType === 'mpin' ? mpinRefs.current[index - 1].focus() : confirmMpinRefs.current[index - 1].focus();
+        } else if (value !== '' && index < 3) {
+            pinType === 'mpin' ? mpinRefs.current[index + 1].focus() : confirmMpinRefs.current[index + 1].focus();
+        }
+    };
 
     const onSubmit = async (formData) => {
         const { mpin } = formData;
@@ -46,36 +71,50 @@ function SetupMPIN({ petrodata }) {
             setSetupError("MPIN is already set");
         }
     };
+
     const handleback = () => {
-        navigate('/mpin-login')
-    }
+        navigate('/mpin-login');
+    };
+
     return (
-        <div className='overflow-hidden w-full bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 h-screen'>
-            <div className='mx-auto flex justify-center items-center h-[90vh]'>
-                <form onSubmit={handleSubmit(onSubmit)} className="w-full bg-gradient-to-b from-amber-200 to-orange-400 mx-5 max-w-sm p-8 rounded-lg shadow-md">
-                    <img className='mt-5 mb-8 mx-auto' src={navlogo} alt="" />
+        <div className='overflow-hidden w-full bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600  h-screen'>
+            <div className='mx-auto flex flex-col justify-center gap-4 items-center h-[90vh]'>
+                <form onSubmit={handleSubmit(onSubmit)} className="h-auto w-full bg-clip-padding bg-gradient-to-b from-amber-200 to-orange-400   max-w-sm  bg-opacity-20 rounded-lg shadow-lg p-5 backdrop-blur-xl backdrop-filter">
+                <img className='mt-5 mb-8 mx-auto' src={navlogo} alt="" />
 
                     <div className="mb-4 lg:mb-8">
-                        <label htmlFor="mpin" className="block mb-1 text-black">MPIN</label>
-                        <input
-                            type="password"
-                            id="mpin"
-                            {...register('mpin')}
-                            placeholder="Enter your MPIN"
-                            className={`w-full py-2 px-3 border ${errors.mpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
-                        />
-                        {errors.mpin && <p className="text-red-500 text-sm mt-1">{errors.mpin.message}</p>}
+                        <label htmlFor="mpin" className="block text-center text-xl mb-2 font-semibold text-black">MPIN</label>
+                        <div className="flex justify-center">
+                            {mpin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (mpinRefs.current[index] = el)}
+                                    type="number"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handlePinChange(e.target.value, index, 'mpin')}
+                                    className={`w-12 h-12 mx-1 text-center text-2xl border ${errors.mpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
+                                />
+                            ))}
+                        </div>
+                        {errors.mpin && <p className="text-red-500 text-md mt-1">{errors.mpin.message}</p>}
                     </div>
 
                     <div className="mb-6 lg:mb-8">
-                        <label htmlFor="confirmMpin" className="block mb-1 text-black">Confirm MPIN</label>
-                        <input
-                            type="password"
-                            id="confirmMpin"
-                            {...register('confirmMpin')}
-                            placeholder="Confirm your MPIN"
-                            className={`w-full py-2 px-3 border ${errors.confirmMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
-                        />
+                        <label htmlFor="confirmMpin" className="block text-center text-xl font-semibold mb-2 text-black">Confirm MPIN</label>
+                        <div className="flex justify-center">
+                            {confirmMpin.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (confirmMpinRefs.current[index] = el)}
+                                    type="number"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handlePinChange(e.target.value, index, 'confirmMpin')}
+                                    className={`w-12 h-12 mx-1 text-center text-2xl border ${errors.confirmMpin ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:outline-none focus:border-black`}
+                                />
+                            ))}
+                        </div>
                         {errors.confirmMpin && <p className="text-red-500 text-sm mt-1">{errors.confirmMpin.message}</p>}
                     </div>
 
