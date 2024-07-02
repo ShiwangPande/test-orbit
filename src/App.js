@@ -8,7 +8,7 @@ import NoozleReading from './pages/NoozleReading';
 import Receipt from './pages/Receipt';
 import Expenses from './pages/Expenses';
 import CreditSale from './pages/CreditSale';
-import CashSale from './pages/CashSale';
+
 import DashBoard from './pages/DashBoard';
 import MPINLogin from './components/MPINLogin';
 import SetupMPIN from './components/SetupMPIN';
@@ -67,7 +67,6 @@ function App() {
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/credit-sale" element={isAuthenticated ? <CreditSale petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/cash-sale" element={isAuthenticated ? <CashSale petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/dashboard" element={isAuthenticated ? <DashBoard petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/cardwallet" element={isAuthenticated ? <CardWallet petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="*" element={<Navigate to="/" />} />

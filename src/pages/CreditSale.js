@@ -811,7 +811,6 @@ function CreditSale({ petrodata }) {
     };
 
 
-
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false, isSwipedLeft: false }));
     const containerRef = useRef(null);
@@ -821,16 +820,16 @@ function CreditSale({ petrodata }) {
         if (containerRef.current) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
-                left: -containerWidth / 10,
-                right: containerWidth / 10,
+                left: -containerWidth / 4,  // Adjust this value based on your swipe threshold
+                right: containerWidth / 4,  // Adjust this value based on your swipe threshold
             });
         }
-    }, [submittedData.length]); // Updated dependency array to run only once or when submittedData length changes
+    }, [submittedData.length]); // Dependency array to update when data length changes
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
             const updatedSwipeStates = [...swipeStates];
-            const swipeThreshold = 10; // Adjust this threshold as needed
+            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this threshold dynamically based on container width
 
             if (info.point.x > swipeThreshold) {
                 updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };

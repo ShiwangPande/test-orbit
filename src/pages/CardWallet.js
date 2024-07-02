@@ -365,24 +365,33 @@ function Reciept({ petrodata }) {
         if (containerRef.current) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
-                left: -containerWidth / 10,
-                right: containerWidth / 10,
+                left: -containerWidth / 4,  // Adjust this value based on your swipe threshold
+                right: containerWidth / 4,  // Adjust this value based on your swipe threshold
             });
         }
-    }, [containerRef.current]);
-    // Function to handle drag end
+    }, [submittedData.length]); // Dependency array to update when data length changes
+
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
             const updatedSwipeStates = [...swipeStates];
-            if (info.point.x > 100) {
+            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this threshold dynamically based on container width
+
+            if (info.point.x > swipeThreshold) {
                 updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
-            } else if (info.point.x < -100) {
+            } else if (info.point.x < -swipeThreshold) {
                 updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: true };
             } else {
                 updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
             }
+
             setSwipeStates(updatedSwipeStates);
         }
+    };
+
+    const handleCardClick = (index) => {
+        const updatedSwipeStates = [...swipeStates];
+        updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+        setSwipeStates(updatedSwipeStates);
     };
     return (
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
@@ -606,6 +615,7 @@ function Reciept({ petrodata }) {
                                         drag={isMobile ? "x" : false}
                                         dragConstraints={dragConstraints}
                                         onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                        onClick={() => handleCardClick(index)}
                                     >
                                         <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                                             {data.selectedLedgerName}
