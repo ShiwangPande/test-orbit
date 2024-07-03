@@ -811,16 +811,16 @@ function CreditSale({ petrodata }) {
     };
 
     const isMobile = useMediaQuery({ maxWidth: 767 });
-    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false, isSwipedLeft: false }));
+    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false }));
     const containerRef = useRef(null);
-    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+    const [dragConstraints, setDragConstraints] = useState({ right: 0 });
 
     useEffect(() => {
         if (containerRef.current) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
-                left: -containerWidth / 4,
                 right: containerWidth / 4,
+                left: 0 // Prevent dragging to the left
             });
         }
     }, [submittedData.length, containerRef.current]);
@@ -831,23 +831,18 @@ function CreditSale({ petrodata }) {
             const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this dynamically based on container width
 
             if (info.point.x > swipeThreshold) {
-                updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
-            } else if (info.point.x < -swipeThreshold) {
-                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: true };
+                updatedSwipeStates[index] = { isSwipedRight: true };
             } else {
-                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+                updatedSwipeStates[index] = { isSwipedRight: false };
             }
 
             setSwipeStates(updatedSwipeStates);
         }
     };
 
-
-
-
     const handleCardClick = (index) => {
         const updatedSwipeStates = [...swipeStates];
-        updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+        updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
     return (
@@ -856,7 +851,7 @@ function CreditSale({ petrodata }) {
 
             <Navbar petrodata={petrodata} />
 
-            <main className="flex-1 relative z-0  overflow-x-auto overflow-y-auto focus:outline-none">
+            <main className="flex-1 overflow-x-hidden relative z-0  overflow-x-auto overflow-y-auto focus:outline-none">
 
                 <div className="flex flex-wrap gap-3">
                     <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
@@ -1207,23 +1202,22 @@ function CreditSale({ petrodata }) {
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
-                                            <button className="h-full flex flex-row rounded-lg bg-navbar justify-around" onClick={() => handleEdit(index)}>
+                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
                                                 <div className="px-2 w-10 h-10 my-auto" color="primary">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
+                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
                                                     </svg>
                                                 </div>
                                             </button>
                                         )}
-
-
                                     </>
                                 )}
+
 
                                 <motion.div
                                     className="flex select-none flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
-                                    animate={{ x: (swipeStates[index]?.isSwipedLeft ? -10 : swipeStates[index]?.isSwipedRight ? 10 : 0) }}
+                                    animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     drag={isMobile ? "x" : false}
                                     dragConstraints={dragConstraints}
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
@@ -1246,7 +1240,7 @@ function CreditSale({ petrodata }) {
 
                                     {!isMobile && (
                                         <div className="flex flex-row justify-around mt-5">
-                                            <button
+                                            {/* <button
                                                 className="px-2 w-10 h-10"
                                                 color="primary"
                                                 onClick={() => handleEdit(index)}
@@ -1260,7 +1254,7 @@ function CreditSale({ petrodata }) {
                                                         fill="#000"
                                                     />
                                                 </svg>
-                                            </button>
+                                            </button> */}
                                             <button
                                                 className="px-2 w-10 h-10"
                                                 onClick={() => handleRemove(index)}
@@ -1278,19 +1272,21 @@ function CreditSale({ petrodata }) {
                                         </div>
                                     )}
                                 </motion.div>
-                                {isMobile && (
+                                {/* {isMobile && (
                                     <>
-                                        {swipeStates[index] && swipeStates[index].isSwipedLeft && (
-                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                        {swipeStates[index] && swipeStates[index].isSwipedRight && (
+                                            <button className="h-full flex flex-row rounded-lg bg-navbar justify-around" onClick={() => handleEdit(index)}>
                                                 <div className="px-2 w-10 h-10 my-auto" color="primary">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
                                                     </svg>
                                                 </div>
                                             </button>
                                         )}
+
+
                                     </>
-                                )}
+                                )} */}
                             </div>
                         )
                     ))}
