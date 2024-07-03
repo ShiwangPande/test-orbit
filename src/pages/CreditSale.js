@@ -851,7 +851,7 @@ function CreditSale({ petrodata }) {
 
             <Navbar petrodata={petrodata} />
 
-            <main className="flex-1 overflow-x-hidden relative z-0  overflow-x-auto overflow-y-auto focus:outline-none">
+            <main className="flex-1 overflow-x-hidden relative z-0  overflow-y-auto focus:outline-none">
 
                 <div className="flex flex-wrap gap-3">
                     <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
