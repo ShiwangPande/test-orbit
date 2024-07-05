@@ -58,8 +58,10 @@ function Navbar({ petrodata }) {
                 return 'Expenses';
             case '/receipt':
                 return 'Receipt';
-            case '/cardwallet':
-                return 'Card/Wallet';
+            case '/card':
+                return 'Card';
+            case '/wallet':
+                return 'Wallet';
             default:
                 return '';
         }
@@ -81,7 +83,7 @@ function Navbar({ petrodata }) {
                             <h2 className="block    text-white text-md lg:text-xl font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
                         </div>
                         <div className="mt-2 flex-1 flex flex-col">
-                            <nav className="flex-1 px-4 flex flex-col gap-7 mt-7 bg-navbar space-y-1">
+                            <nav className="flex-1 px-4 flex flex-col gap-5 mt-5 bg-navbar space-y-1">
                                 <Link
                                     to="/dashboard"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/dashboard' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
@@ -125,11 +127,18 @@ function Navbar({ petrodata }) {
                                     Receipt
                                 </Link>
                                 <Link
-                                    to="/cardwallet"
+                                    to="/card"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/cardwallet' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/cardwallet' ? 'page' : undefined}
+                                    aria-current={window.location.pathname === '/card' ? 'page' : undefined}
                                 >
-                                    Card/Wallet
+                                    Card
+                                </Link>
+                                <Link
+                                    to="/wallet"
+                                    className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/cardwallet' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/wallet' ? 'page' : undefined}
+                                >
+                                    Wallet
                                 </Link>
                                 <div className='px-3'>
                                     <Logout />
@@ -177,7 +186,7 @@ function Navbar({ petrodata }) {
                         </div>
 
                         <div className="mt-1 flex-1 flex flex-col ">
-                            <nav className="flex-1 px-2 flex gap-[1.7rem] flex-col mt-8 bg-navbar space-y-1">
+                            <nav className="flex-1 px-2 flex gap-[1.5rem] flex-col mt-5 bg-navbar space-y-1">
                                 <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
                                         className="h-9 mx-auto w-auto mb-5"
@@ -230,11 +239,18 @@ function Navbar({ petrodata }) {
                                     Receipt
                                 </Link>
                                 <Link
-                                    to="/cardwallet"
+                                    to="/card"
                                     className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/cardwallet' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/cardwallet' ? 'page' : undefined}
+                                    aria-current={window.location.pathname === '/card' ? 'page' : undefined}
                                 >
-                                    Card/Wallet
+                                    Card
+                                </Link>
+                                <Link
+                                    to="/wallet"
+                                    className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/cardwallet' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/wallet' ? 'page' : undefined}
+                                >
+                                    Wallet
                                 </Link>
                                 <div className='px-3'>
                                     <Logout />

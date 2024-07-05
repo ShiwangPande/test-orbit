@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import nozzlee from "../images/nozzlee.png";
 import { useNavigate } from "react-router-dom";
 import wave from "../images/wave.svg";
-function Home({ data }) {
+function Home({ petrodata }) {
     const navigate = useNavigate();
     const handleclick = () => {
         navigate("/mpin-login");
@@ -32,10 +32,18 @@ function Home({ data }) {
                     <h2 className="text-[1.8rem] lg:text-5xl font-semibold">
                         Welcome to{" "}
                     </h2>
-                    <h1 className="font-extrabold text-4xl lg:text-5xl">
+                    <h1 className="font-bold text-4xl lg:text-5xl">
                         {" "}
 
-                        orbit pump
+                        {petrodata ? (
+                            <>
+                                {petrodata.petro_name}
+                            </>
+                        ) : (
+                            <>
+                                Bizperto DSM App
+                            </>
+                        )}
                     </h1>
                 </div>
 

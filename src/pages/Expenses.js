@@ -14,6 +14,7 @@ import {
     useDisclosure,
 } from "@nextui-org/react";
 import add from "../images/add.svg";
+import { useLongPress } from 'use-long-press';
 
 import React from "react";
 
@@ -21,11 +22,14 @@ function Expenses({ petrodata }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [creditdata, setCreditData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const [ShiftData, setShiftData] = useState([]);
+    const [expensesVoucherList, setExpensesVoucherList] = useState([]);
 
-
-    const [selectedLedgerName, setSelectedLedgerName] = useState(null);
+    const [dsmIds, setDsmIds] = useState([]); // State to store dsmIds
+    const [selectedLedgerName, setSelectedLedgerName] = useState(null);;
     const [ledgerId, setLedgerId] = useState(null);
     const [LedgerNamedata, setLedgerNamedata] = useState([]);
+
     // const [ledgerId, setLedgerId] = useState(null); // New state for ledger ID
     const [noozleData, setNoozleData] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -48,6 +52,71 @@ function Expenses({ petrodata }) {
         return `${day}/${month}/${year}`;
     };
     const base_url = process.env.REACT_APP_API_URL;
+
+
+
+
+    useEffect(() => {
+        axios
+            .post(`${base_url}/currentShiftData/1`,
+                {
+
+                    petro_id: petrodata.petro_id,
+                })
+            .then((response) => {
+                const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                const formattedDate = formatDate(date);
+                setShiftData({ shift, day_shift_no, formattedDate, date });
+            })
+            .catch((error) => {
+                console.error("Error fetching data:", error);
+            });
+    }, [petrodata, base_url]);
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios.post(`${base_url}/expensesVoucherList/1`, {
+                shift: `${ShiftData.shift}`,
+                employee_id: petrodata.user_id,
+                "vid": 1,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setExpensesVoucherList(response.data.data);
+                    console.log('setExpensesVoucherList', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios
+                .post(`${base_url}/assignNozzleList/1`, {
+                    shift: `${ShiftData.shift}`,
+                    emp_id: petrodata.user_id,
+                    date: ShiftData.date,
+                    petro_id: petrodata.petro_id,
+                    day_shift: petrodata.daily_shift,
+                })
+                .then((response) => {
+                    const data = response.data.data;
+
+                    const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                    setDsmIds(extractedDsmIds);
+                    console.log('extractedDsmIds', extractedDsmIds)
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+
+
+
     // Function to handle changes in edit modal
     const handleEditChange = (e) => {
         const { name, value } = e.target;
@@ -141,8 +210,15 @@ function Expenses({ petrodata }) {
         // if (!selectedLedgerName) {
         //     newErrors.selectedLedgerName = 'LedgerName is required';
         // }
-        if (searchQuery !== selectedLedgerName) {
-            newErrors.selectedLedgerName = "Ledger Name is required";
+
+        // Validate selectedLedgerName
+        if (!selectedLedgerName || !LedgerNamedata.some(item => item.name === selectedLedgerName.name)) {
+            newErrors.selectedLedgerName = 'Please select a valid Ledger Name from the list.';
+        }
+
+        // Validate searchQuery
+        if (!searchQuery || !LedgerNamedata.some(item => item.name === searchQuery)) {
+            newErrors.selectedLedgerName = 'Please select a valid Ledger Name from the list.';
         }
         // Optionally, if you want to update the state or errors immediately:
         setErrors(newErrors);
@@ -163,52 +239,70 @@ function Expenses({ petrodata }) {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
 
         // Validate the form inputs
         if (validateForm()) {
-            const newData = {
-                selectedLedgerName,
-
-                amount,
-                narration,
+            const payload = {
+                petro_id: petrodata.petro_id,
+                date: ShiftData.date,
+                dsm_id: dsmIds[0],
+                shift: ShiftData.shift,
+                day_shift_no: ShiftData.day_shift_no,
+                narration: narration,
+                amount: amount,
+                voucherDetails: [{
+                    ledger_id: selectedLedgerName.id,
+                    dr_cr: 1,
+                    amount: amount
+                }]
             };
+            try {
+                await axios.post(`${base_url}/expenseVoucherEntry/1`, payload);
+                console.log('Data submitted successfully.');
 
-            // Update or add the new data to localStorage
-            const existingData =
-                JSON.parse(localStorage.getItem("submittedExpensesData")) || [];
+                const response = await axios.post(`${base_url}/expensesVoucherList/1`, {
+                    shift: `${ShiftData.shift}`,
+                    employee_id: petrodata.user_id,
+                    "vid": 1,
+                    date: ShiftData.date,
+                    petro_id: petrodata.petro_id,
+                    day_shift: petrodata.daily_shift,
+                });
+                setExpensesVoucherList(response.data.data);
+                console.log('Updated card sales:', response.data.data);
 
-            if (editingIndex !== null && editingIndex !== undefined) {
-                existingData[editingIndex] = newData; // Update existing data if editing
-            } else {
-                existingData.push(newData); // Add new data if not editing
+
+                setSelectedLedgerName("");
+                setSearchQuery("")
+                setamount("");
+                setnarration("");
+                setEditingIndex(null);
+                setShowDropdown(false);
+                setSearchQuery("");
+
+                console.log("Form submitted successfully");
+
+
+                onClose(); // Close modal or perform other UI actions after submission
+            } catch (error) {
+                console.error('Error submitting data:', error);
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                    console.error('Response headers:', error.response.headers);
+                }
             }
 
-            // Save updated data back to localStorage
-            localStorage.setItem(
-                "submittedExpensesData",
-                JSON.stringify(existingData)
-            );
-
             // Update state variables and UI after successful submission
-            setSubmittedData(existingData);
-            setSelectedLedgerName("");
-            setSearchQuery("")
-            setamount("");
-            setnarration("");
-            setEditingIndex(null);
-            setShowDropdown(false);
-            setSearchQuery("");
 
-            console.log("Form submitted successfully");
-            console.log(existingData);
+
+
 
             onClose(); // Close modal or perform other UI actions after submission
         }
     };
-
-
     const handleEdit = (index) => {
         console.log("Editing index:", index);
         const dataToEdit = submittedData[index];
@@ -237,55 +331,43 @@ function Expenses({ petrodata }) {
         };
     }, [dropdownRef]);
 
-    useEffect(() => {
-        axios
-            .post(`${base_url}/assignNozzleList/1`, {
-                shift: 11,
-                emp_id: "24",
-                date: "2024-04-11",
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            })
-            .then((response) => {
-                const data = response.data.data;
-                setNoozleData(data);
-                // Initialize readings state
-                console.log(data);
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
+
 
     useEffect(() => {
-        axios
-            .post(`${base_url}/customerlist/1`, {
-                petro_id: petrodata.petro_id,
-            })
-            .then((response) => {
-                if (response.status === 200 && response.data.data) {
+        if (petrodata && petrodata.petro_id && base_url) {
+            axios
+                .post(`${base_url}/customerlist/1`, {
+                    petro_id: petrodata.petro_id,
+                })
+                .then((response) => {
+                    console.log("customerlist data:", response.data.data);
                     const data = response.data.data;
-                    const values = Object.values(data);
-                    setLedgerNamedata(values);
-                } else {
-                    console.error('Error fetching data: Invalid response format');
-                }
-            })
-            .catch((error) => {
-                console.error('Error fetching data:', error);
-            });
-    }, [base_url, petrodata]);
+                    if (data && typeof data === 'object') {
+                        const formattedData = Object.keys(data).map((key) => ({
+                            id: key,
+                            name: data[key],
+                        }));
+                        setLedgerNamedata(formattedData);
+                    } else {
+                        console.error("Unexpected data format:", response.data);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, base_url]);
 
     const handleSelectLedgerName = (item) => {
         setSelectedLedgerName(item);
-        // setLedgerId(LedgerName.Ledger.id);
-        setSearchQuery(item);
+        setSearchQuery(item.name);
         setShowDropdown(false); // Hide the dropdown after selecting
-        setEditData((prevState) => ({
+        setErrors((prevState) => ({
             ...prevState,
-            selectedLedgerName: item,
+            selectedLedgerName: '',
         }));
     };
+
 
     const handleClear = () => {
         setSelectedLedgerName('');
@@ -297,43 +379,7 @@ function Expenses({ petrodata }) {
         }));
     };
 
-    useEffect(() => {
-        axios
-            .post(`${base_url}/customerlist/1`, {
-                petro_id: petrodata.petro_id,
-            })
-            .then((response) => {
-                console.log("customerlist data:", response.data.data);
-                // Ensure the response data is an array
-                if (Array.isArray(response.data.data)) {
-                    setLedgerNamedata(response.data.data);
-                } else {
-                    console.error("Unexpected data format:", response.data);
-                }
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
-    }, [petrodata.petro_id, base_url]);
 
-    useEffect(() => {
-        axios
-            .post(`${base_url}/empcurrentShiftData/7/24/1`, {
-                shift: 11,
-                emp_id: "24",
-                date: "2024-04-11",
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            })
-            .then((response) => {
-                const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                const formattedDate = formatDate(date);
-                setCreditData({ shift, day_shift_no, date: formattedDate });
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
     const handleSearchChange = (event) => {
         const query = event.target.value.toLowerCase();
         handleEditChange(event);
@@ -355,31 +401,29 @@ function Expenses({ petrodata }) {
         setamount(amountValue);
     };
     const isMobile = useMediaQuery({ maxWidth: 767 });
-    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false, isSwipedLeft: false }));
+    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false }));
     const containerRef = useRef(null);
-    const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
+    const [dragConstraints, setDragConstraints] = useState({ right: 0 });
 
     useEffect(() => {
         if (containerRef.current) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
-                left: -containerWidth / 4,  // Adjust this value based on your swipe threshold
-                right: containerWidth / 4,  // Adjust this value based on your swipe threshold
+                right: containerWidth / 4,
+                left: 0 // Prevent dragging to the left
             });
         }
-    }, [submittedData.length]); // Dependency array to update when data length changes
+    }, [submittedData.length, containerRef.current]);
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
             const updatedSwipeStates = [...swipeStates];
-            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this threshold dynamically based on container width
+            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this dynamically based on container width
 
             if (info.point.x > swipeThreshold) {
-                updatedSwipeStates[index] = { isSwipedRight: true, isSwipedLeft: false };
-            } else if (info.point.x < -swipeThreshold) {
-                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: true };
+                updatedSwipeStates[index] = { isSwipedRight: true };
             } else {
-                updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+                updatedSwipeStates[index] = { isSwipedRight: false };
             }
 
             setSwipeStates(updatedSwipeStates);
@@ -388,9 +432,10 @@ function Expenses({ petrodata }) {
 
     const handleCardClick = (index) => {
         const updatedSwipeStates = [...swipeStates];
-        updatedSwipeStates[index] = { isSwipedRight: false, isSwipedLeft: false };
+        updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
+
     return (
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
             <Navbar petrodata={petrodata} />
@@ -419,7 +464,7 @@ function Expenses({ petrodata }) {
                         {(onClose) => (
                             <>
                                 <ModalHeader className="flex flex-col text-2xl bg-navbar text-white gap-1">
-                                    Add Credit Sale
+                                    Add Expenses Sale
                                 </ModalHeader>
                                 <form onSubmit={handleSubmit}>
                                     <ModalBody className="px-4 lg:px-8">
@@ -429,7 +474,7 @@ function Expenses({ petrodata }) {
                                                     Date:{" "}
                                                     <span className="text-red-500 font-medium">
                                                         {" "}
-                                                        {creditdata.date}
+                                                        {ShiftData.formattedDate}
                                                     </span>
                                                 </h2>
                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
@@ -437,7 +482,7 @@ function Expenses({ petrodata }) {
                                                     Shift:{" "}
                                                     <span className="text-red-500 font-medium">
                                                         {" "}
-                                                        {creditdata.day_shift_no}
+                                                        {ShiftData.day_shift_no}
                                                     </span>
                                                 </h2>
                                             </div>
@@ -467,16 +512,18 @@ function Expenses({ petrodata }) {
                                                             {errors.selectedLedgerName}
                                                         </span>
                                                     )}
-                                                    {/* <p>{selectedLedgerName}</p> */}
                                                     {selectedLedgerName && (
                                                         <button
-                                                            onClick={handleClear}
+                                                            onClick={() => {
+                                                                setSelectedLedgerName(null);
+                                                                setSearchQuery('');
+                                                            }}
                                                             className="absolute top-1 w-8 h-8 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-1"
                                                         >
                                                             &#x2715;
                                                         </button>
                                                     )}
-                                                    {showDropdown && ( // Show dropdown only if showDropdown is true
+                                                    {showDropdown && (
                                                         <ul
                                                             ref={dropdownRef}
                                                             className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60"
@@ -487,23 +534,22 @@ function Expenses({ petrodata }) {
                                                                 </li>
                                                             ) : (
                                                                 LedgerNamedata.filter((item) =>
-                                                                    item.toLowerCase().includes(searchQuery.toLowerCase())
-                                                                ) // Filter based on search query
-                                                                    .map((item, index) => (
-                                                                        <li
-                                                                            key={index}
-                                                                            className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100"
-                                                                            onClick={() => handleSelectLedgerName(item)}
-                                                                        >
-                                                                            {item}
-                                                                        </li>
-                                                                    ))
+                                                                    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                                                ).map((item, index) => (
+                                                                    <li
+                                                                        key={index}
+                                                                        className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100"
+                                                                        onClick={() => handleSelectLedgerName(item)}
+                                                                    >
+                                                                        {item.name}
+                                                                    </li>
+                                                                ))
                                                             )}
                                                         </ul>
                                                     )}
-
                                                 </div>
                                             </div>
+
 
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
@@ -520,6 +566,17 @@ function Expenses({ petrodata }) {
                                                         {errors.amount}
                                                     </span>
                                                 )}
+                                            </div>
+                                            <div className="flex flex-col col-span-1  gap-1">
+                                                <label htmlFor="slip">Account Name
+                                                </label>
+                                                <div
+
+                                                    className="border p-2 border-gray-300 rounded"
+                                                >
+
+                                                    Cash
+                                                </div>
                                             </div>
                                             {/* Narration */}
                                             <div className="flex flex-col col-span-2  gap-1">
@@ -562,7 +619,7 @@ function Expenses({ petrodata }) {
                                 Date:{" "}
                                 <span className="text-red-500 font-medium">
                                     {" "}
-                                    {creditdata.date}
+                                    {ShiftData.formattedDate}
                                 </span>
                             </h2>
                             <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
@@ -570,112 +627,100 @@ function Expenses({ petrodata }) {
                                 Shift:{" "}
                                 <span className="text-red-500 font-medium">
                                     {" "}
-                                    {creditdata.day_shift_no}
+                                    {ShiftData.day_shift_no}
                                 </span>
                             </h2>
                         </div>
                     </div>
                 )}
                 <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
-                    {submittedData.map(
-                        (data, index) =>
-                            // Check if essential data fields are present before rendering the card
-                            data?.selectedLedgerName && (
-                                <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
-                                    {isMobile && (
-                                        <>
-                                            {swipeStates[index] && swipeStates[index].isSwipedRight && (
-                                                <button className=" h-full flex flex-row rounded-lg bg-navbar justify-around  " onClick={() => handleEdit(index)}>
-                                                    <div className="px-2 w-10 h-10 my-auto" color="primary">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                            <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
-                                                        </svg>
-                                                    </div>
-
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <motion.div
-
-                                        className="flex select-none  w-full  flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                                        initial={{ x: 0 }}
-                                        animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : swipeStates[index]?.isSwipedLeft ? -10 : 0) }}
-                                        drag={isMobile ? "x" : false}
-                                        dragConstraints={dragConstraints}
-                                        onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                        onClick={() => handleCardClick(index)}
-                                    >
-                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                            {data.selectedLedgerName}
-                                        </h5>
-                                        <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                            {data.amount && (
-                                                <p className="text-gray-700 font-semibold">
-                                                    Amount: <span className="font-bold">{data.amount}</span>{" "}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                            {data.narration && (
-                                                <p className="text-gray-700 font-semibold">
-                                                    Narration:{" "}
-                                                    <span className="font-normal break-words">{data.narration}</span>{" "}
-                                                </p>
-                                            )}
-                                        </div>
-                                        {!isMobile && (
-                                            <div className="flex flex-row justify-around mt-5">
-                                                <button
-                                                    className="px-2 w-10 h-10"
-                                                    color="primary"
-                                                    onClick={() => handleEdit(index)}
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
-                                                            fill="#000"
-                                                        />
+                    {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
+                        expensesVoucherList.map((voucher, index) => (
+                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
+                                {isMobile && (
+                                    <>
+                                        {swipeStates[index] && swipeStates[index].isSwipedRight && (
+                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
                                                     </svg>
-                                                </button>
-                                                <button
-                                                    className="px-2 w-10 h-10"
-                                                    onClick={() => handleRemove(index)}
-                                                >
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z"
-                                                            fill="#F44336"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                                </div>
+                                            </button>
                                         )}
-
-
-                                    </motion.div>
-                                    {isMobile && (
-                                        <>
-                                            {swipeStates[index] && swipeStates[index].isSwipedLeft && (
-                                                <button className=" h-full flex flex-row rounded-lg bg-redish justify-around  " onClick={() => handleRemove(index)}>
+                                    </>
+                                )}
+                                <motion.div
+                                    className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                    initial={{ x: 0 }}
+                                    animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
+                                    drag={isMobile ? "x" : false}
+                                    dragConstraints={dragConstraints}
+                                    onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                    onClick={() => handleCardClick(index)} // Added onClick handler
+                                >
+                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                        <ul>
+                                            {voucher.VoucherDetail.map((detail, detailIndex) => (
+                                                <li key={detailIndex}>
+                                                    {detail.Ledger.name}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </h5>
+                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                        {voucher.Voucher.amount && (
+                                            <p className="text-gray-700 font-semibold">
+                                                Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                        {voucher.Voucher.narration && (
+                                            <p className="text-gray-700 font-semibold">
+                                                Narration:{" "}
+                                                <span className="font-normal break-words">{voucher.Voucher.narration}</span>{" "}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {!isMobile && (
+                                        <div className="flex flex-row justify-around mt-5">
+                                           
+                                            <button
+                                                className="px-2 w-10 h-10"
+                                                onClick={() => handleRemove(index)}
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z"
+                                                        fill="#F44336"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+                                </motion.div>
+                                {isMobile && (
+                                    <>
+                                        {swipeStates[index] && swipeStates[index].isHeld && (
+                                            <>
+                                                <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
                                                     <div className="px-2 w-10 h-10 my-auto" color="primary">
                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                             <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
                                                         </svg>
                                                     </div>
                                                 </button>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )
+                                            </>
+                                        )}
+                                    </>)}
+                            </div>
+                        ))
+                    ) : (
+                        <p>No card sales available.</p>
                     )}
 
                     {isEditModalOpen && (

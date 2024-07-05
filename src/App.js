@@ -14,7 +14,8 @@ import MPINLogin from './components/MPINLogin';
 import SetupMPIN from './components/SetupMPIN';
 import ResetMPIN from './components/ResetMPIN';
 import Logout from "./components/Logout";
-import CardWallet from './pages/CardWallet';
+import Wallet from './pages/Wallet';
+import Card from './pages/Card';
 
 
 function App() {
@@ -22,6 +23,8 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   const [userMobile, setUserMobile] = useState(localStorage.getItem('userMobile') || '');
   const base_url = process.env.REACT_APP_API_URL;
+
+
 
   useEffect(() => {
     if (isAuthenticated && !data) {
@@ -57,18 +60,19 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Home data={data} />} />
-          <Route path="/login" element={<LoginPage setUserMobile={setUserMobile} setIsAuthenticated={setIsAuthenticated} setData={setData} />} />
+          <Route path="/" element={<Home petrodata={data} />} />
+          <Route path="/login" element={<LoginPage  setUserMobile={setUserMobile} setIsAuthenticated={setIsAuthenticated} setData={setData} />} />
           <Route path="/receipt" element={isAuthenticated ? <Receipt petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/reset-mpin" element={isAuthenticated ? <ResetMPIN petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/setup-mpin" element={isAuthenticated ? <SetupMPIN petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/logout" element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin  isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/credit-sale" element={isAuthenticated ? <CreditSale petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/dashboard" element={isAuthenticated ? <DashBoard petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/cardwallet" element={isAuthenticated ? <CardWallet petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/wallet" element={isAuthenticated ? <Wallet petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/card" element={isAuthenticated ? <Card petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

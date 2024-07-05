@@ -36,38 +36,6 @@ const NoozleReading = ({ petrodata }) => {
         }
     }, [submittedData]);
 
-    useEffect(() => {
-        axios.post(
-            `${base_url}/assignNozzleList/1`,
-            {
-                "shift": 11,
-                "emp_id": "24",
-                "date": "2024-04-11",
-                "petro_id": petrodata.petro_id,
-                "day_shift": petrodata.daily_shift,
-            }
-        )
-            .then(response => {
-                const data = response.data.data;
-                setNoozleData(data);
-                const initialReadings = {};
-                data.forEach(item => {
-                    initialReadings[item.NozzlesAssign.id] = {
-                        startReading: item.start_reading,
-                        closeReading: item.start_reading,
-                        testing: 0,
-                        nozzleId: item.NozzlesAssign.id,
-                        rate: item.rate,
-                        maxReading: item.Nozzle.max_reading,
-                    };
-                });
-                setReadings(initialReadings); // Set readings state
-                console.log('initial', initialReadings)
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata, base_url]);
 
     const handleCalculation = (startReading, closeReading, testing, rate, maxReading) => {
         startReading = parseFloat(startReading) || 0;
@@ -169,24 +137,22 @@ const NoozleReading = ({ petrodata }) => {
 
     useEffect(() => {
         axios.post(
-            `${base_url}/empcurrentShiftData/7/24/1`,
+            `${base_url}/currentShiftData/1`,
             {
-                shift: 11,
-                emp_id: "24",
-                date: "2024-04-11",
+
                 petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
             }
         )
             .then(response => {
                 const { shift, day_shift_no, date } = response.data.data.DailyShift;
                 const formattedDate = formatDate(date);
-                setShiftdata({ shift, day_shift_no, date: formattedDate });
+                setShiftdata({ shift, day_shift_no, formattedDate, date });
+                console.log("shiftdata", shiftdata)
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
+    }, [petrodata, base_url, shiftdata]);
     const handleEdit = (index) => {
         const dataToEdit = submittedData[index];
         console.log('Data to Edit:', dataToEdit); // Debugging
@@ -223,6 +189,38 @@ const NoozleReading = ({ petrodata }) => {
 
 
 
+    useEffect(() => {
+        axios.post(
+            `${base_url}/assignNozzleList/1`,
+            {
+                "shift": `${shiftdata.shift}`,
+                "emp_id": petrodata.user_id,
+                "date": shiftdata.date,
+                "petro_id": petrodata.petro_id,
+                "day_shift": petrodata.daily_shift,
+            }
+        )
+            .then(response => {
+                const data = response.data.data;
+                setNoozleData(data);
+                const initialReadings = {};
+                data.forEach(item => {
+                    initialReadings[item.NozzlesAssign.id] = {
+                        startReading: item.start_reading,
+                        closeReading: item.start_reading,
+                        testing: 0,
+                        nozzleId: item.NozzlesAssign.id,
+                        rate: item.rate,
+                        maxReading: item.Nozzle.max_reading,
+                    };
+                });
+                setReadings(initialReadings); // Set readings state
+                console.log('initial', initialReadings)
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    }, [petrodata, base_url, shiftdata]);
 
 
 
@@ -288,7 +286,7 @@ const NoozleReading = ({ petrodata }) => {
                                                             <form id="my-form" onSubmit={handleSubmit} className="bg-card grid grid-cols-2 gap-2 lg:gap-5 lg:px-10 lg:py-14 shadow-md rounded px-4 pt-6 pb-5 lg:mb-2">
 
                                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
-                                                                    Date: <span className='text-red-500 font-medium'>        {shiftdata.date}</span>
+                                                                    Date: <span className='text-red-500 font-medium'>        {shiftdata.formattedDate}</span>
                                                                 </h2>
                                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {shiftdata.day_shift_no}</span></h2>
 
@@ -394,7 +392,7 @@ const NoozleReading = ({ petrodata }) => {
 
 
                             <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
-                                Date: <span className='text-red-500 font-medium'>        {shiftdata.date}</span>
+                                Date: <span className='text-red-500 font-medium'>        {shiftdata.formattedDate}</span>
                             </h2>
                             <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {shiftdata.day_shift_no}</span></h2>
                         </div>

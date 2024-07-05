@@ -73,15 +73,16 @@ function SetupMPIN({ petrodata }) {
     };
 
     const handleback = () => {
-        navigate('/mpin-login');
+        navigate('/login');
     };
 
     return (
         <div className='overflow-hidden w-full bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600  h-screen'>
             <div className='mx-auto flex flex-col justify-center gap-4 items-center h-[90vh]'>
                 <form onSubmit={handleSubmit(onSubmit)} className="h-auto w-full bg-clip-padding bg-gradient-to-b from-amber-200 to-orange-400   max-w-sm  bg-opacity-20 rounded-lg shadow-lg p-5 backdrop-blur-xl backdrop-filter">
-                <img className='mt-5 mb-8 mx-auto' src={navlogo} alt="" />
+                <img className='mt-5 mb-6 mx-auto' src={navlogo} alt="" />
 
+                    <h1 className='text-2xl text-center font-bold mb-4'>Welcome {petrodata.name}</h1>
                     <div className="mb-4 lg:mb-8">
                         <label htmlFor="mpin" className="block text-center text-xl mb-2 font-semibold text-black">MPIN</label>
                         <div className="flex justify-center">
@@ -127,12 +128,6 @@ function SetupMPIN({ petrodata }) {
                         Set MPIN
                     </button>
                 </form>
-                <div className='flex items-center mx-auto'>
-                    <button type="button" className="w-fit p-5 mx-auto bg-black text-white py-2 rounded-lg hover:bg-black focus:outline-none"
-                        onClick={handleback}>
-                        Back
-                    </button>
-                </div>
             </div>
         </div>
     );

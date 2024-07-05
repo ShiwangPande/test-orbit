@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-import { Plugins } from '@capacitor/core';
+
 
 
 
@@ -18,7 +18,7 @@ function DashBoard({ petrodata }) {
             (reading) => reading.sale !== 0 || reading.amount !== 0
         );
     };
-    const { Device } = Plugins;
+
     function customFormat(number) {
         const [integerPart, decimalPart] = number.toString().split('.');
         let result = '';
@@ -110,13 +110,10 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         axios.post(
-            `${base_url}/empcurrentShiftData/7/24/1`,
+            `${base_url}/currentShiftData/1`,
             {
-                shift: 11,
-                emp_id: "24",
-                date: "2024-04-11",
+
                 petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
             }
         )
             .then(response => {
@@ -156,60 +153,58 @@ function DashBoard({ petrodata }) {
                         <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.day_shift_no}</span></h2>
                     </div>
                 </div>
-                <div className=' mx-auto w-[90%] lg:w-1/2 lg:mx-auto my- rounded border-white p-5 mt-28 mb-1 lg:mt-28  bg-navbar'>
+                <div className=' mx-auto w-[90%] lg:w-1/2 lg:mx-auto my- rounded border-white p-4 lg:p-5 mt-28 mb-1 lg:mt-28  bg-navbar'>
                     <h1 className='text-2xl w-full text-white mb-2 lg:hidden block text-center font-bold'>Hey, {petrodata.name}</h1>
                     <h1 className='text-xl lg:text-2xl w-full text-white  text-center font-bold'>Welcome to {petrodata.petro_name}</h1>
-                  
-
                 </div>
-                <div className='flex flex-col bg-white border-3 drop-shadow-2xl border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-10'>
+                <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
                     <div className='flex flex-col px-4 lg:px-10 w-full'>
                         {filteredData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(totalAmount)}>₹{formattedtotalAmount}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(totalAmount)}>₹{formattedtotalAmount}</h1>
                             </div>
                         )}
                         {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Total Credit Amount</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_credit_amount)}>₹{formattedtotal_credit_amount}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_credit_amount)}>₹{formattedtotal_credit_amount}</h1>
                             </div>
                         )}
                         {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Cash Sale Amount</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Sale Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashsale)}>₹{formattedcashsale}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashsale)}>₹{formattedcashsale}</h1>
                             </div>
                         )}
                         {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Driver Cash</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Driver Cash</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_driver_cash)}>₹{formattedtotal_driver_cash}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_driver_cash)}>₹{formattedtotal_driver_cash}</h1>
                             </div>
                         )}
                         {filteredExpensesData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_expenses)}>₹{formattedtotal_expenses}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_expenses)}>₹{formattedtotal_expenses}</h1>
                             </div>
                         )}
                         {filteredRecieptData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_receipt)}>₹{formattedtotal_receipt}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_receipt)}>₹{formattedtotal_receipt}</h1>
                             </div>
                         )}
-                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-2 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
+                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-4 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formattedcashBalance}</h1>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formattedcashBalance}</h1>
                         </div>
                     </div>
                 </div>

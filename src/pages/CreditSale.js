@@ -22,7 +22,7 @@ import React from "react";
 function CreditSale({ petrodata }) {
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-    const [creditdata, setCreditData] = useState([]);
+    const [ShiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchQueryVehicle, setSearchQueryVehicle] = useState("");
     const [searchQueryFuel, setSearchQueryFuel] = useState("");
@@ -39,6 +39,8 @@ function CreditSale({ petrodata }) {
     const [showDropdownFuel, setShowDropdownFuel] = useState(false); // State to toggle the dropdown visibility
     const [rate, setRate] = useState(''); // State to toggle the dropdown visibility
     const [quantity, setQuantity] = useState('');
+    const [selectedFuelId, setSelectedFuelId] = useState('');
+
     const [totalAmt, setTotalAmt] = useState('');
     const [sgst, setSgst] = useState("");
     const [cgst, setCgst] = useState("");
@@ -50,7 +52,7 @@ function CreditSale({ petrodata }) {
     const [editingIndex, setEditingIndex] = useState(null);
     const [errors, setErrors] = useState({});
     const [errorss, setErrorss] = useState({});
-
+    const [dsmIds, setDsmIds] = useState([]);
     const [editData, setEditData] = useState({
         selectedCustomer: '',
         selectedVehicle: '',
@@ -270,22 +272,16 @@ function CreditSale({ petrodata }) {
                 return;
             }
 
-            // Create a copy of submittedData
             const updatedData = [...submittedData];
 
-            // Update the item at the editingIndex with editData
             updatedData[editingIndex] = editData;
 
-            // Update local storage
             localStorage.setItem('submittedData', JSON.stringify(updatedData));
 
-            // Update state with the edited data
             setSubmittedData(updatedData);
 
-            // Close the edit modal
             setIsEditModalOpen(false);
 
-            // Reset editingIndex
             setEditingIndex(null);
         }
     };
@@ -342,62 +338,99 @@ function CreditSale({ petrodata }) {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
-
+        const sale_type = selectedCustomer === 'CASH' ? 0 : 1;
+        const customerid = selectedCustomer === 'CASH' ? 'CASH' : ledgerId;
         // Validate the form inputs
         if (validateForm()) {
-            const newData = {
-                selectedVehicle: selectedVehicle || searchQueryVehicle.trim(), // Use manually entered vehicle if selectedVehicle is empty
-                selectedCustomer,
-                selectedFuel,
-                rate,
-                quantity,
-                totalAmt,
-                driverCash,
-                inclusiveTotal,
-                slipNo,
-                cgst,
-                sgst,
-                coupenNo,
+            const payload = {
+                is_card: 0,
+                petro_id: petrodata.petro_id,
+                shift: ShiftData.shift,
+                dsm_id: dsmIds[0],
+                vehicle_no: selectedVehicle || searchQueryVehicle,
+                slip_no: slipNo,
+                coupen_no: coupenNo,
+                day_shift_no: ShiftData.day_shift_no,
+                customer_id: customerid,
+                state_id: petrodata.state_id,
+                gst_type: 0,
+                sale_type: sale_type,
+                total_net_amt: totalAmt,
+                total_sgst_amt: sgst,
+                total_cgst_amt: cgst,
+                total_igst_amt: 0,
+                total_dis_amt: 0,
+                cash_to_driver: driverCash,
+                total_inclusive_amt: inclusiveTotal,
+                addSaleItemList: [
+                    {
+                        petro_id: petrodata.petro_id,
+                        shift: ShiftData.shift,
+                        batch_no: null,
+                        qty: quantity,
+                        rate: rate,
+                        net_amt: totalAmt,
+                        gst_rate: parseFloat(cgst) + parseFloat(sgst),
+                        cgst_per: cgst,
+                        sgst_per: sgst,
+                        igst_per: 0,
+                        cgst_amt: cgst,
+                        sgst_amt: sgst,
+                        igst_amt: 0,
+                        dis: 0,
+                        dis_amt: 0,
+                        total_amt: totalAmt,
+                        inclusive_rate: rate,
+                        inclusive_total: inclusiveTotal,
+                        item_id: selectedFuelId
+                    }
+                ]
+
             };
 
-            // Update or add the new data to localStorage
-            const existingData = JSON.parse(localStorage.getItem('submittedData')) || [];
+            try {
+                await axios.post(`${base_url}/addSale/1`, payload);
+                console.log('Data submitted successfully.');
 
-            if (editingIndex !== null && editingIndex !== undefined) {
-                existingData[editingIndex] = newData; // Update existing data if editing
-            } else {
-                existingData.push(newData); // Add new data if not editing
+                // Fetch updated card sales data after successful submission
+                // const response = await axios.post(`${base_url}//1`, {
+                //     shift: `${ShiftData.shift}`,
+                //     employee_id: petrodata.user_id,
+                //     type: 1,
+                //     date: ShiftData.date,
+                //     petro_id: petrodata.petro_id,
+                //     day_shift: petrodata.daily_shift,
+                // });
+                setSelectedVehicle('');
+                setSelectedCustomer('');
+                setQuantity('');
+                setTotalAmt('');
+                setDriverCash('');
+                setInclusiveTotal('');
+                setSlipNo('');
+                setCoupenNo('');
+                setEditingIndex(null);
+                setShowDropdown(false);
+                setSearchQuery('');
+                setSearchQueryVehicle('');
+                setCgst('');
+                setSgst('');
+                console.log('Form submitted successfully');
+
+
+                onClose(); // Close modal or perform other UI actions after submission
+            } catch (error) {
+                console.error('Error submitting data:', error);
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                    console.error('Response headers:', error.response.headers);
+                }
             }
-
-            // Save updated data back to localStorage
-            localStorage.setItem('submittedData', JSON.stringify(existingData));
-
-            // Update state variables and UI after successful submission
-            setSubmittedData(existingData);
-            setSelectedVehicle('');
-            setSelectedCustomer('');
-
-            setQuantity('');
-            setTotalAmt('');
-            setDriverCash('');
-            setInclusiveTotal('');
-            setSlipNo('');
-            setCoupenNo('');
-            setEditingIndex(null);
-            setShowDropdown(false);
-            setSearchQuery('');
-            setSearchQueryVehicle('');
-            setCgst('');
-            setSgst('');
-            console.log('Form submitted successfully');
-            console.log(existingData);
-
-            onClose(); // Close modal or perform other UI actions after submission
         }
     };
-
 
     const handleEdit = (index) => {
         console.log("Editing index:", index);
@@ -430,28 +463,7 @@ function CreditSale({ petrodata }) {
         };
     }, [dropdownRef]);
 
-    useEffect(() => {
-        axios.post(
-            `${base_url}/assignNozzleList/1`,
-            {
-                "shift": 11,
-                "emp_id": "24",
-                "date": "2024-04-11",
-                "petro_id": petrodata.petro_id,
-                "day_shift": petrodata.daily_shift,
-            }
-        )
-            .then(response => {
-                const data = response.data.data;
-                setNoozleData(data);
-                // Initialize readings state
-                console.log(data)
 
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
     useEffect(() => {
         axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
             "petro_id": petrodata.petro_id,
@@ -488,16 +500,18 @@ function CreditSale({ petrodata }) {
 
     // Function to handle selection of customer
     const handleSelectCustomer = (customer) => {
-        if (selectedCustomer !== 'Cash') {
+        if (selectedCustomer !== 'CASH') {
             // Reset to default rate
             const selectedNoozleItem = noozleData.find(item => item.Nozzle.Item.name === selectedFuel);
             const selectedItem = ItemName.find(item => item.Item.name === selectedFuel);
+            setLedgerId(customer.Ledger.id === 'CASH' ? 'CASH' : customer.Ledger.id); // Update the ledger ID
             const defaultRate = selectedNoozleItem ? selectedNoozleItem.rate : (selectedItem ? selectedItem.Item.mrp : '');
             setRate(defaultRate);
         } else {
             setRate(''); // Reset rate if no fuel is selected
         }
         setSelectedCustomer(customer.Ledger.name);
+
         setLedgerId(customer.Ledger.id); // Update the ledger ID
         setSearchQuery(customer.Ledger.name);
         setSearchQueryVehicle(""); // Clear the vehicle number
@@ -551,20 +565,6 @@ function CreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(`${base_url}/customervehList/1`, {
-            "petro_id": petrodata.petro_id,
-            "ledger_id": 800,
-        })
-
-            .then(response => {
-                console.log(response.data.data)
-                setVehicledata(response.data.data)
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata.petro_id, base_url]);
-    useEffect(() => {
         axios.post(`${base_url}/searchItemByName/1`, {
             "petro_id": petrodata.petro_id,
         })
@@ -579,25 +579,46 @@ function CreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(
-            `${base_url}/empcurrentShiftData/7/24/1`,
-            {
-                shift: 11,
-                emp_id: "24",
-                date: "2024-04-11",
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            }
-        )
-            .then(response => {
-                const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                const formattedDate = formatDate(date);
-                setCreditData({ shift, day_shift_no, date: formattedDate });
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
+        if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
+            axios
+                .post(`${base_url}/currentShiftData/1`,
+                    {
+
+                        petro_id: petrodata.petro_id,
+                    })
+                .then((response) => {
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    setShiftData({ shift, day_shift_no, formattedDate, date });
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios
+                .post(`${base_url}/assignNozzleList/1`, {
+                    shift: `${ShiftData.shift}`,
+                    emp_id: petrodata.user_id,
+                    date: ShiftData.date,
+                    petro_id: petrodata.petro_id,
+                    day_shift: petrodata.daily_shift,
+                })
+                .then((response) => {
+                    const data = response.data.data;
+
+                    const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                    setDsmIds(extractedDsmIds);
+                    console.log('extractedDsmIds', extractedDsmIds)
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
     const handleSearchChange = (event) => {
         const query = event.target.value.toLowerCase();
         setShowDropdown(true); // Show dropdown when input value changes
@@ -647,14 +668,17 @@ function CreditSale({ petrodata }) {
         const selectedNoozleItem = noozleData.find(item => item.Nozzle.Item.name === selectedValue);
         const selectedItem = ItemName.find(item => item.Item.name === selectedValue);
         const rate = selectedNoozleItem ? selectedNoozleItem.rate : (selectedItem ? selectedItem.Item.mrp : '');
+        const selectedId = selectedNoozleItem ? selectedNoozleItem.NozzlesAssign.id : (selectedItem ? selectedItem.Item.id : '');
 
         if (selectedNoozleItem || selectedItem) {
             setSelectedFuel(selectedValue);
             setRate(rate);
+            setSelectedFuelId(selectedId); // Set the selected fuel/item ID
 
             setEditData(prevData => ({
                 ...prevData,
                 selectedFuel: selectedValue,
+                selectedFuelId: selectedId, // Store the selected ID
                 rate: selectedNoozleItem ? selectedNoozleItem.rate : '',
                 mrp: selectedItem ? selectedItem.Item.mrp : ''
             }));
@@ -665,6 +689,7 @@ function CreditSale({ petrodata }) {
 
         setShowDropdownFuel(false);
     };
+
 
 
 
@@ -688,7 +713,7 @@ function CreditSale({ petrodata }) {
         let sgstAmount = 0;
 
         const baseAmount = (total * gst_percentage) / (100 + gst_percentage)
-        // If customer is 'Cash', calculate only CGST and SGST
+        // If customer is 'CASH', calculate only CGST and SGST
 
         cgstAmount = baseAmount / 2;
         sgstAmount = baseAmount / 2;
@@ -872,9 +897,9 @@ function CreditSale({ petrodata }) {
                                         <>
                                             <div className="mb-4 flex justify-between">
                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
-                                                    Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
+                                                    Date: <span className='text-red-500 font-medium'>        {ShiftData.date}</span>
                                                 </h2>
-                                                <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
+                                                <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {ShiftData.day_shift_no}</span></h2>
                                             </div>
                                         </>
 
@@ -909,8 +934,8 @@ function CreditSale({ petrodata }) {
                                                     )}
                                                     {showDropdown && (
                                                         <ul ref={dropdownRef} className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                            <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'cash', name: 'Cash' } })}>
-                                                                Cash
+                                                            <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'CASH', name: 'CASH' } })}>
+                                                                CASH
                                                             </li>
                                                             {customerdata.length === 0 ? (
                                                                 <li className="py-2 px-3 text-gray-500">No data available</li>
@@ -937,7 +962,6 @@ function CreditSale({ petrodata }) {
                                                             {vehicledata.length === 0 ? (
                                                                 <input
                                                                     type="text"
-
                                                                     value={searchQueryVehicle}
                                                                     onChange={(e) => setSearchQueryVehicle(e.target.value)}
                                                                     placeholder="Enter vehicle manually"
@@ -987,7 +1011,7 @@ function CreditSale({ petrodata }) {
 
                                             {/* Fuel Type */}
                                             <div className="flex flex-col col-span-1 gap-1">
-                                                <label htmlFor="itemOrFuelType">{selectedCustomer === 'Cash' ? 'Item' : 'Fuel Type'}</label>
+                                                <label htmlFor="itemOrFuelType">{selectedCustomer === 'CASH' ? 'Item' : 'Fuel Type'}</label>
                                                 <div className="mt-1 relative">
                                                     <select
                                                         id="itemOrFuelType"
@@ -995,8 +1019,8 @@ function CreditSale({ petrodata }) {
                                                         onChange={(e) => handleSelectfuel(e.target.value)}
                                                         className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                     >
-                                                        <option value="">Select {selectedCustomer === 'Cash' ? 'Item' : 'Fuel'}</option>
-                                                        {selectedCustomer !== 'Cash' && (
+                                                        <option value="">Select {selectedCustomer === 'CASH' ? 'Item' : 'Fuel'}</option>
+                                                        {selectedCustomer !== 'CASH' && (
                                                             <>
                                                                 {noozleData.map((item) => (
 
@@ -1189,9 +1213,9 @@ function CreditSale({ petrodata }) {
 
 
                         <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
-                            Date: <span className='text-red-500 font-medium'>        {creditdata.date}</span>
+                            Date: <span className='text-red-500 font-medium'>        {ShiftData.date}</span>
                         </h2>
-                        <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {creditdata.day_shift_no}</span></h2>
+                        <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {ShiftData.day_shift_no}</span></h2>
                     </div>
                     </div>
                 )}
@@ -1215,7 +1239,7 @@ function CreditSale({ petrodata }) {
 
 
                                 <motion.div
-                                    className="flex select-none flex-col justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                    className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
                                     animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     drag={isMobile ? "x" : false}
@@ -1301,13 +1325,13 @@ function CreditSale({ petrodata }) {
                                     {/* Edit form */}
                                     <form onSubmit={handleSubmitEdit}>
                                         <div className="">
-                                            {creditdata.data && (
+                                            {ShiftData.data && (
                                                 <>
                                                     <div className="mb-4 flex justify-between">
                                                         <h2 className="block text-gray-700 text-lg font-bold mb-2">
-                                                            Date: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.date}</span>
+                                                            Date: <span className='text-red-500 font-medium'>{ShiftData.data.DailyShift.date}</span>
                                                         </h2>
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.data.DailyShift.day_shift_no}</span></h2>
+                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">Shift: <span className='text-red-500 font-medium'>{ShiftData.data.DailyShift.day_shift_no}</span></h2>
                                                     </div>
                                                 </>
                                             )}
@@ -1339,7 +1363,7 @@ function CreditSale({ petrodata }) {
 
                                                         {showDropdown && (
                                                             <ul ref={dropdownRef} className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'cash', name: 'Cash' } })}>
+                                                                <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'CASH', name: 'CASH' } })}>
                                                                     Cash
                                                                 </li>
                                                                 {customerdata.length === 0 ? (
@@ -1421,7 +1445,7 @@ function CreditSale({ petrodata }) {
                                                 {/* Fuel Type */}
                                                 <div className="flex flex-col col-span-1 gap-1">
 
-                                                    <label htmlFor="itemOrFuelType">{selectedCustomer === 'Cash' ? 'Item' : 'Fuel Type'}</label>
+                                                    <label htmlFor="itemOrFuelType">{selectedCustomer === 'CASH' ? 'Item' : 'Fuel Type'}</label>
                                                     <div className="mt-1 relative">
                                                         <select
                                                             id="itemOrFuelType"
@@ -1429,8 +1453,8 @@ function CreditSale({ petrodata }) {
                                                             onChange={(e) => handleSelectfuel(e.target.value)}
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         >
-                                                            <option value="">Select {selectedCustomer === 'Cash' ? 'Item' : 'Fuel'}</option>
-                                                            {selectedCustomer !== 'Cash' && (
+                                                            <option value="">Select {selectedCustomer === 'CASH' ? 'Item' : 'Fuel'}</option>
+                                                            {selectedCustomer !== 'CASH' && (
                                                                 <>
                                                                     {noozleData.map((item) => (
 
