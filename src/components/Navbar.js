@@ -186,7 +186,7 @@ function Navbar({ petrodata }) {
                         </div>
 
                         <div className="mt-1 flex-1 flex flex-col ">
-                            <nav className="flex-1 px-2 flex gap-[1.5rem] flex-col mt-5 bg-navbar space-y-1">
+                            <nav className="flex-1 px-2 flex gap-[1.3rem] flex-col mt-5 bg-navbar space-y-1">
                                 <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
                                         className="h-9 mx-auto w-auto mb-5"
