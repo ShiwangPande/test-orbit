@@ -191,7 +191,7 @@ function Navbar({ petrodata }) {
                                     <img
                                         className="h-9 mx-auto w-auto mb-5"
                                         src={logo}
-                                        alt="Your Company"
+                                        alt={petrodata.petro_name}
                                     />
                                     <h2 className="block    text-white text-md lg:text-xl font-normal mb-0  lg:mb-1" >Hey {petrodata.name}</h2>
                                     <h2 className="block    text-white text-md lg:text-xl font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
