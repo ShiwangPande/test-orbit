@@ -38,7 +38,7 @@ function Reciept({ petrodata }) {
     const [editingIndex, setEditingIndex] = useState(null);
     const [errors, setErrors] = useState({});
     const [errorss, setErrorss] = useState({});
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [editData, setEditData] = useState({
         selectedWalletName: "",
         amount: "",
@@ -230,7 +230,11 @@ function Reciept({ petrodata }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
-    
+        if (isSubmitting) {
+            return; // Prevent multiple submissions
+        }
+
+        setIsSubmitting(true);
         // Validate the form inputs
         if (validateForm()) {
             const payload = {
@@ -246,11 +250,11 @@ function Reciept({ petrodata }) {
                 type: 1,
                 date: ShiftData.date,
             };
-    
+
             try {
                 await axios.post(`${base_url}/addCardSale/1`, payload);
                 console.log('Data submitted successfully.');
-    
+
                 // Fetch updated card sales data after successful submission
                 const response = await axios.post(`${base_url}/cardSaleList/1`, {
                     shift: `${ShiftData.shift}`,
@@ -262,7 +266,7 @@ function Reciept({ petrodata }) {
                 });
                 setCardSales(response.data.data);
                 console.log('Updated card sales:', response.data.data);
-    
+
                 // Reset form fields and UI state
                 setSelectedWalletName("");
                 setSearchQuery("");
@@ -273,7 +277,7 @@ function Reciept({ petrodata }) {
                 setVehicle("");
                 setbatch("");
                 console.log("Form submitted successfully");
-    
+
                 onClose(); // Close modal or perform other UI actions after submission
             } catch (error) {
                 console.error('Error submitting data:', error);
@@ -284,8 +288,9 @@ function Reciept({ petrodata }) {
                 }
             }
         }
+        setIsSubmitting(false);
     };
-    
+
 
 
     const handleEdit = (index) => {
@@ -629,9 +634,12 @@ function Reciept({ petrodata }) {
                                         <Button className="bg-red-500 text-white" onPress={onClose}>
                                             Close
                                         </Button>
-                                        <Button className="bg-gray-800 text-white" type="submit">
+                                        <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
                                             Submit
                                         </Button>
+                                        <br />
+                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
+
                                     </ModalFooter>
                                 </form>
                             </>

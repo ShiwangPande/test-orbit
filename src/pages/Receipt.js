@@ -26,7 +26,7 @@ function Expenses({ petrodata }) {
     const [ShiftData, setShiftData] = useState([]);
     const [expensesVoucherList, setExpensesVoucherList] = useState([]);
     const [dropdownType, setDropdownType] = useState('');
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [dsmIds, setDsmIds] = useState([]); // State to store dsmIds
     const [selectedLedgerName, setSelectedLedgerName] = useState(null);;
     const [ledgerId, setLedgerId] = useState(null);
@@ -247,7 +247,11 @@ function Expenses({ petrodata }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
+        if (isSubmitting) {
+            return; // Prevent multiple submissions
+        }
 
+        setIsSubmitting(true);
         // Validate the form inputs
         if (validateForm()) {
             const payload = {
@@ -304,6 +308,7 @@ function Expenses({ petrodata }) {
             }
             onClose(); // Close modal or perform other UI actions after submission
         }
+        setIsSubmitting(false);
     };
     const handleEdit = (index) => {
         console.log("Editing index:", index);
@@ -707,9 +712,12 @@ function Expenses({ petrodata }) {
                                         <Button className="bg-red-500 text-white" onPress={onClose}>
                                             Close
                                         </Button>
-                                        <Button className="bg-gray-800 text-white" type="submit">
+                                        <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
                                             Submit
                                         </Button>
+                                        <br />
+                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
+
                                     </ModalFooter>
                                 </form>
                             </>

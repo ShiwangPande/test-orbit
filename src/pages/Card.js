@@ -23,6 +23,7 @@ function Reciept({ petrodata }) {
     const [ShiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [dsmIds, setDsmIds] = useState([]); // State to store dsmIds
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [selectedCardName, setSelectedCardName] = useState(null);
     const [CardNamedata, setCardNamedata] = useState([]);
@@ -235,6 +236,11 @@ function Reciept({ petrodata }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
+        if (isSubmitting) {
+            return; // Prevent multiple submissions
+        }
+
+        setIsSubmitting(true);
 
 
         // Validate the form inputs
@@ -296,6 +302,8 @@ function Reciept({ petrodata }) {
 
             onClose(); // Close modal or perform other UI actions after submission
         }
+        setIsSubmitting(false); // Reset submission state after the operation is done
+
     };
 
 
@@ -640,9 +648,12 @@ function Reciept({ petrodata }) {
                                         <Button className="bg-red-500 text-white" onPress={onClose}>
                                             Close
                                         </Button>
-                                        <Button className="bg-gray-800 text-white" type="submit">
+                                        <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
                                             Submit
                                         </Button>
+                                        <br />
+                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
+
                                     </ModalFooter>
                                 </form>
                             </>
