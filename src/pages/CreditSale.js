@@ -29,6 +29,8 @@ function CreditSale({ petrodata }) {
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [selectedFuel, setSelectedFuel] = useState(null);
+    const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("")
+    const [getOtherSaleList, setgetOtherSaleList] = useState("")
     const [vehicledata, setVehicledata] = useState([])
     const [ItemName, setItemName] = useState([])
     const [customerdata, setCustomerdata] = useState([])
@@ -40,7 +42,7 @@ function CreditSale({ petrodata }) {
     const [rate, setRate] = useState(''); // State to toggle the dropdown visibility
     const [quantity, setQuantity] = useState('');
     const [selectedFuelId, setSelectedFuelId] = useState('');
-
+    const [gst, setgst] = useState('')
     const [totalAmt, setTotalAmt] = useState('');
     const [sgst, setSgst] = useState("");
     const [cgst, setCgst] = useState("");
@@ -68,6 +70,7 @@ function CreditSale({ petrodata }) {
         inclusiveTotal: 0
     });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Function to open edit modal and populate with data
     const formatDate = (dateString) => {
@@ -292,6 +295,49 @@ function CreditSale({ petrodata }) {
             setSubmittedData(storedData);
         }
     }, []);
+
+
+
+
+
+
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                shift: `${ShiftData.shift}`,
+                employee_id: petrodata.user_id,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setgetOtherSaleList(response.data.data);
+                    console.log('getOtherSaleListByShiftOrType', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                shift: `${ShiftData.shift}`,
+                employee_id: petrodata.user_id,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setgetOtherSaleList(response.data.data);
+                    console.log('getOtherSaleListByShiftOrType', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
     const validateForm = () => {
         const newErrors = {};
 
@@ -340,9 +386,15 @@ function CreditSale({ petrodata }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault(); // Prevent default form submission behavior
+        if (isSubmitting) {
+            return; // Prevent multiple submissions
+        }
+
+        setIsSubmitting(true);
+
+
         const sale_type = selectedCustomer === 'CASH' ? 0 : 1;
-        const customerid = selectedCustomer === 'CASH' ? 'CASH' : ledgerId;
-        // Validate the form inputs
+        const customerid = selectedCustomer === 'CASH' ? 1 : ledgerId;
         if (validateForm()) {
             const payload = {
                 is_card: 0,
@@ -354,16 +406,18 @@ function CreditSale({ petrodata }) {
                 coupen_no: coupenNo,
                 day_shift_no: ShiftData.day_shift_no,
                 customer_id: customerid,
+                date: ShiftData.date,
                 state_id: petrodata.state_id,
-                gst_type: 0,
+                gst_type: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? 1 : 0,
                 sale_type: sale_type,
-                total_net_amt: totalAmt,
-                total_sgst_amt: sgst,
-                total_cgst_amt: cgst,
-                total_igst_amt: 0,
-                total_dis_amt: 0,
+                total_net_amt: inclusiveTotal,
+                total_sgst_amt: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? sgst : null,
+                total_cgst_amt: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? cgst : null,
+                total_igst_amt: null,
+                total_dis_amt: null,
                 cash_to_driver: driverCash,
                 total_inclusive_amt: inclusiveTotal,
+                total_gt_amt: totalAmt,
                 addSaleItemList: [
                     {
                         petro_id: petrodata.petro_id,
@@ -372,15 +426,15 @@ function CreditSale({ petrodata }) {
                         qty: quantity,
                         rate: rate,
                         net_amt: totalAmt,
-                        gst_rate: parseFloat(cgst) + parseFloat(sgst),
-                        cgst_per: cgst,
-                        sgst_per: sgst,
-                        igst_per: 0,
-                        cgst_amt: cgst,
-                        sgst_amt: sgst,
-                        igst_amt: 0,
-                        dis: 0,
-                        dis_amt: 0,
+                        gst_rate: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? gst : null,
+                        cgst_per: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? cgst : null,
+                        sgst_per: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? sgst : null,
+                        igst_per: null,
+                        cgst_amt: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? cgst : null,
+                        sgst_amt: selectedFuel !== 'HSD' && selectedFuel !== 'MS' ? sgst : null,
+                        igst_amt: null,
+                        dis: null,
+                        dis_amt: null,
                         total_amt: totalAmt,
                         inclusive_rate: rate,
                         inclusive_total: inclusiveTotal,
@@ -395,14 +449,23 @@ function CreditSale({ petrodata }) {
                 console.log('Data submitted successfully.');
 
                 // Fetch updated card sales data after successful submission
-                // const response = await axios.post(`${base_url}//1`, {
-                //     shift: `${ShiftData.shift}`,
-                //     employee_id: petrodata.user_id,
-                //     type: 1,
-                //     date: ShiftData.date,
-                //     petro_id: petrodata.petro_id,
-                //     day_shift: petrodata.daily_shift,
-                // });
+                const response = await axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+                    shift: `${ShiftData.shift}`,
+                    employee_id: petrodata.user_id,
+                    date: ShiftData.date,
+                    petro_id: petrodata.petro_id,
+                    day_shift: petrodata.daily_shift,
+                });
+
+                const otherresponse = await axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                    shift: `${ShiftData.shift}`,
+                    employee_id: petrodata.user_id,
+                    date: ShiftData.date,
+                    petro_id: petrodata.petro_id,
+                    day_shift: petrodata.daily_shift,
+                });
+                setmsAndHsdSaleList(response.data.data);
+                setgetOtherSaleList(otherresponse.data.data);
                 setSelectedVehicle('');
                 setSelectedCustomer('');
                 setQuantity('');
@@ -421,6 +484,7 @@ function CreditSale({ petrodata }) {
 
 
                 onClose(); // Close modal or perform other UI actions after submission
+
             } catch (error) {
                 console.error('Error submitting data:', error);
                 if (error.response) {
@@ -430,6 +494,8 @@ function CreditSale({ petrodata }) {
                 }
             }
         }
+        setIsSubmitting(false); // Reset submission state after the operation is done
+
     };
 
     const handleEdit = (index) => {
@@ -612,6 +678,7 @@ function CreditSale({ petrodata }) {
 
                     const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
                     setDsmIds(extractedDsmIds);
+                    setNoozleData(response.data.data)
                     console.log('extractedDsmIds', extractedDsmIds)
                 })
                 .catch((error) => {
@@ -648,16 +715,32 @@ function CreditSale({ petrodata }) {
         setShowDropdownFuel(true); // Show dropdown when input value changes
         setSearchQueryFuel(queryfuel);
     };
+
+
     useEffect(() => {
         if (Array.isArray(noozleData) && noozleData.length > 0) {
             const hsdItem = noozleData.find(item => item.Nozzle.Item.name === 'HSD');
+            const msItem = noozleData.find(item => item.Nozzle.Item.name === 'MS');
+
             if (hsdItem) {
                 setSelectedFuel('HSD');
                 setRate(hsdItem.rate);
+                setSelectedFuelId(hsdItem.Nozzle.commodity);
                 setEditData(prevData => ({
                     ...prevData,
                     selectedFuel: 'HSD',
+                    selectedFuelId: hsdItem.Nozzle.commodity,
                     rate: hsdItem.rate
+                }));
+            } else if (msItem) {
+                setSelectedFuel('MS');
+                setRate(msItem.rate);
+                setSelectedFuelId(msItem.Nozzle.commodity);
+                setEditData(prevData => ({
+                    ...prevData,
+                    selectedFuel: 'MS',
+                    selectedFuelId: msItem.Nozzle.commodity,
+                    rate: msItem.rate
                 }));
             }
         }
@@ -665,15 +748,21 @@ function CreditSale({ petrodata }) {
 
 
     const handleSelectfuel = (selectedValue) => {
+        console.log('Selected Value:', selectedValue);
         const selectedNoozleItem = noozleData.find(item => item.Nozzle.Item.name === selectedValue);
         const selectedItem = ItemName.find(item => item.Item.name === selectedValue);
         const rate = selectedNoozleItem ? selectedNoozleItem.rate : (selectedItem ? selectedItem.Item.mrp : '');
-        const selectedId = selectedNoozleItem ? selectedNoozleItem.NozzlesAssign.id : (selectedItem ? selectedItem.Item.id : '');
+        const selectedId = selectedNoozleItem ? selectedNoozleItem.Nozzle.commodity : (selectedItem ? selectedItem.Item.id : '');
+
+        console.log('Selected Noozle Item:', selectedNoozleItem);
+        console.log('Selected Item:', selectedItem);
+        console.log('Rate:', rate);
+        console.log('Selected ID:', selectedId);
 
         if (selectedNoozleItem || selectedItem) {
             setSelectedFuel(selectedValue);
             setRate(rate);
-            setSelectedFuelId(selectedId); // Set the selected fuel/item ID
+            setSelectedFuelId(selectedId);
 
             setEditData(prevData => ({
                 ...prevData,
@@ -693,73 +782,56 @@ function CreditSale({ petrodata }) {
 
 
 
-    // useEffect(() => {
-    //     const total = parseFloat(totalAmt) || 0;
-    //     const cash = parseFloat(driverCash) || 0;
-    //     setInclusiveTotal((total + cash).toFixed(2));
-    // }, [totalAmt, driverCash]);
-
     useEffect(() => {
         const total = parseFloat(totalAmt) || 0;
-        const cash = parseFloat(driverCash) || 0;
-        const cgstItem = ItemName.find(item => item.GstMaster.cgst !== null);
-        const sgstItem = ItemName.find(item => item.GstMaster.sgst !== null);
-        const cgstPercentage = parseFloat(cgstItem?.GstMaster?.cgst) || 0;
-        const sgstPercentage = parseFloat(sgstItem?.GstMaster?.sgst) || 0;
+
         const gstItem = ItemName.find(item => item.GstMaster.gst_percentage !== null);
         const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
-        // Calculate CGST and SGST amounts
-        let cgstAmount = 0;
-        let sgstAmount = 0;
-
-        const baseAmount = (total * gst_percentage) / (100 + gst_percentage)
-        // If customer is 'CASH', calculate only CGST and SGST
-
-        cgstAmount = baseAmount / 2;
-        sgstAmount = baseAmount / 2;
-
-
-        // Calculate inclusive total based on customer selection
+        let get_total = 0;
         let inclusiveTotal = 0;
         if (selectedFuel === 'HSD' || selectedFuel === 'MS') {
-            // Otherwise, add cash amount to total
-            const cash = parseFloat(driverCash) || 0;
-            inclusiveTotal = (total + cash).toFixed(2);
-
+            inclusiveTotal = (total).toFixed(2);
+            setCgst(0); // No CGST for HSD and MS
+            setSgst(0); // No SGST for HSD and MS
+            setgst(0);
         } else {
-            inclusiveTotal = (total + cash - cgstAmount - sgstAmount).toFixed(2);
+            const baseAmount = (total * gst_percentage) / (100 + gst_percentage);
+            const cgstAmount = baseAmount / 2;
+            const sgstAmount = baseAmount / 2;
+            inclusiveTotal = (total - cgstAmount - sgstAmount).toFixed(2);
+
+            setCgst(cgstAmount.toFixed(2));
+            setSgst(sgstAmount.toFixed(2));
+            setgst(gst_percentage);
+
+            console.log(get_total)
         }
 
         setInclusiveTotal(inclusiveTotal);
-    }, [totalAmt, driverCash, ItemName, selectedFuel]);
+    }, [totalAmt, ItemName, selectedFuel]);
+
+
 
     useEffect(() => {
         const cgstItem = ItemName.find(item => item.GstMaster.cgst !== null);
         const sgstItem = ItemName.find(item => item.GstMaster.sgst !== null);
         const gstItem = ItemName.find(item => item.GstMaster.gst_percentage !== null);
 
-
-        if (cgstItem) {
-            // const cgstPercentage = parseFloat(cgstItem.GstMaster.cgst) || 0;
+        if (selectedFuel !== 'HSD' && selectedFuel !== 'MS') {
             const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
             const total = parseFloat(totalAmt) || 0;
-            const precalculatedCgst = (total * gst_percentage) / (100 + gst_percentage);
-            const calculatedCgst = precalculatedCgst / 2;
+            const baseAmount = (total * gst_percentage) / (100 + gst_percentage);
+            const calculatedCgst = baseAmount / 2;
+            const calculatedSgst = baseAmount / 2;
+
             setCgst(calculatedCgst.toFixed(2));
+            setSgst(calculatedSgst.toFixed(2));
         } else {
-            setCgst(0); // Handle case when no item with cgst is found
+            setCgst(0);
+            setSgst(0);
         }
-        if (sgstItem) {
-            const gst_percentage = parseFloat(gstItem?.GstMaster?.gst_percentage) || 0;
-            const total = parseFloat(totalAmt) || 0;
-            const precalculatedCgst = (total * gst_percentage) / (100 + gst_percentage);
-            const calculatedCgst = precalculatedCgst / 2;
-            setSgst(calculatedCgst.toFixed(2));
-        } else {
-            setSgst(0); // Handle case when no item with cgst is found
-        }
+    }, [totalAmt, ItemName, selectedFuel]);
 
-    }, [totalAmt, ItemName]);
 
 
     const handleQuantityChange = (e) => {
@@ -1023,26 +1095,22 @@ function CreditSale({ petrodata }) {
                                                         {selectedCustomer !== 'CASH' && (
                                                             <>
                                                                 {noozleData.map((item) => (
-
                                                                     <option key={item.NozzlesAssign.id} value={item.Nozzle.Item.name}>
                                                                         {item.Nozzle.Item.name}
                                                                     </option>
-
-                                                                ))
-
-                                                                }
-                                                            </>)}
+                                                                ))}
+                                                            </>
+                                                        )}
                                                         {ItemName.map((item) => (
                                                             <option key={item.Item.id} value={item.Item.name}>
                                                                 {item.Item.name}
                                                             </option>
-                                                        ))
-                                                        }
+                                                        ))}
                                                     </select>
-                                                    {/* {selectedCustomer} */}
                                                     {errors.selectedFuel && <span className="text-red-500 text-sm">{errors.selectedFuel}</span>}
                                                 </div>
                                             </div>
+
 
 
 
@@ -1054,6 +1122,7 @@ function CreditSale({ petrodata }) {
                                                     value={slipNo}
                                                     onChange={(e) => setSlipNo(e.target.value)}
                                                     id="slip"
+                                                    placeholder="Slip No"
                                                     className="border p-2 border-gray-300 rounded"
                                                     maxLength={5}
                                                 />
@@ -1067,6 +1136,7 @@ function CreditSale({ petrodata }) {
                                                     value={coupenNo}
                                                     onChange={(e) => setCoupenNo(e.target.value)}
                                                     id="coupen"
+                                                    placeholder="Coupen No"
                                                     className="border p-2 border-gray-300 rounded"
                                                     maxLength={5}
                                                 />
@@ -1103,6 +1173,7 @@ function CreditSale({ petrodata }) {
                                                     id="Quantity"
                                                     value={quantity}
                                                     onChange={handleQuantityChange}
+                                                    placeholder="Quantity"
                                                     disabled={!selectedFuel}
                                                     className="border p-2 border-gray-300 rounded"
                                                 // required
@@ -1195,10 +1266,12 @@ function CreditSale({ petrodata }) {
                                         <Button className="bg-red-500 text-white" onPress={onClose}>
                                             Close
                                         </Button>
-                                        <Button className="bg-gray-800 text-white" type="submit" >
+                                        <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
                                             Submit
-
                                         </Button>
+                                        <br />
+                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
+
                                     </ModalFooter>
                                 </form>
                             </>
@@ -1219,10 +1292,13 @@ function CreditSale({ petrodata }) {
                     </div>
                     </div>
                 )}
-                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-2 gap-3 lg:gap-5">
-                    {submittedData.map((data, index) => (
-                        data?.selectedCustomer && (
-                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row ">
+
+
+
+                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
+                    {Array.isArray(getOtherSaleList) && getOtherSaleList.length > 0 ? (
+                        getOtherSaleList.map((voucher, index) => (
+                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
@@ -1236,8 +1312,6 @@ function CreditSale({ petrodata }) {
                                         )}
                                     </>
                                 )}
-
-
                                 <motion.div
                                     className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
@@ -1245,75 +1319,64 @@ function CreditSale({ petrodata }) {
                                     drag={isMobile ? "x" : false}
                                     dragConstraints={dragConstraints}
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                    onClick={() => handleCardClick(index)} // Added onClick handler
+                                    onClick={() => handleCardClick(index)}
                                 >
-                                    <h5 className="lg:mb-2 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {data.selectedCustomer}
+                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                        {voucher.Ledger?.name}
                                     </h5>
-                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        {data.selectedVehicle && <p className="text-orrange font-semibold text-base">{data.selectedVehicle}</p>}
-                                        {data.selectedFuel && <p className="text-gray-700 font-semibold">Fuel: <span className="font-bold">{data.selectedFuel}</span></p>}
-                                        {data.rate && <p className="text-gray-700 font-semibold">Rate: <span className="font-bold">{data.rate}</span></p>}
-                                        {data.quantity && <p className="text-gray-700 font-semibold">Quantity: <span className="font-bold">{data.quantity}</span></p>}
-                                        {data.totalAmt && <p className="text-gray-700 font-semibold">Total Amt: <span className="font-bold">{data.totalAmt}</span></p>}
-                                        {data.driverCash && <p className="text-gray-700 font-semibold">Driver Cash: <span className="font-bold">{data.driverCash}</span></p>}
-                                        {data.slipNo && <p className="text-gray-700 font-semibold">Slip No: <span className="font-bold">{data.slipNo}</span></p>}
-                                        {data.coupenNo && <p className="text-gray-700 font-semibold">Coupen No: <span className="font-bold">{data.coupenNo}</span></p>}
-                                        {data.inclusiveTotal && <p className="text-gray-700 font-semibold">Inclusive Total: <span className="font-bold">{data.inclusiveTotal}</span></p>}
-                                    </div>
-
+                                    {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
+                                        <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                            <p className="text-gray-700 font-semibold">
+                                                Item: <span className="font-bold">{detail.Item?.name}</span>
+                                            </p>
+                                            <p className="text-gray-700 font-semibold">
+                                                Rate: <span className="font-bold">{detail.inclusive_rate}</span>
+                                            </p>
+                                            <p className="text-gray-700 font-semibold">
+                                                Quantity: <span className="font-bold">{detail.quantity}</span>
+                                            </p>
+                                            <p className="text-gray-700 font-semibold">
+                                                Total Amount: <span className="font-bold">{detail.total_amount}</span>
+                                            </p>
+                                            <p className="text-gray-700 font-semibold">
+                                                Inclusive Total: <span className="font-bold">{detail.inclusive_total}</span>
+                                            </p>
+                                        </div>
+                                    ))}
                                     {!isMobile && (
                                         <div className="flex flex-row justify-around mt-5">
-                                            {/* <button
-                                                className="px-2 w-10 h-10"
-                                                color="primary"
-                                                onClick={() => handleEdit(index)}
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
-                                                        fill="#000"
-                                                    />
-                                                </svg>
-                                            </button> */}
                                             <button
                                                 className="px-2 w-10 h-10"
                                                 onClick={() => handleRemove(index)}
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z"
-                                                        fill="#F44336"
-                                                    />
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                    <path d="M5.755 20.283 4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" />
                                                 </svg>
                                             </button>
                                         </div>
                                     )}
                                 </motion.div>
-                                {/* {isMobile && (
+                                {isMobile && (
                                     <>
-                                        {swipeStates[index] && swipeStates[index].isSwipedRight && (
-                                            <button className="h-full flex flex-row rounded-lg bg-navbar justify-around" onClick={() => handleEdit(index)}>
-                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#fff" />
-                                                    </svg>
-                                                </div>
-                                            </button>
+                                        {swipeStates[index] && swipeStates[index].isHeld && (
+                                            <>
+                                                <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                                    <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                            <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                        </svg>
+                                                    </div>
+                                                </button>
+                                            </>
                                         )}
-
-
                                     </>
-                                )} */}
+                                )}
                             </div>
-                        )
-                    ))}
+                        ))
+                    ) : (
+                        <p>No card sales available.</p>
+                    )}
+
 
                     {isEditModalOpen && (
                         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
