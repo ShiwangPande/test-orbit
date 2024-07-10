@@ -15,6 +15,7 @@ import {
 } from "@nextui-org/react";
 import add from "../images/add.svg";
 import { useLongPress } from 'use-long-press';
+import { Spinner } from "@nextui-org/react";
 
 import React from "react";
 
@@ -77,7 +78,7 @@ function Reciept({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/cardSaleList/1`, {
-                shift: `${ShiftData.shift}`,
+                shift: ShiftData.shift,
                 employee_id: petrodata.user_id,
                 "type": 0,
                 date: ShiftData.date,
@@ -98,7 +99,7 @@ function Reciept({ petrodata }) {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: ShiftData.shift,
                     emp_id: petrodata.user_id,
                     date: ShiftData.date,
                     petro_id: petrodata.petro_id,
@@ -264,7 +265,7 @@ function Reciept({ petrodata }) {
 
                 // Fetch updated card sales data after successful submission
                 const response = await axios.post(`${base_url}/cardSaleList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: ShiftData.shift,
                     employee_id: petrodata.user_id,
                     type: 0,
                     date: ShiftData.date,
@@ -473,7 +474,7 @@ function Reciept({ petrodata }) {
                 <div className="flex flex-wrap gap-3">
 
                     <Button
-                        className="bg-navbar fixed  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
+                        className="bg-navbar fixed z-10  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
                         onPress={onOpen}
                     >
                         <img src={add} className="w-8 h-8" alt="" />
@@ -527,7 +528,7 @@ function Reciept({ petrodata }) {
                                                     Account Name
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={handleSearchChange}
@@ -578,7 +579,7 @@ function Reciept({ petrodata }) {
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Amount</label>
-                                                <input
+                                                 <input autoComplete="off"
                                                     type="number"
                                                     value={amount}
                                                     onChange={handleAmountChange}
@@ -593,7 +594,7 @@ function Reciept({ petrodata }) {
                                             </div>
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Batch No.</label>
-                                                <input
+                                                 <input autoComplete="off"
                                                     type="text"
                                                     value={batch}
                                                     onChange={handleBatchChange}
@@ -610,7 +611,7 @@ function Reciept({ petrodata }) {
                                             </div>
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="vehicle">Vehicle No.</label>
-                                                <input
+                                                 <input autoComplete="off"
                                                     type="text"
                                                     value={vehicle}
                                                     onChange={handleVehicleChange}
@@ -652,8 +653,11 @@ function Reciept({ petrodata }) {
                                             Submit
                                         </Button>
                                         <br />
-                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
 
+
+
+
+                                        {isSubmitting && <Spinner label="Submitting..." color="default" />}
                                     </ModalFooter>
                                 </form>
                             </>
@@ -683,10 +687,11 @@ function Reciept({ petrodata }) {
                     </div>
                 )}
 
-                <div className=" mt-5 mx-5 relative -z-10  grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
+                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
+
                     {Array.isArray(cardSales) && cardSales.length > 0 ? (
                         cardSales.map((sale, index) => (
-                            <div key={index} ref={containerRef} className="relative  justify-center flex flex-row overflow-hidden">
+                            <div key={index} ref={containerRef} className="relative -z-0   justify-center flex flex-row overflow-hidden">
                                 {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
@@ -709,29 +714,25 @@ function Reciept({ petrodata }) {
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                     onClick={() => handleCardClick(index)} // Added onClick handler
                                 >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                         {sale.Card && sale.Card.card_name}
                                     </h5>
-                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        <p className="text-gray-700 font-semibold">
+                                    <div className="lg:mb-1 mb-1  grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-basetext-xs">
+                                        {sale.CardSale && sale.CardSale.amount && <p className="text-gray-700 font-semibold">
                                             Amount: <span className="font-bold"> {sale.CardSale && sale.CardSale.amount}</span>
-                                        </p>
-                                        <p className="text-gray-700 font-semibold">
+                                        </p>}
+
+                                        {sale.CardSale && sale.CardSale.batch_no && <p className="text-gray-700 font-semibold">
                                             Batch: <span className="font-bold"> {sale.CardSale && sale.CardSale.batch_no}</span>
-                                        </p>
+                                        </p>}
                                     </div>
-                                    <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        <p className="text-gray-700 font-semibold">
+                                    <div className="lg:mb-1 mb-1  grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
+                                        {sale.CardSale && sale.CardSale.vehicle_no && <p className="text-gray-700 font-semibold">
                                             Vehicle No.: <span className="font-normal break-words"> {sale.CardSale && sale.CardSale.vehicle_no}</span>
-                                        </p>
+                                        </p>}
                                     </div>
-                                    {/* <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
-                                        <p className="text-gray-700 font-semibold">
-                                            Date: <span className="font-normal break-words">{sale.CardSale.date}</span>
-                                        </p>
-                                    </div> */}
                                     {!isMobile && (
-                                        <div className="flex flex-row justify-around mt-5">
+                                        <div className="flex flex-row justify-around mt-2">
                                             {/* <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                     <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" />
@@ -791,7 +792,7 @@ function Reciept({ petrodata }) {
                                                         Account Name
                                                     </label>
                                                     <div className="mt-1 relative">
-                                                        <input
+                                                         <input autoComplete="off"
                                                             type="text"
                                                             value={editData.selectedCardName}
                                                             name="selectedCardName"
@@ -837,7 +838,7 @@ function Reciept({ petrodata }) {
                                    
                                                 <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
                                                     <label htmlFor="slip">Amount</label>
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={editData.amount}
                                                         name="amount"
@@ -854,7 +855,7 @@ function Reciept({ petrodata }) {
                                                 </div>
                                                 <div className="flex flex-col col-span-1  gap-1">
                                                     <label htmlFor="slip">Batch No.</label>
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={editData.batch}
                                                         onChange={handleEditChange}

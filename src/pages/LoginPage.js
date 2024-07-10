@@ -73,7 +73,7 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData }) {
                         <div className="mb-4 lg:mb-8">
                             <label htmlFor="mobile" className="block mb-1 text-black">Mobile Number</label>
                             <div className="relative">
-                                <input
+                                 <input autoComplete="off"
                                     type="number"
                                     id="mobile"
                                     {...register('mobile')}
@@ -88,7 +88,7 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData }) {
                         <div className="mb-6 lg:mb-8">
                             <label htmlFor="password" className="block mb-1 text-black">Password</label>
                             <div className="relative">
-                                <input
+                                 <input autoComplete="off"
                                     type={showPassword ? "text" : "password"}
                                     id="password"
                                     {...register('password')}

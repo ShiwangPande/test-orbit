@@ -11,7 +11,49 @@ function DashBoard({ petrodata }) {
     const CreditData = JSON.parse(localStorage.getItem('submittedData')) || [];
     const ExpensesData = JSON.parse(localStorage.getItem('submittedExpensesData')) || [];
     const RecieptData = JSON.parse(localStorage.getItem('submittedReceiptData')) || [];
+    const [ShiftData, setShiftData] = useState([]);
+    const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("")
 
+    const base_url = process.env.REACT_APP_API_URL;
+    useEffect(() => {
+        if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
+            axios
+                .post(`${base_url}/currentShiftData/1`,
+                    {
+
+                        petro_id: petrodata.petro_id,
+                    })
+                .then((response) => {
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    setShiftData({ shift, day_shift_no, formattedDate, date });
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setmsAndHsdSaleList(response.data.data);
+                    console.log('msAndHsdSaleListByShift', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, base_url]);
+
+    //
     const hasValidReadings = (data) => {
         if (!data || !data.readings) return false;
         return Object.values(data.readings).some(
@@ -105,7 +147,7 @@ function DashBoard({ petrodata }) {
         return `${day}/${month}/${year}`;
     };
 
-    const base_url = process.env.REACT_APP_API_URL;
+
     const formattedtotalAmount = customFormat(totalAmount);
 
     useEffect(() => {

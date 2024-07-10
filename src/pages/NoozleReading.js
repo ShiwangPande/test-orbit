@@ -136,23 +136,23 @@ const NoozleReading = ({ petrodata }) => {
 
 
     useEffect(() => {
-        axios.post(
-            `${base_url}/currentShiftData/1`,
-            {
+        axios
+            .post(`${base_url}/currentShiftData/1`,
+                {
 
-                petro_id: petrodata.petro_id,
-            }
-        )
-            .then(response => {
+                    petro_id: petrodata.petro_id,
+                })
+            .then((response) => {
                 const { shift, day_shift_no, date } = response.data.data.DailyShift;
                 const formattedDate = formatDate(date);
                 setShiftdata({ shift, day_shift_no, formattedDate, date });
-                console.log("shiftdata", shiftdata)
             })
-            .catch(error => {
-                console.error('Error fetching data:', error);
+            .catch((error) => {
+                console.error("Error fetching data:", error);
             });
-    }, [petrodata, base_url, shiftdata]);
+    }, [petrodata, base_url]);
+
+
     const handleEdit = (index) => {
         const dataToEdit = submittedData[index];
         console.log('Data to Edit:', dataToEdit); // Debugging
@@ -240,12 +240,12 @@ const NoozleReading = ({ petrodata }) => {
                 <div className=' relative z-0 overflow-x-hidden overflow-y-auto'>
 
                     {isEditModalOpen && (
-                        <div className="flex flex-row justify-between items-center px-4 max-w-96 mx-auto rounded-lg lg:max-w-5xl lg:px-8 p-5  bg-navbar text-white gap-1">
-                            <div className='text-2xl'>Add Nozzle Reading</div>
+                        <div className="flex flex-row justify-between mt-20 lg:mt-5  items-center px-4 max-w-96 mx-auto rounded-md lg:rounded-lg lg:max-w-5xl lg:px-8 p-4  bg-navbar text-white gap-1">
+                            <div className='text-xl lg:text-2xl'>Add Nozzle Reading</div>
                             <div>
-                                <button className='w-10 h-10 p-2 bg-navbar border-2 border-navbar hover:border-white hover:bg-white rounded-full' onClick={() => setIsEditModalOpen(false)} >
-                                    <div className='mx-auto w-7 h-7'>
-                                        <svg fill='#383838' height="20px" width="20px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xmlSpace="preserve">
+                                <button className='lg:w-10 w-6 h-6 lg:h-10 p-0 lg:p-2 bg-navbar border-2 border-navbar hover:border-white hover:bg-white rounded-full' onClick={() => setIsEditModalOpen(false)} >
+                                    <div className='mx-auto lg:w-5 h-5 w-5 lg:h-5'>
+                                        <svg fill='#383838' version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xmlSpace="preserve">
                                             <g>
                                                 <g>
                                                     <polygon points="512,59.076 452.922,0 256,196.922 59.076,0 0,59.076 196.922,256 0,452.922 59.076,512 256,315.076 452.922,512 512,452.922 315.076,256" />
@@ -272,8 +272,10 @@ const NoozleReading = ({ petrodata }) => {
                                     {!isEditModalOpen && !isDataAdded && (
                                         <div className="flex flex-wrap gap-3">
                                             <button className="bg-navbar fixed w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0 bottom-0 m-5 rounded-full hover:invert text-white" onClick={() => setIsEditModalOpen(true)}>
-                                                <img src={add} className="w-14 h-14 p-3" alt="" />
+                                                <img src={add} className="w-14 h-14 m-auto  p-3" alt="" />
                                             </button>
+
+
                                         </div>
                                     )}
 
@@ -285,7 +287,7 @@ const NoozleReading = ({ petrodata }) => {
                                                         <div className="max-w-96 lg:max-w-5xl mx-auto sm:px-6 lg:px-8">
                                                             <form id="my-form" onSubmit={handleSubmit} className="bg-card grid grid-cols-2 gap-2 lg:gap-5 lg:px-10 lg:py-14 shadow-md rounded px-4 pt-6 pb-5 lg:mb-2">
 
-                                                                <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
+                                                                <h2 className="block text-gray-700 text-base lg:text-lg font-bold mb-0 lg:mb-2">
                                                                     Date: <span className='text-red-500 font-medium'>        {shiftdata.formattedDate}</span>
                                                                 </h2>
                                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">  Shift: <span className='text-red-500 font-medium'>  {shiftdata.day_shift_no}</span></h2>
@@ -293,12 +295,12 @@ const NoozleReading = ({ petrodata }) => {
                                                                 <h2 className="block text-gray-700 text-base lg:text-lg font-bold mb-2">
                                                                     Nozzle: <span className='text-red-500 font-medium'>{item.Nozzle.name}</span>
                                                                 </h2>
-                                                                <h2 className="block text-gray-700 text-base lg:text-lg font-bold mb-2">Commodity Name: <span className='text-red-500 font-medium'>{item.Nozzle.Item.name}</span></h2>
+                                                                <h2 className="block text-gray-700 text-base lg:text-lg font-bold mb-2">Commodity: <span className='text-red-500  font-medium'>{item.Nozzle.Item.name}</span></h2>
                                                                 <div className="mb-2">
                                                                     <label className="block text-gray-700 text-md font-bold mb-2" htmlFor="start-reading">
                                                                         Start Reading
                                                                     </label>
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={readings[item.NozzlesAssign.id]?.startReading || ''}
@@ -312,7 +314,7 @@ const NoozleReading = ({ petrodata }) => {
                                                                         Close Reading
                                                                     </label>
 
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={readings[item.NozzlesAssign.id]?.closeReading || ''}
@@ -327,7 +329,7 @@ const NoozleReading = ({ petrodata }) => {
                                                                         Testing
                                                                     </label>
 
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={readings[item.NozzlesAssign.id]?.testing || ''}
@@ -338,7 +340,7 @@ const NoozleReading = ({ petrodata }) => {
                                                                     <label className="block text-gray-700 text-md font-bold mb-2" htmlFor="total-sale">
                                                                         Sale
                                                                     </label>
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={sale}
@@ -349,7 +351,7 @@ const NoozleReading = ({ petrodata }) => {
                                                                     <label className="block text-gray-700 text-md font-bold mb-2" htmlFor="rate">
                                                                         Rate
                                                                     </label>
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={rate}
@@ -361,7 +363,7 @@ const NoozleReading = ({ petrodata }) => {
                                                                     <label className="block text-gray-700 text-md font-bold mb-2" htmlFor="amount">
                                                                         Amount
                                                                     </label>
-                                                                    <input
+                                                                    <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
                                                                         value={amount}
@@ -388,7 +390,7 @@ const NoozleReading = ({ petrodata }) => {
 
                     )}
                     {!isEditModalOpen && (
-                        <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:fixed relative lg:mt-5 mt-16 mx-5  rounded-md px-8 py-5 '><div className="  flex justify-between">
+                        <div className='w-[90vw]  lg:w-[80.5vw] bg-navbar lg:fixed relative lg:mt-5 mt-16 mx-5  rounded-md px-8 py-5 '><div className="  flex justify-between">
 
 
                             <h2 className="block    text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
@@ -399,9 +401,9 @@ const NoozleReading = ({ petrodata }) => {
                         </div>
                     )}
                     {!isEditModalOpen && (
-                        <div className="flex justify-center items-center flex-col w-full h-[80vh] lg:h-[90vh] gap-2 py-2">
+                        <div className="flex justify-center items-center flex-col w-full h-[80vh] lg:h-screen gap-2 py-2">
                             {submittedData && submittedData.map((data, index) => (
-                                <div key={index} className="bg-white mx-auto mt-10 lg:my-auto flex rounded-lg flex-col gap-8 justify-center w-4/5 lg:w-1/2 h-fit p-4 shadow">
+                                <div key={index} className="bg-white mx-auto my-auto mt-10 lg:my-auto flex rounded-lg flex-col gap-8 justify-center w-4/5 lg:w-1/2 h-fit p-4 shadow">
                                     <div className='flex flex-col lg:flex-row select-none justify-around mt-5 gap-5 h-full w-full'>
                                         {data.readings.map((reading, i) => (
 

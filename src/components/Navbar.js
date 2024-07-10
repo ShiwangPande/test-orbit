@@ -52,8 +52,10 @@ function Navbar({ petrodata }) {
                 return 'Dashboard';
             case '/noozle-reading':
                 return 'Noozle Reading';
-            case '/credit-sale':
-                return 'Credit/Cash Sale';
+            case '/OtherCreditSale':
+                return 'Other Credit/Cash Sale';
+            case '/MsHsdCreditSale':
+                return 'MsHsd Credit/Cash Sale';
             case '/expenses':
                 return 'Expenses';
             case '/receipt':
@@ -71,7 +73,7 @@ function Navbar({ petrodata }) {
             {/* Desktop Navbar */}
             <div className="hidden lg:fixed h-screen md:flex md:flex-shrink-0">
                 <div className="flex flex-col w-64">
-                    <div className="h-0 flex-1 flex flex-col pt-10 pb-4 overflow-y-auto bg-navbar">
+                    <div className="h-0 flex-1 flex flex-col pt-5 pb-4 overflow-y-auto bg-navbar">
                         {/* Sidebar Links */}
                         <div className="flex flex-col items-start flex-shrink-0 px-5">
                             <img
@@ -79,11 +81,11 @@ function Navbar({ petrodata }) {
                                 src={logo}
                                 alt="Your Company"
                             />
-                            <h2 className="block    text-white text-md lg:text-xl font-normal mb-0  lg:mb-1" >Hey {petrodata.name}</h2>
-                            <h2 className="block    text-white text-md lg:text-xl font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
+                            <h2 className="block    text-white text-md lg:text-lg font-normal mb-0  lg:mb-1" >Hey {petrodata.name}</h2>
+                            <h2 className="block    text-white text-md lg:text-lg font-normal mb-0 lg:mb-1 italic"> {petrodata.mobile_no}</h2>
                         </div>
                         <div className="mt-2 flex-1 flex flex-col">
-                            <nav className="flex-1 px-4 flex flex-col gap-5 mt-5 bg-navbar space-y-1">
+                            <nav className="flex-1 px-4 flex flex-col gap-4 mt-2 bg-navbar space-y-1">
                                 <Link
                                     to="/dashboard"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/dashboard' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
@@ -99,19 +101,19 @@ function Navbar({ petrodata }) {
                                     Noozle reading
                                 </Link>
                                 <Link
-                                    to="/credit-sale"
-                                    className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/credit-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/credit-sale' ? 'page' : undefined}
+                                    to="/MsHsdCreditSale"
+                                    className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/MsHsdCreditSale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/MsHsdCreditSale' ? 'page' : undefined}
                                 >
-                                    Credit/Cash Sale
+                                    MS HSD Credit/Cash Sale
                                 </Link>
-                                {/* <Link
-                                    to="/cash-sale"
-                                    className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/cash-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/cash-sale' ? 'page' : undefined}
+                                <Link
+                                    to="/OtherCreditSale"
+                                    className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/OtherCreditSale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/OtherCreditSale' ? 'page' : undefined}
                                 >
-                                    Cash Sale
-                                </Link> */}
+                                    Other Credit/Cash Sale
+                                </Link>
                                 <Link
                                     to="/expenses"
                                     className={`block rounded-md px-3 py-2 text-md font-medium  ${window.location.pathname === '/expenses' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
@@ -151,7 +153,7 @@ function Navbar({ petrodata }) {
 
             {/* Mobile Menu */}
             <div className={`lg:hidden  fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
-                <div className="flex items-center  justify-start h-full backdrop-blur-lg	">
+                <div className="flex items-center  justify-start h-full 	">
                     <motion.div
                         className={`bg-navbar h-full fixed w-[80vw] py-5 px-8 flex flex-col navbar`}
                         initial={{ x: '-80vw' }}
@@ -162,31 +164,34 @@ function Navbar({ petrodata }) {
                         onDragEnd={handleDragEnd}
                         style={{ cursor: 'grab', left: 0 }}
                     >
-                        <div className="flex relative z-50 justify-end bg-navbar">
-                            <button
-                                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                                type="button"
-                                className="text-gray-300 hover:text-white focus:outline-none focus:text-white"
-                                aria-controls="mobile-menu"
-                                aria-expanded={showMobileMenu ? 'true' : 'false'}
-                            >
-                                <span className="sr-only">Close main menu</span>
-                                {/* Close Icon */}
-                                <svg
-                                    className={`h-8 w-8`}
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    aria-hidden="true"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+
 
                         <div className="mt-1 flex-1 flex flex-col ">
-                            <nav className="flex-1 px-2 flex gap-[1.3rem] flex-col mt-5 bg-navbar space-y-1">
+                            <div className="flex relative z-50 justify-end bg-navbar">
+
+                                <button
+                                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                                    type="button"
+                                    className="text-gray-300 hover:text-white focus:outline-none focus:text-white"
+                                    aria-controls="mobile-menu"
+                                    aria-expanded={showMobileMenu ? 'true' : 'false'}
+                                >
+                                    <span className="sr-only">Close main menu</span>
+                                    {/* Close Icon */}
+                                    <svg
+                                        className={`h-8 w-8`}
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <nav className="flex-1 px-2 flex gap-[1.3rem] flex-col  bg-navbar space-y-1">
+
                                 <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
                                         className="h-9 mx-auto w-auto mb-5"
@@ -210,20 +215,21 @@ function Navbar({ petrodata }) {
                                 >
                                     Noozle reading
                                 </Link>
+
                                 <Link
-                                    to="/credit-sale"
-                                    className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/credit-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/credit-sale' ? 'page' : undefined}
+                                    to="/MsHsdCreditSale"
+                                    className={`block rounded-md px-3 py-2 text-base font-medium  ${window.location.pathname === '/MsHsdCreditSale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/MsHsdCreditSale' ? 'page' : undefined}
                                 >
-                                    Credit/Cash Sale
+                                    MS HSD Credit/Cash Sale
                                 </Link>
-                                {/* <Link
-                                    to="/cash-sale"
-                                    className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/cash-sale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
-                                    aria-current={window.location.pathname === '/cash-sale' ? 'page' : undefined}
+                                <Link
+                                    to="/OtherCreditSale"
+                                    className={`block rounded-md px-3 py-2 text-base font-medium  ${window.location.pathname === '/OtherCreditSale' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}
+                                    aria-current={window.location.pathname === '/OtherCreditSale' ? 'page' : undefined}
                                 >
-                                    Cash Sale
-                                </Link> */}
+                                    Other Credit/Cash Sale
+                                </Link>
                                 <Link
                                     to="/expenses"
                                     className={`block rounded-md px-3 py-2 text-lg font-medium  ${window.location.pathname === '/expenses' ? 'bg-wheat text-black' : 'hover:bg-gray-700 text-white'}`}

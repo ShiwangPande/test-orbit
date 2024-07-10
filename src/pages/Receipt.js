@@ -15,6 +15,7 @@ import {
 } from "@nextui-org/react";
 import add from "../images/add.svg";
 import { useLongPress } from 'use-long-press';
+import { Spinner } from "@nextui-org/react";
 
 import React from "react";
 
@@ -81,7 +82,7 @@ function Expenses({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/receiptVoucherList/1`, {
-                shift: `${ShiftData.shift}`,
+                shift: ShiftData.shift,
                 employee_id: petrodata.user_id,
                 "vid": 0,
                 date: ShiftData.date,
@@ -102,7 +103,7 @@ function Expenses({ petrodata }) {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: ShiftData.shift,
                     emp_id: petrodata.user_id,
                     date: ShiftData.date,
                     petro_id: petrodata.petro_id,
@@ -274,7 +275,7 @@ function Expenses({ petrodata }) {
                 console.log('Data submitted successfully.');
 
                 const response = await axios.post(`${base_url}/receiptVoucherList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: ShiftData.shift,
                     employee_id: petrodata.user_id,
                     "vid": 0,
                     date: ShiftData.date,
@@ -287,11 +288,14 @@ function Expenses({ petrodata }) {
 
                 setSelectedLedgerName("");
                 setSearchQuery("")
+
                 setamount("");
                 setnarration("");
                 setEditingIndex(null);
                 setShowDropdown(false);
                 setSearchQuery("");
+                setSearchcardQuery("");
+
                 setSearchcardQuery("")
                 setSelectedItem("")
                 console.log("Form submitted successfully");
@@ -523,7 +527,7 @@ function Expenses({ petrodata }) {
                 </h1>
                 <div className="flex flex-wrap gap-3">
                     <Button
-                        className="bg-navbar fixed  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
+                        className="bg-navbar fixed z-10  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
                         onPress={onOpen}
                     >
                         <img src={add} className="w-8 h-8" alt="" />
@@ -542,7 +546,7 @@ function Expenses({ petrodata }) {
                         {(onClose) => (
                             <>
                                 <ModalHeader className="flex flex-col text-2xl bg-navbar text-white gap-1">
-                                    Add Expenses Sale
+                                    Add Reciept Sale
                                 </ModalHeader>
                                 <form onSubmit={handleSubmit}>
                                     <ModalBody className="px-4 lg:px-8">
@@ -577,7 +581,7 @@ function Expenses({ petrodata }) {
                                                     Account Name
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={handleSearchChange}
@@ -633,7 +637,7 @@ function Expenses({ petrodata }) {
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Amount</label>
-                                                <input
+                                                 <input autoComplete="off"
                                                     type="number"
                                                     value={amount}
                                                     onChange={handleAmountChange}
@@ -653,7 +657,7 @@ function Expenses({ petrodata }) {
                                                     Deposited In
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={selectedItem ? selectedItem.name : searchcardQuery}
                                                         onChange={handleCardSearchChange}
@@ -716,8 +720,11 @@ function Expenses({ petrodata }) {
                                             Submit
                                         </Button>
                                         <br />
-                                        {isSubmitting && <p>Form has been submitted. Please wait...</p>}
 
+
+
+
+                                        {isSubmitting && <Spinner label="Submitting..." color="default" />}
                                     </ModalFooter>
                                 </form>
                             </>
@@ -747,11 +754,11 @@ function Expenses({ petrodata }) {
                         </div>
                     </div>
                 )}
-                <div className=" mt-5 mx-5 relative -z-10 grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
+                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
                     {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
                         expensesVoucherList.map((voucher, index) => (
-                            <div key={index} ref={containerRef} className="relative justify-center flex flex-row overflow-hidden">
-                                 {isMobile && (
+                            <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
+                                {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                             <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -764,7 +771,6 @@ function Expenses({ petrodata }) {
                                         )}
                                     </>
                                 )}
-
                                 <motion.div
                                     className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     initial={{ x: 0 }}
@@ -774,7 +780,7 @@ function Expenses({ petrodata }) {
                                     onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                     onClick={() => handleCardClick(index)} // Added onClick handler
                                 >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                         <ul>
                                             {voucher.VoucherDetail.map((detail, detailIndex) => (
                                                 <li key={detailIndex}>
@@ -783,14 +789,14 @@ function Expenses({ petrodata }) {
                                             ))}
                                         </ul>
                                     </h5>
-                                    <div className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
                                         {voucher.Voucher.amount && (
                                             <p className="text-gray-700 font-semibold">
                                                 Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
                                             </p>
                                         )}
                                     </div>
-                                    <div className="lg:my-1 my-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-lg text-xs">
+                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
                                         {voucher.Voucher.narration && (
                                             <p className="text-gray-700 font-semibold">
                                                 Narration:{" "}
@@ -799,8 +805,8 @@ function Expenses({ petrodata }) {
                                         )}
                                     </div>
                                     {!isMobile && (
-                                        <div className="flex flex-row justify-around mt-5">
-                                          
+                                        <div className="flex flex-row justify-around mt-2">
+                                           
                                             <button
                                                 className="px-2 w-10 h-10"
                                                 onClick={() => handleRemove(index)}
@@ -876,12 +882,12 @@ function Expenses({ petrodata }) {
                                                         Ledger Name
                                                     </label>
                                                     <div className="mt-1 relative">
-                                                        <input
+                                                         <input autoComplete="off"
                                                             type="text"
                                                             value={editData.selectedLedgerName}
                                                             name="selectedLedgerName"
                                                             onChange={handleEditChange}
-                                                            onClick={() => setShowCardDropdown(true)} // Show dropdown when input is clicked
+                                                            onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
                                                             placeholder="Search Ledger Names"
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         />
@@ -926,11 +932,10 @@ function Expenses({ petrodata }) {
                                                     </div>
                                                 </div>
 
-
                                                 {/* Amount */}
                                                 <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
                                                     <label htmlFor="slip">Amount</label>
-                                                    <input
+                                                     <input autoComplete="off"
                                                         type="text"
                                                         value={editData.amount}
                                                         name="amount"
@@ -945,9 +950,6 @@ function Expenses({ petrodata }) {
                                                         </span>
                                                     )}
                                                 </div>
-
-
-
 
                                                 {/* Narration */}
                                                 <div className="flex flex-col col-span-2 lg:col-span-2 gap-1">
