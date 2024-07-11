@@ -6,15 +6,15 @@ import Navbar from '../components/Navbar';
 
 
 function DashBoard({ petrodata }) {
-    const [creditdata, setCreditData] = useState([]);
-    const nozzleData = JSON.parse(localStorage.getItem('submittedNozzleData')) || [];
-    const CreditData = JSON.parse(localStorage.getItem('submittedData')) || [];
-    const ExpensesData = JSON.parse(localStorage.getItem('submittedExpensesData')) || [];
-    const RecieptData = JSON.parse(localStorage.getItem('submittedReceiptData')) || [];
-    const [ShiftData, setShiftData] = useState([]);
-    const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("")
 
+    const [ShiftData, setShiftData] = useState([]);
+    const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("");
     const base_url = process.env.REACT_APP_API_URL;
+    const [getOtherSaleList, setgetOtherSaleList] = useState("");
+    const [expensesVoucherList, setExpensesVoucherList] = useState([]);
+    const [recieptList, setRecieptList] = useState([]);
+    const [cardList, setCardSales] = useState([]);
+    const [walletList, setWallet] = useState([]);
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
@@ -44,8 +44,11 @@ function DashBoard({ petrodata }) {
                 day_shift: petrodata.daily_shift,
             })
                 .then(response => {
-                    setmsAndHsdSaleList(response.data.data);
+
                     console.log('msAndHsdSaleListByShift', response.data.data)
+                    const totalamount = response.data.data.map(item => item.Sale.total_amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setmsAndHsdSaleList(sum);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
@@ -53,13 +56,116 @@ function DashBoard({ petrodata }) {
         }
     }, [petrodata, ShiftData, base_url]);
 
-    //
-    const hasValidReadings = (data) => {
-        if (!data || !data.readings) return false;
-        return Object.values(data.readings).some(
-            (reading) => reading.sale !== 0 || reading.amount !== 0
-        );
-    };
+
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    const totalamount = response.data.data.map(item => item.Sale.total_amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setgetOtherSaleList(sum);
+                    console.log('getOtherSaleListByShiftOrType', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            axios.post(`${base_url}/expensesVoucherList/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                "vid": 1,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    const totalamount = response.data.data.map(item => item.Voucher.amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setExpensesVoucherList(sum);
+                    console.log('setExpensesVoucherList', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, base_url]);
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            axios.post(`${base_url}/receiptVoucherList/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                "vid": 0,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    const totalamount = response.data.data.map(item => item.Voucher.amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setRecieptList(sum);
+                    console.log('setRecieptList', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, base_url]);
+
+
+
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios.post(`${base_url}/cardSaleList/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                type: 1,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    const totalamount = response.data.data.map(item => item.CardSale.amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setWallet(sum);
+                    console.log('setWallet', response.data.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    useEffect(() => {
+        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+            axios.post(`${base_url}/cardSaleList/1`, {
+                shift: ShiftData.shift,
+                employee_id: petrodata.user_id,
+                "type": 0,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    const totalamount = response.data.data.map(item => item.CardSale.amount);
+                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+                    setCardSales(sum);
+                    console.log('setWallet', response.data.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+
 
     function customFormat(number) {
         const [integerPart, decimalPart] = number.toString().split('.');
@@ -91,92 +197,22 @@ function DashBoard({ petrodata }) {
         return result;
     }
 
-    const hasValidData = (data) => data?.selectedCustomer;
-    const hasValidExpenseData = (data) => data?.selectedLedgerName;
-    const hasValidRecieptData = (data) => data?.selectedLedgerName;
 
-    const filteredData = nozzleData.filter(hasValidReadings);
-    const filteredCreditData = CreditData.filter(hasValidData);
-    const filteredExpensesData = ExpensesData.filter(hasValidExpenseData);
-    const filteredRecieptData = RecieptData.filter(hasValidRecieptData);
-
-    let totalAmount = 0;
-    filteredData.forEach(data => {
-        Object.values(data.readings).forEach(reading => {
-            if (reading.amount !== 0) {
-                totalAmount += parseFloat(reading.amount);
-            }
-        });
-    });
-
-    let total_credit_amount = 0;
-    let total_driver_cash = 0;
-    let total_expenses = 0;
-    let total_receipt = 0;
-
-    filteredCreditData.forEach(data => {
-        if (data.totalAmt) {
-            total_credit_amount += parseFloat(data.totalAmt);
-        }
-    });
-
-    filteredCreditData.forEach(data => {
-        if (data.driverCash > 0) {
-            total_driver_cash += parseFloat(data.driverCash);
-        }
-    });
-
-    filteredExpensesData.forEach(data => {
-        if (data.amount) {
-            total_expenses += parseFloat(data.amount);
-        }
-    });
-
-    filteredRecieptData.forEach(data => {
-        if (data.amount) {
-            total_receipt += parseFloat(data.amount);
-        }
-    });
-
-    total_credit_amount = parseFloat(total_credit_amount).toFixed(2);
-    let cashsale = totalAmount - total_credit_amount;
-    cashsale = parseFloat(cashsale).toFixed(2);
 
     const formatDate = (dateString) => {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     };
 
+    const total_sale = parseFloat(msAndHsdSaleList) + parseFloat(getOtherSaleList)
+    const formattedtotal_sale = customFormat(total_sale);
+    const formattedexpensesVoucherList = customFormat(expensesVoucherList);
+    const formattedrecieptList = customFormat(recieptList);
+    const formattedwalletList = customFormat(walletList);
+    const formattedcardList = customFormat(cardList);
+    console.log("formattedtotalAmount", formattedtotal_sale);
 
-    const formattedtotalAmount = customFormat(totalAmount);
 
-    useEffect(() => {
-        axios.post(
-            `${base_url}/currentShiftData/1`,
-            {
-
-                petro_id: petrodata.petro_id,
-            }
-        )
-            .then(response => {
-                const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                const formattedDate = formatDate(date);
-                setCreditData({ shift, day_shift_no, date: formattedDate });
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata.petro_id, petrodata.daily_shift, base_url]);
-
-    let cashBalance = 0;
-    cashBalance = cashsale - total_driver_cash - total_expenses + total_receipt;
-
-    const formattedcashBalance = customFormat(cashBalance);
-    const formattedtotal_credit_amount = customFormat(total_credit_amount);
-    const formattedcashsale = customFormat(cashsale);
-    const formattedtotal_driver_cash = customFormat(total_driver_cash);
-    const formattedtotal_expenses = customFormat(total_expenses);
-    const formattedtotal_receipt = customFormat(total_receipt);
 
     const getTextStyle = (value) => ({
         color: value < 0 ? 'red' : 'black',
@@ -190,9 +226,9 @@ function DashBoard({ petrodata }) {
                 <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-8 py-5 '>
                     <div className="flex justify-between">
                         <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
-                            Date: <span className='text-red-500 font-medium'>{creditdata.date}</span>
+                            Date: <span className='text-red-500 font-medium'>{ShiftData.date}</span>
                         </h2>
-                        <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">Shift: <span className='text-red-500 font-medium'>{creditdata.day_shift_no}</span></h2>
+                        <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">Shift: <span className='text-red-500 font-medium'>{ShiftData.day_shift_no}</span></h2>
                     </div>
                 </div>
                 <div className=' mx-auto w-[90%] lg:w-1/2 lg:mx-auto my- rounded border-white p-4 lg:p-5 mt-28 mb-1 lg:mt-28  bg-navbar'>
@@ -201,53 +237,47 @@ function DashBoard({ petrodata }) {
                 </div>
                 <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
                     <div className='flex flex-col px-4 lg:px-10 w-full'>
-                        {filteredData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(totalAmount)}>₹{formattedtotalAmount}</h1>
-                            </div>
-                        )}
-                        {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Amount</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_credit_amount)}>₹{formattedtotal_credit_amount}</h1>
-                            </div>
-                        )}
-                        {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Sale Amount</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashsale)}>₹{formattedcashsale}</h1>
-                            </div>
-                        )}
-                        {filteredCreditData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Driver Cash</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_driver_cash)}>₹{formattedtotal_driver_cash}</h1>
-                            </div>
-                        )}
-                        {filteredExpensesData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_expenses)}>₹{formattedtotal_expenses}</h1>
-                            </div>
-                        )}
-                        {filteredRecieptData.length > 0 && (
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_receipt)}>₹{formattedtotal_receipt}</h1>
-                            </div>
-                        )}
-                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+
+                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
+                        </div>}
+
+
+                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Cash/Credit Amount</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
+                        </div>}
+
+                        {formattedexpensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(expensesVoucherList)}>₹{formattedexpensesVoucherList}</h1>
+                        </div>}
+
+                        {formattedrecieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(recieptList)}>₹{formattedrecieptList}</h1>
+                        </div>}
+                        {formattedwalletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(walletList)}>₹{formattedwalletList}</h1>
+                        </div>}
+                        {formattedcardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
+                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cardList)}>₹{formattedcardList}</h1>
+                        </div>}
+
+                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formattedcashBalance}</h1>
-                        </div>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
+                        </div>}
                     </div>
                 </div>
             </main>

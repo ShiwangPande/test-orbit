@@ -240,7 +240,12 @@ function MsHsdCreditSale({ petrodata }) {
         if (!quantity) {
             newErrors.quantity = 'Quantity is required';
         }
-
+        if (rate <= 0) {
+            newErrors.rate = 'Rate must be greater than 0';
+        }
+        if (!rate) {
+            newErrors.rate = 'Rate is required';
+        }
         const vehicleToUse = selectedVehicle || searchQueryVehicle.trim();
 
         // Validate driverCash as before
@@ -907,6 +912,8 @@ function MsHsdCreditSale({ petrodata }) {
                                                             placeholder="Rate"
                                                             className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         />
+                                                        {errors.rate && <span className="text-red-500 text-sm">{errors.rate}</span>}
+
                                                     </div>
                                                 </div>
 

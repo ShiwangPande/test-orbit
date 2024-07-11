@@ -113,7 +113,6 @@ function OtherCreditSale({ petrodata }) {
                 .then((response) => {
                     if (response.status === 204) {
                         console.warn("No content returned from the server.");
-                        // Handle this case as per your application's requirements
                     } else if (response.status === 200) {
                         if (response.data && response.data.data) {
                             const data = response.data.data;
@@ -122,11 +121,9 @@ function OtherCreditSale({ petrodata }) {
                             console.log('extractedDsmIds', extractedDsmIds);
                         } else {
                             console.error("Unexpected response data structure:", response.data);
-                            // Handle unexpected response structure here
                         }
                     } else {
                         console.error("Unexpected response status:", response.status);
-                        // Handle other unexpected response statuses here
                     }
                 })
                 .catch((error) => {
@@ -217,6 +214,12 @@ function OtherCreditSale({ petrodata }) {
         }
         if (quantity <= 0) {
             newErrors.quantity = 'Quantity must be greater than 0';
+        }
+        if (rate <= 0) {
+            newErrors.rate = 'Rate must be greater than 0';
+        }
+        if (!rate) {
+            newErrors.rate = 'Rate is required';
         }
         if (!quantity) {
             newErrors.quantity = 'Quantity is required';
@@ -872,6 +875,8 @@ function OtherCreditSale({ petrodata }) {
                                                             placeholder="Rate"
                                                             className="block p-2 w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         />
+                                                        {errors.rate && <span className="text-red-500 text-sm">{errors.rate}</span>}
+
                                                     </div>
                                                 </div>
 
