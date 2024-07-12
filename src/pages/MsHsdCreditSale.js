@@ -114,11 +114,11 @@ function MsHsdCreditSale({ petrodata }) {
         if (petrodata && ShiftData && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: ShiftData.shift,
-                    emp_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+                    "shift": `${ShiftData.shift}`,
+                    "emp_id": petrodata.user_id,
+                    "date": ShiftData.date,
+                    "petro_id": petrodata.petro_id,
+                    "day_shift": petrodata.daily_shift,
                 })
                 .then((response) => {
                     if (response.status === 204) {
@@ -285,7 +285,7 @@ function MsHsdCreditSale({ petrodata }) {
         const payload = {
             is_card: 0,
             petro_id: petrodata.petro_id,
-            shift: ShiftData.shift,
+            shift: `${ShiftData.shift}`,
             dsm_id: dsmIds[0],
             vehicle_no: selectedVehicle || searchQueryVehicle,
             slip_no: slipNo,
@@ -308,7 +308,7 @@ function MsHsdCreditSale({ petrodata }) {
             addSaleItemList: [
                 {
                     petro_id: petrodata.petro_id,
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     batch_no: null,
                     qty: quantity,
                     rate: rate,
@@ -336,7 +336,7 @@ function MsHsdCreditSale({ petrodata }) {
 
             const [msHsdResponse] = await Promise.all([
                 axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     employee_id: petrodata.user_id,
                     date: ShiftData.date,
                     petro_id: petrodata.petro_id,
@@ -384,7 +384,7 @@ function MsHsdCreditSale({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
                 petro_id: petrodata.petro_id,
@@ -900,7 +900,8 @@ function MsHsdCreditSale({ petrodata }) {
                                                         <input autoComplete="off"
                                                             type="number"
                                                             value={rate}
-
+                                                            readOnly
+                                                            disabled
                                                             onChange={(e) => {
                                                                 const value = e.target.value;
                                                                 if (!isNaN(value) && value.length <= 7) {

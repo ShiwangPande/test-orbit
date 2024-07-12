@@ -69,12 +69,7 @@ function OtherCreditSale({ petrodata }) {
 
 
     const dropdownRef = useRef(null);
-    useEffect(() => {
-        const storedData = JSON.parse(localStorage.getItem('submittedData'));
-        if (storedData) {
-            setSubmittedData(storedData);
-        }
-    }, []);
+
 
 
     useEffect(() => {
@@ -83,7 +78,7 @@ function OtherCreditSale({ petrodata }) {
                 .post(`${base_url}/currentShiftData/1`,
                     {
 
-                        petro_id: petrodata.petro_id,
+                        "petro_id": petrodata.petro_id,
                     })
                 .then((response) => {
                     const { shift, day_shift_no, date } = response.data.data.DailyShift;
@@ -96,34 +91,26 @@ function OtherCreditSale({ petrodata }) {
         }
     }, [petrodata, base_url]);
 
-
-
-
-
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: ShiftData.shift,
-                    emp_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+                    "shift": `${ShiftData.shift}`,
+                    "emp_id": petrodata.user_id,
+                    "date": ShiftData.date,
+                    "petro_id": petrodata.petro_id,
+                    "day_shift": petrodata.daily_shift,
                 })
                 .then((response) => {
                     if (response.status === 204) {
-                        console.warn("No content returned from the server.");
-                    } else if (response.status === 200) {
-                        if (response.data && response.data.data) {
-                            const data = response.data.data;
-                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
-                            setDsmIds(extractedDsmIds);
-                            console.log('extractedDsmIds', extractedDsmIds);
-                        } else {
-                            console.error("Unexpected response data structure:", response.data);
-                        }
+                        console.warn("No content returned from the API:", response.data.msg);
+                    } else if (response.data && response.data.data) {
+                        const data = response.data.data;
+                        const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                        setDsmIds(extractedDsmIds);
+                        console.log('extractedDsmIds', extractedDsmIds);
                     } else {
-                        console.error("Unexpected response status:", response.status);
+                        console.error("Unexpected response data structure:", response.data);
                     }
                 })
                 .catch((error) => {
@@ -156,7 +143,7 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && base_url) {
-            axios.post(`${base_url}/searchItemByName/1`, { petro_id: petrodata.petro_id })
+            axios.post(`${base_url}/searchItemByName/1`, { "petro_id": petrodata.petro_id })
                 .then(response => {
                     const data = response.data.data;
                     console.log("setItemName", data);
@@ -189,7 +176,7 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (base_url && PriceID.length > 0) {
-            axios.post(`${base_url}/getItemGstDetails/1`, { item_id: PriceID })
+            axios.post(`${base_url}/getItemGstDetails/1`, { "item_id": PriceID })
                 .then(response => {
                     console.log('getItemGstDetails', response.data.data);
                     setPetrolGst([response.data.data]);
@@ -260,7 +247,7 @@ function OtherCreditSale({ petrodata }) {
         const payload = {
             is_card: 0,
             petro_id: petrodata.petro_id,
-            shift: ShiftData.shift,
+            shift: `${ShiftData.shift}`,
             dsm_id: dsmIds[0],
             vehicle_no: selectedVehicle || searchQueryVehicle,
             slip_no: slipNo,
@@ -283,7 +270,7 @@ function OtherCreditSale({ petrodata }) {
             addSaleItemList: [
                 {
                     petro_id: petrodata.petro_id,
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     batch_no: null,
                     qty: quantity,
                     rate: rate,
@@ -304,36 +291,38 @@ function OtherCreditSale({ petrodata }) {
                 }
             ]
         };
+        if (petrodata && ShiftData && base_url) {
+            try {
+                await axios.post(`${base_url}/addSale/1`, payload);
+                console.log('Data submitted successfully.');
 
-        try {
-            await axios.post(`${base_url}/addSale/1`, payload);
-            console.log('Data submitted successfully.');
+                const [otherResponse] = await Promise.all([
 
-            const [otherResponse] = await Promise.all([
+                    axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                        shift: `${ShiftData.shift}`,
+                        employee_id: petrodata.user_id,
+                        date: ShiftData.date,
+                        petro_id: petrodata.petro_id,
+                        day_shift: petrodata.daily_shift,
+                    })
 
-                axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
-                    shift: ShiftData.shift,
-                    employee_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
-                })
-            ]);
+                ]);
 
 
-            setgetOtherSaleList(otherResponse.data.data);
+                setgetOtherSaleList(otherResponse.data.data);
 
-            resetForm();
+                resetForm();
 
-            console.log('Form submitted successfully');
-            onClose();
+                console.log('Form submitted successfully');
+                onClose();
 
-        } catch (error) {
-            console.error('Error submitting data:', error);
-            if (error.response) {
-                console.error('Response data:', error.response.data);
-                console.error('Response status:', error.response.status);
-                console.error('Response headers:', error.response.headers);
+            } catch (error) {
+                console.error('Error submitting data:', error);
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                    console.error('Response headers:', error.response.headers);
+                }
             }
         }
 
@@ -364,11 +353,11 @@ function OtherCreditSale({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
-                shift: ShiftData.shift,
-                employee_id: petrodata.user_id,
-                date: ShiftData.date,
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
+                "shift": `${ShiftData.shift}`,
+                "employee_id": petrodata.user_id,
+                "date": ShiftData.date,
+                "petro_id": petrodata.petro_id,
+                "day_shift": petrodata.daily_shift,
             })
                 .then(response => {
                     setgetOtherSaleList(response.data.data);
@@ -404,23 +393,6 @@ function OtherCreditSale({ petrodata }) {
     }, [dropdownRef]);
 
 
-    useEffect(() => {
-        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
-            "petro_id": petrodata.petro_id,
-        })
-            .then(response => {
-                console.log('data:', response.data);
-                // Ensure the response data is an array
-                if (Array.isArray(response.data.data)) {
-                    setCustomerdata(response.data.data);
-                } else {
-                    console.error('Unexpected data format:', response.data);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
-    }, [petrodata.petro_id, base_url]);
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
@@ -620,7 +592,6 @@ function OtherCreditSale({ petrodata }) {
 
 
 
-
     const isMobile = useMediaQuery({ maxWidth: 767 });
     const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false }));
     const containerRef = useRef(null);
@@ -656,8 +627,6 @@ function OtherCreditSale({ petrodata }) {
         updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
-
-
 
 
 

@@ -62,7 +62,7 @@ function Reciept({ petrodata }) {
             .post(`${base_url}/currentShiftData/1`,
                 {
 
-                    petro_id: petrodata.petro_id,
+                    "petro_id": petrodata.petro_id,
                 })
             .then((response) => {
                 const { shift, day_shift_no, date } = response.data.data.DailyShift;
@@ -99,11 +99,11 @@ function Reciept({ petrodata }) {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: ShiftData.shift,
-                    emp_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+                    "shift": `${ShiftData.shift}`,
+                    "emp_id": petrodata.user_id,
+                    "date": ShiftData.date,
+                    "petro_id": petrodata.petro_id,
+                    "day_shift": petrodata.daily_shift,
                 })
                 .then((response) => {
                     const data = response.data.data;
@@ -240,7 +240,7 @@ function Reciept({ petrodata }) {
         if (validateForm()) {
             const payload = {
                 petro_id: petrodata.petro_id,
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 dsm_id: dsmIds[0],
                 day_shift: ShiftData.day_shift_no,
                 amount: amount,

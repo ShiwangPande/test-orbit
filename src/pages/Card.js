@@ -78,7 +78,7 @@ function Reciept({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/cardSaleList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "type": 0,
                 date: ShiftData.date,
@@ -99,7 +99,7 @@ function Reciept({ petrodata }) {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     emp_id: petrodata.user_id,
                     date: ShiftData.date,
                     petro_id: petrodata.petro_id,
@@ -248,7 +248,7 @@ function Reciept({ petrodata }) {
         if (validateForm()) {
             const payload = {
                 petro_id: petrodata.petro_id,
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 dsm_id: dsmIds[0],
                 day_shift: ShiftData.day_shift_no,
                 amount: amount,
@@ -265,7 +265,7 @@ function Reciept({ petrodata }) {
 
                 // Fetch updated card sales data after successful submission
                 const response = await axios.post(`${base_url}/cardSaleList/1`, {
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     employee_id: petrodata.user_id,
                     type: 0,
                     date: ShiftData.date,

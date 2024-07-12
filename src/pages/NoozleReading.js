@@ -136,20 +136,22 @@ const NoozleReading = ({ petrodata }) => {
 
 
     useEffect(() => {
-        axios
-            .post(`${base_url}/currentShiftData/1`,
-                {
+        if (base_url && petrodata) {
+            axios
+                .post(`${base_url}/currentShiftData/1`,
+                    {
 
-                    petro_id: petrodata.petro_id,
+                        petro_id: petrodata.petro_id,
+                    })
+                .then((response) => {
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    setShiftdata({ shift, day_shift_no, formattedDate, date });
                 })
-            .then((response) => {
-                const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                const formattedDate = formatDate(date);
-                setShiftdata({ shift, day_shift_no, formattedDate, date });
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
     }, [petrodata, base_url]);
 
 
@@ -190,36 +192,38 @@ const NoozleReading = ({ petrodata }) => {
 
 
     useEffect(() => {
-        axios.post(
-            `${base_url}/assignNozzleList/1`,
-            {
-                "shift": `${shiftdata.shift}`,
-                "emp_id": petrodata.user_id,
-                "date": shiftdata.date,
-                "petro_id": petrodata.petro_id,
-                "day_shift": petrodata.daily_shift,
-            }
-        )
-            .then(response => {
-                const data = response.data.data;
-                setNoozleData(data);
-                const initialReadings = {};
-                data.forEach(item => {
-                    initialReadings[item.NozzlesAssign.id] = {
-                        startReading: item.start_reading,
-                        closeReading: item.start_reading,
-                        testing: 0,
-                        nozzleId: item.NozzlesAssign.id,
-                        rate: item.rate,
-                        maxReading: item.Nozzle.max_reading,
-                    };
+        if (base_url && shiftdata ) {
+            axios.post(
+                `${base_url}/assignNozzleList/1`,
+                {
+                    "shift": `${shiftdata.shift}`,
+                    "emp_id": petrodata.user_id,
+                    "date": shiftdata.date,
+                    "petro_id": petrodata.petro_id,
+                    "day_shift": petrodata.daily_shift,
+                }
+            )
+                .then(response => {
+                    const data = response.data.data;
+                    setNoozleData(data);
+                    const initialReadings = {};
+                    data.forEach(item => {
+                        initialReadings[item.NozzlesAssign.id] = {
+                            startReading: item.start_reading,
+                            closeReading: item.start_reading,
+                            testing: 0,
+                            nozzleId: item.NozzlesAssign.id,
+                            rate: item.rate,
+                            maxReading: item.Nozzle.max_reading,
+                        };
+                    });
+                    setReadings(initialReadings); // Set readings state
+                    console.log('initial', initialReadings)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
                 });
-                setReadings(initialReadings); // Set readings state
-                console.log('initial', initialReadings)
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-            });
+        }
     }, [petrodata, base_url, shiftdata]);
 
 
@@ -303,6 +307,8 @@ const NoozleReading = ({ petrodata }) => {
                                                                     <input autoComplete="off"
                                                                         className="shadow appearance-none border border-gray-400 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                                                                         type="number"
+                                                                        readOnly
+                                                                        disabled
                                                                         value={readings[item.NozzlesAssign.id]?.startReading || ''}
                                                                         onChange={(e) => handleInputChange(item.NozzlesAssign.id, 'startReading', e.target.value, item.Nozzle.max_reading)}
                                                                     />

@@ -82,7 +82,7 @@ function Expenses({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/receiptVoucherList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "vid": 0,
                 date: ShiftData.date,
@@ -103,7 +103,7 @@ function Expenses({ petrodata }) {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     emp_id: petrodata.user_id,
                     date: ShiftData.date,
                     petro_id: petrodata.petro_id,
@@ -259,7 +259,7 @@ function Expenses({ petrodata }) {
                 petro_id: petrodata.petro_id,
                 date: ShiftData.date,
                 dsm_id: dsmIds[0],
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 ledger_id: selectedItem.id,
                 day_shift: ShiftData.day_shift_no,
                 narration: narration,
@@ -275,7 +275,7 @@ function Expenses({ petrodata }) {
                 console.log('Data submitted successfully.');
 
                 const response = await axios.post(`${base_url}/receiptVoucherList/1`, {
-                    shift: ShiftData.shift,
+                    shift: `${ShiftData.shift}`,
                     employee_id: petrodata.user_id,
                     "vid": 0,
                     date: ShiftData.date,

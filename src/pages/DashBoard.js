@@ -7,14 +7,16 @@ import Navbar from '../components/Navbar';
 
 function DashBoard({ petrodata }) {
 
-    const [ShiftData, setShiftData] = useState([]);
+    const [ShiftData, setShiftData] = useState("");
     const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("");
+    const [total_sale, settotal_sale] = useState(0);
     const base_url = process.env.REACT_APP_API_URL;
     const [getOtherSaleList, setgetOtherSaleList] = useState("");
-    const [expensesVoucherList, setExpensesVoucherList] = useState([]);
-    const [recieptList, setRecieptList] = useState([]);
-    const [cardList, setCardSales] = useState([]);
-    const [walletList, setWallet] = useState([]);
+    const [expensesVoucherList, setExpensesVoucherList] = useState("");
+    const [recieptList, setRecieptList] = useState("");
+    const [cardList, setCardSales] = useState("");
+    const [walletList, setWallet] = useState("");
+
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
@@ -37,7 +39,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
                 petro_id: petrodata.petro_id,
@@ -57,10 +59,33 @@ function DashBoard({ petrodata }) {
     }, [petrodata, ShiftData, base_url]);
 
 
+    // useEffect(() => {
+    //     if (petrodata && ShiftData && base_url) {
+    //         axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+    //             shift: `${ShiftData.shift}`,
+    //             employee_id: petrodata.user_id,
+    //             date: ShiftData.date,
+    //             petro_id: petrodata.petro_id,
+    //             day_shift: petrodata.daily_shift,
+    //         })
+    //             .then(response => {
+
+    //                 console.log('setNoozleData', response.data.data)
+    //                 const totalamount = response.data.data.map(item => item.Sale.total_amount);
+    //                 const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
+    //                 setNoozleData(sum);
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error fetching data:', error);
+    //             });
+    //     }
+    // }, [petrodata, ShiftData, base_url]);
+
+
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
                 petro_id: petrodata.petro_id,
@@ -81,7 +106,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/expensesVoucherList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "vid": 1,
                 date: ShiftData.date,
@@ -99,10 +124,11 @@ function DashBoard({ petrodata }) {
                 });
         }
     }, [petrodata, ShiftData, base_url]);
+
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
             axios.post(`${base_url}/receiptVoucherList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "vid": 0,
                 date: ShiftData.date,
@@ -126,7 +152,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/cardSaleList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 type: 1,
                 date: ShiftData.date,
@@ -147,7 +173,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/cardSaleList/1`, {
-                shift: ShiftData.shift,
+                shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "type": 0,
                 date: ShiftData.date,
@@ -203,16 +229,18 @@ function DashBoard({ petrodata }) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     };
-
-    const total_sale = parseFloat(msAndHsdSaleList) + parseFloat(getOtherSaleList)
-    const formattedtotal_sale = customFormat(total_sale);
+    const formatedtotal_sale = customFormat(total_sale);
+    const total_cash_credit = parseFloat(msAndHsdSaleList || 0) + parseFloat(getOtherSaleList || 0)
+    const formattedtotal_cash_credit = customFormat(total_cash_credit);
     const formattedexpensesVoucherList = customFormat(expensesVoucherList);
     const formattedrecieptList = customFormat(recieptList);
     const formattedwalletList = customFormat(walletList);
     const formattedcardList = customFormat(cardList);
-    console.log("formattedtotalAmount", formattedtotal_sale);
+    console.log("formattedtotalAmount", formattedtotal_cash_credit);
+    let cashBalance = 0;
+    cashBalance = parseFloat(total_sale || 0) - parseFloat(total_cash_credit || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
 
-
+    const formatedcashBalance = customFormat(cashBalance);
 
     const getTextStyle = (value) => ({
         color: value < 0 ? 'red' : 'black',
@@ -238,46 +266,46 @@ function DashBoard({ petrodata }) {
                 <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
                     <div className='flex flex-col px-4 lg:px-10 w-full'>
 
-                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
-                        </div>}
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formatedtotal_sale}</h1>
+                        </div>
 
 
-                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        {(msAndHsdSaleList || expensesVoucherList) && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Cash/Credit Amount</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_cash_credit)}>₹{formattedtotal_cash_credit}</h1>
                         </div>}
 
-                        {formattedexpensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                             <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(expensesVoucherList)}>₹{formattedexpensesVoucherList}</h1>
                         </div>}
 
-                        {formattedrecieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        {recieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                             <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(recieptList)}>₹{formattedrecieptList}</h1>
                         </div>}
-                        {formattedwalletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        {walletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                             <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(walletList)}>₹{formattedwalletList}</h1>
                         </div>}
-                        {formattedcardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        {cardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                             <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cardList)}>₹{formattedcardList}</h1>
                         </div>}
 
-                        {formattedtotal_sale && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale)}>₹{formattedtotal_sale}</h1>
-                        </div>}
+                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formatedcashBalance}</h1>
+                        </div>
                     </div>
                 </div>
             </main>
