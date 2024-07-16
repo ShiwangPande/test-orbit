@@ -35,7 +35,7 @@ const DigitalKeyboard = ({ onKeyPress, onBackspace, onClose }) => {
                 className="w-full p-1  h-full col-span-1 mx-auto my-1 text-black  text-center text-3xl border hover:bg-wheat hover:text-black hover:border-wheat border-wheat focus:outline-none"
                 onClick={onClose}
             >
-               ←  </button>
+                ←  </button>
 
             <button
                 className="w-full p-2  h-full col-span-1 mx-auto my-1 text-center text-xl border hover:bg-wheat hover:text-black hover:border-wheat border-wheat focus:outline-none"

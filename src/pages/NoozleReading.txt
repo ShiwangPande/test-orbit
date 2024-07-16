@@ -1,0 +1,31 @@
+  <div className="flex justify-center items-center flex-col w-full h-[80vh] lg:h-screen gap-2 py-2">
+                            {submittedData && submittedData.map((data, index) => (
+                                <div key={index} className="bg-white mx-auto my-auto mt-10 lg:my-auto flex rounded-lg flex-col gap-8 justify-center w-4/5 lg:w-1/2 h-fit p-4 shadow">
+                                    <div className='flex flex-col lg:flex-row select-none justify-around mt-5 gap-5 h-full w-full'>
+                                        {data.readings.map((reading, i) => (
+
+                                            <div key={i} className='flex flex-col gap-3 lg:gap-3 border border-black p-3 lg:p-8 rounded-lg lg:text-lg text-lg'>
+                                                {reading.nozzleName !== null && <h3 className="text-orrange text-lg  font-semibold">Nozzle: {reading.nozzleName}</h3>}
+                                                {reading.startReading !== 0 && <p className="text-gray-700  font-semibold">Start Reading: {reading.startReading}</p>}
+                                                {reading.closeReading !== 0 && <p className="text-gray-700 font-semibold">Close Reading: {reading.closeReading}</p>}
+                                                {reading.testing !== 0 && <p className="text-gray-700 font-semibold">Testing: {reading.testing}</p>}
+                                                {reading.sale !== 0 && <p className="text-gray-700 font-semibold">Sale: {reading.sale}</p>}
+                                                {reading.rate !== 0 && <p className="text-gray-700 font-semibold">Rate: {reading.rate}</p>}
+                                                {reading.amount !== 0 && <p className="text-gray-700 font-semibold">Amount: {reading.amount}</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <button className='mx-auto bg-navbar flex justify-center w-1/3 rounded-xl' onClick={() => handleEdit(index)}>
+                                        {/* <button onClick={() => handleEdit(index)} className="bg-blue-500 text-white py-1 px-2 rounded mt-2">Edit</button> */}
+                                        <div className=''>
+                                            <div className="px-2 invert flex it w-10 h-10" color="primary" >
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                    <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    {/* <button onClick={() => handleDelete(index)} className="bg-red-500 text-white py-1 px-2 rounded mt-2 ml-2">Delete</button> */}
+                                </div>
+                            ))}
+                        </div>

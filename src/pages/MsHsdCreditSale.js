@@ -114,7 +114,7 @@ function MsHsdCreditSale({ petrodata }) {
         if (petrodata && ShiftData && base_url) {
             axios
                 .post(`${base_url}/assignNozzleList/1`, {
-                    "shift": `${ShiftData.shift}`,
+                    "shift": ShiftData.shift,
                     "emp_id": petrodata.user_id,
                     "date": ShiftData.date,
                     "petro_id": petrodata.petro_id,
@@ -621,7 +621,7 @@ function MsHsdCreditSale({ petrodata }) {
             setErrors((prev) => ({ ...prev, totalAmt: '' }));
         }
 
-        setTotalAmt(totalAmtValue.toFixed(2));
+        setTotalAmt(totalAmtValue);
         calculateQuantity(totalAmtValue, effectiveRate);
     };
 
@@ -1024,7 +1024,7 @@ function MsHsdCreditSale({ petrodata }) {
 
 
 
-                    <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
+                    <div className=" mt-5 mx-5  lg:mt-28 grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-5">
                         {Array.isArray(msAndHsdSaleList) && msAndHsdSaleList.length > 0 ? (
                             msAndHsdSaleList.map((voucher, index) => (
                                 <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
@@ -1054,8 +1054,8 @@ function MsHsdCreditSale({ petrodata }) {
                                             {voucher.Ledger?.name}
                                         </h5>
 
-                                        {voucher.Sale.vehicle_no && <div className="text-gray-700 font-semibold">
-                                            Vehicle No: <span className="font-bold">{voucher.Sale.vehicle_no}</span>
+                                        {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
+                                             <span className="font-bold">{voucher.Sale.vehicle_no}</span>
                                         </div>}
                                         {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
                                             <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">

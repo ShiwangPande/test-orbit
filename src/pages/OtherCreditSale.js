@@ -58,7 +58,8 @@ function OtherCreditSale({ petrodata }) {
     const [dsmIds, setDsmIds] = useState([]);
     const [PriceID, setPriceID] = useState([]);
     const [petrolgst, setPetrolGst] = useState([]);
-
+    const [igst, setIgst] = useState('')
+    const [gstType, setGstType] = useState("cgst_sgst"); // New state to track GST type
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const formatDate = (dateString) => {
@@ -238,7 +239,7 @@ function OtherCreditSale({ petrodata }) {
 
         const sale_type = selectedCustomer === 'CASH' ? 0 : 1;
         const customerid = selectedCustomer === 'CASH' ? 1 : ledgerId;
-
+        const gsttype = gstType === 'igst' ? 1 : 0;
         if (!validateForm()) {
             setIsSubmitting(false);
             return;
@@ -256,12 +257,12 @@ function OtherCreditSale({ petrodata }) {
             customer_id: customerid,
             date: ShiftData.date,
             state_id: petrodata.state_id,
-            gst_type: 0,
+            gst_type: gsttype,
             sale_type: sale_type,
             total_net_amt: inclusiveTotal,
             total_sgst_amt: sgst,
             total_cgst_amt: cgst,
-            total_igst_amt: 0,
+            total_igst_amt: igst,
             total_dis_amt: 0,
             ms_hsd_sale: 0,
             cash_to_driver: driverCash,
@@ -278,10 +279,10 @@ function OtherCreditSale({ petrodata }) {
                     gst_rate: gst,
                     cgst_per: cgst,
                     sgst_per: sgst,
-                    igst_per: 0,
+                    igst_per: igst,
                     cgst_amt: cgst,
                     sgst_amt: sgst,
-                    igst_amt: 0,
+                    igst_amt: igst,
                     dis: null,
                     dis_amt: 0,
                     total_amt: totalAmt,
@@ -412,24 +413,29 @@ function OtherCreditSale({ petrodata }) {
 
 
     const handleSelectCustomer = (customer) => {
-
-        const selectedItem = ItemName.find(item => item.Item.name === selectedFuel);
+        // const selectedItem = ItemName.find(item => item.Item.name === selectedFuel);
         setLedgerId(customer.Ledger.id === 'CASH' ? 'CASH' : customer.Ledger.id);
-        const defaultRate = selectedItem ? selectedItem.Item.mrp : (selectedItem ? selectedItem.Item.mrp : '');
-        setRate(defaultRate);
+        // const defaultRate = selectedItem ? selectedItem.Item.mrp : '';
+        // setRate(defaultRate);
+
+        if (customer.Ledger.id === 'CASH') {
+            setGstType('cgst_sgst');
+        } else {
+            const gstIN = String(customer.PartyDetail?.gstin).substring(0, 2);
+            if (gstIN === "27") {
+                setGstType('cgst_sgst');
+            } else {
+                setGstType('igst');
+            }
+        }
 
         setSelectedCustomer(customer.Ledger.name);
-
-        setLedgerId(customer.Ledger.id);
         setSearchQuery(customer.Ledger.name);
-        setSearchQueryVehicle("");
-        setSelectedVehicle(null);
         setShowDropdown(false);
-
-
     };
-    const handleClear = () => {
 
+
+    const handleClear = () => {
         setSelectedCustomer("");
         setLedgerId("");
         setSearchQuery("");
@@ -461,6 +467,7 @@ function OtherCreditSale({ petrodata }) {
         setShowDropdownVehicle(false);
         setSearchQueryVehicle(vehicleNumber);
     };
+
     const handleSelectfuel = (selectedValue) => {
         console.log('Selected Value:', selectedValue);
         const allItems = [...ItemName];
@@ -482,20 +489,40 @@ function OtherCreditSale({ petrodata }) {
     useEffect(() => {
         const total = parseFloat(totalAmt) || 0;
 
-
         const petrolGstItem = petrolgst.find(item => item.GstMaster && item.GstMaster.gst_percentage !== null);
         const gst_petrol_percentage = parseFloat(petrolGstItem?.GstMaster?.gst_percentage) || 0;
+        const igst_petrol_percentage = parseFloat(petrolGstItem?.GstMaster?.igst) || 0;
 
-        const baseAmount = (total * gst_petrol_percentage) / (100 + gst_petrol_percentage);
-        const calculatedCgst = baseAmount / 2;
-        const calculatedSgst = baseAmount / 2;
+        const selectedCustomerData = customerdata.find(item => item.Ledger.name === selectedCustomer);
+        const gstIN = selectedCustomerData ? String(selectedCustomerData.PartyDetail?.gstin).substring(0, 2) : '';
 
-        setCgst(calculatedCgst.toFixed(2));
-        setSgst(calculatedSgst.toFixed(2));
-        setgst(gst_petrol_percentage);
-        setInclusiveTotal((total - calculatedCgst - calculatedSgst).toFixed(2));
+        if (selectedCustomer === 'CASH' || gstIN === "27") {
+            const baseAmount = (total * gst_petrol_percentage) / (100 + gst_petrol_percentage);
+            const calculatedCgst = (baseAmount / 2).toFixed(2);
+            const calculatedSgst = (baseAmount / 2).toFixed(2);
 
-    }, [totalAmt, ItemName, selectedFuel, petrolgst]);
+            setCgst(calculatedCgst);
+            setSgst(calculatedSgst);
+            setgst(gst_petrol_percentage);
+            setGstType('cgst_sgst');
+
+            const inclusiveTotal = total - (parseFloat(calculatedCgst) + parseFloat(calculatedSgst));
+            setInclusiveTotal(inclusiveTotal.toFixed(2));
+        } else {
+            const baseIGSTAmount = (total * igst_petrol_percentage) / (100 + igst_petrol_percentage);
+            const calculatedIgst = baseIGSTAmount.toFixed(2);
+            setCgst(0);
+            setSgst(0);
+            setgst(gst_petrol_percentage);
+            setIgst(calculatedIgst);
+            setGstType('igst');
+
+            const inclusive_IGST = total - parseFloat(calculatedIgst);
+            setInclusiveTotal(inclusive_IGST.toFixed(2));
+        }
+    }, [totalAmt, selectedCustomer, petrolgst, customerdata]);
+
+
 
 
 
@@ -602,7 +629,7 @@ function OtherCreditSale({ petrodata }) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
                 right: containerWidth / 4,
-                left: 0 // Prevent dragging to the left
+                left: 0
             });
         }
     }, [submittedData.length]);
@@ -664,12 +691,10 @@ function OtherCreditSale({ petrodata }) {
                                             </>
 
 
-                                            {/* Customer */}
+
                                             <div className="grid grid-cols-2 lg:grid-cols-3  gap-3">
                                                 {/* Customer */}
                                                 <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
-
-
                                                     <label htmlFor="customer" className="block text-sm font-medium text-gray-700">
                                                         Customer
                                                     </label>
@@ -678,12 +703,10 @@ function OtherCreditSale({ petrodata }) {
                                                             type="text"
                                                             value={searchQuery}
                                                             onChange={handleSearchChange}
-                                                            onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
+                                                            onClick={() => setShowDropdown(true)}
                                                             placeholder="Search customers"
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-
                                                         />
-                                                        {errors.selectedCustomer && <span className="text-red-500 text-sm">{errors.selectedCustomer}</span>}
                                                         {selectedCustomer && (
                                                             <button
                                                                 onClick={handleClear}
@@ -693,8 +716,8 @@ function OtherCreditSale({ petrodata }) {
                                                             </button>
                                                         )}
                                                         {showDropdown && (
-                                                            <ul ref={dropdownRef} className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
-                                                                <li key="cash-option" className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'CASH', name: 'CASH' } })}>
+                                                            <ul ref={dropdownRef} className="mt-1 absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60">
+                                                                <li key="cash-option" className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer({ Ledger: { id: 'CASH', name: 'CASH' } })}>
                                                                     CASH
                                                                 </li>
                                                                 {customerdata.length === 0 ? (
@@ -703,7 +726,7 @@ function OtherCreditSale({ petrodata }) {
                                                                     customerdata
                                                                         .filter(item => item.Ledger.name.toLowerCase().includes(searchQuery.toLowerCase()))
                                                                         .map((item) => (
-                                                                            <li key={item.Ledger.id} className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer(item)}>
+                                                                            <li key={item.Ledger.id} className="py-2 px-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectCustomer(item)}>
                                                                                 {item.Ledger.name}
                                                                             </li>
                                                                         ))
@@ -769,7 +792,7 @@ function OtherCreditSale({ petrodata }) {
 
                                                 </div>
 
-                                                {/* Oil Type */}
+
                                                 <div className="flex flex-col col-span-1 gap-1">
                                                     <label htmlFor="itemOrFuelType">
                                                         {selectedCustomer === 'CASH' ? 'Item' : 'Oil Type'}
@@ -900,34 +923,44 @@ function OtherCreditSale({ petrodata }) {
 
                                                 </div>
 
-                                                <div className="flex flex-col col-span-1  gap-1">
-                                                    <label htmlFor="sgst">SGST</label>
-                                                    <input autoComplete="off"
-                                                        type="number"
-                                                        id="sgst"
-                                                        value={sgst}
-                                                        readOnly
-                                                        className="border p-2 border-gray-300 rounded"
-                                                    // required
-                                                    />
-                                                    {errors.sgst && <span className="text-red-500 text-sm">{errors.sgst}</span>}
-                                                </div>
+                                                {gstType === 'cgst_sgst' ? (
+                                                    <>
+                                                        <div className="flex flex-col col-span-1 gap-1">
+                                                            <label htmlFor="sgst">SGST</label>
+                                                            <input autoComplete="off"
+                                                                type="number"
+                                                                id="sgst"
+                                                                value={sgst}
+                                                                readOnly
+                                                                className="border p-2 border-gray-300 rounded"
+                                                            />
+                                                        </div>
+                                                        <div className="flex flex-col col-span-1 gap-1">
+                                                            <label htmlFor="cgst">CGST</label>
+                                                            <input autoComplete="off"
+                                                                type="number"
+                                                                id="cgst"
+                                                                value={cgst}
+                                                                readOnly
+                                                                className="border p-2 border-gray-300 rounded"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex flex-col col-span-1 gap-1">
+                                                            <label htmlFor="igst">IGST</label>
+                                                            <input autoComplete="off"
+                                                                type="number"
+                                                                id="igst"
+                                                                value={igst}
+                                                                readOnly
+                                                                className="border p-2 border-gray-300 rounded"
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )}
 
-
-
-
-                                                <div className="flex flex-col col-span-1  gap-1">
-                                                    <label htmlFor="cgst">CGST</label>
-                                                    <input autoComplete="off"
-                                                        type="number"
-                                                        id="cgst"
-                                                        value={cgst}
-                                                        readOnly
-                                                        className="border p-2 border-gray-300 rounded"
-                                                    // required
-                                                    />
-                                                    {errors.cgst && <span className="text-red-500 text-sm">{errors.cgst}</span>}
-                                                </div>
 
 
                                                 {/* Driver Cash */}
@@ -1013,8 +1046,8 @@ function OtherCreditSale({ petrodata }) {
                                         <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                             {voucher.Ledger?.name}
                                         </h5>
-                                        {voucher.Sale.vehicle_no && <div className="text-gray-700 font-semibold">
-                                            Vehicle No: <span className="font-bold">{voucher.Sale.vehicle_no}</span>
+                                        {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
+                                            <span className="font-bold">{voucher.Sale.vehicle_no}</span>
                                         </div>}
                                         {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
                                             <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
