@@ -1028,7 +1028,7 @@ function MsHsdCreditSale({ petrodata }) {
                         {Array.isArray(msAndHsdSaleList) && msAndHsdSaleList.length > 0 ? (
                             msAndHsdSaleList.map((voucher, index) => (
                                 <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
-                                    {isMobile && (
+                                    {/* {isMobile && (
                                         <>
                                             {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                                 <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -1040,15 +1040,15 @@ function MsHsdCreditSale({ petrodata }) {
                                                 </button>
                                             )}
                                         </>
-                                    )}
-                                    <motion.div
+                                    )} */}
+                                    <div
                                         className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                                        initial={{ x: 0 }}
-                                        animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
-                                        drag={isMobile ? "x" : false}
-                                        dragConstraints={dragConstraints}
-                                        onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                        onClick={() => handleCardClick(index)} // Added onClick handler
+                                        // initial={{ x: 0 }}
+                                        // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
+                                        // drag={isMobile ? "x" : false}
+                                        // dragConstraints={dragConstraints}
+                                        // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                        // onClick={() => handleCardClick(index)} 
                                     >
                                         <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                             {voucher.Ledger?.name}
@@ -1085,7 +1085,7 @@ function MsHsdCreditSale({ petrodata }) {
                                         ))}
 
 
-                                        {!isMobile && (
+                                        {/* {!isMobile && (
                                             <div className="flex flex-row justify-around mt-2">
                                                 <button
                                                     className="px-2 w-10 h-10"
@@ -1096,9 +1096,9 @@ function MsHsdCreditSale({ petrodata }) {
                                                     </svg>
                                                 </button>
                                             </div>
-                                        )}
-                                    </motion.div>
-                                    {isMobile && (
+                                        )} */}
+                                    </div>
+                                    {/* {isMobile && (
                                         <>
                                             {swipeStates[index] && swipeStates[index].isHeld && (
                                                 <>
@@ -1112,7 +1112,7 @@ function MsHsdCreditSale({ petrodata }) {
                                                 </>
                                             )}
                                         </>
-                                    )}
+                                    )} */}
                                 </div>
                             ))
                         ) : (

@@ -777,14 +777,14 @@ function Expenses({ petrodata }) {
                                         )}
                                     </>
                                 )}
-                                <motion.div
+                                <div
                                     className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                                    initial={{ x: 0 }}
-                                    animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
-                                    drag={isMobile ? "x" : false}
-                                    dragConstraints={dragConstraints}
-                                    onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                    onClick={() => handleCardClick(index)} // Added onClick handler
+                                    // initial={{ x: 0 }}
+                                    // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
+                                    // drag={isMobile ? "x" : false}
+                                    // dragConstraints={dragConstraints}
+                                    // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                    // onClick={() => handleCardClick(index)} // Added onClick handler
                                 >
                                     <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                         <ul>
@@ -810,7 +810,7 @@ function Expenses({ petrodata }) {
                                             </p>
                                         )}
                                     </div>
-                                    {!isMobile && (
+                                    {/* {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
 
                                             <button
@@ -828,9 +828,9 @@ function Expenses({ petrodata }) {
                                                 </svg>
                                             </button>
                                         </div>
-                                    )}
-                                </motion.div>
-                                {isMobile && (
+                                    )} */}
+                                </div>
+                                {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isHeld && (
                                             <>
@@ -843,7 +843,7 @@ function Expenses({ petrodata }) {
                                                 </button>
                                             </>
                                         )}
-                                    </>)}
+                                    </>)} */}
                             </div>
                         ))
                     ) : (

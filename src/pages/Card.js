@@ -692,7 +692,7 @@ function Reciept({ petrodata }) {
                     {Array.isArray(cardSales) && cardSales.length > 0 ? (
                         cardSales.map((sale, index) => (
                             <div key={index} ref={containerRef} className="relative -z-0   justify-center flex flex-row overflow-hidden">
-                                {isMobile && (
+                                {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                             <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -704,15 +704,15 @@ function Reciept({ petrodata }) {
                                             </button>
                                         )}
                                     </>
-                                )}
-                                <motion.div
+                                )} */}
+                                <div
                                     className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
-                                    initial={{ x: 0 }}
-                                    animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
-                                    drag={isMobile ? "x" : false}
-                                    dragConstraints={dragConstraints}
-                                    onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                    onClick={() => handleCardClick(index)} // Added onClick handler
+                                    // initial={{ x: 0 }}
+                                    // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
+                                    // drag={isMobile ? "x" : false}
+                                    // dragConstraints={dragConstraints}
+                                    // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
+                                    // onClick={() => handleCardClick(index)} // Added onClick handler
                                 >
                                     <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                         {sale.Card && sale.Card.card_name}
@@ -731,21 +731,17 @@ function Reciept({ petrodata }) {
                                             Vehicle No.: <span className="font-normal break-words"> {sale.CardSale && sale.CardSale.vehicle_no}</span>
                                         </p>}
                                     </div>
-                                    {!isMobile && (
+                                    {/* {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
-                                            {/* <button className="px-2 w-10 h-10" color="primary" onClick={() => handleEdit(index)}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                    <path d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z" fill="#000" />
-                                                </svg>
-                                            </button> */}
+                                          
                                             <button className="px-2 w-10 h-10" onClick={() => handleRemove(index)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                     <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#F44336" />
                                                 </svg>
                                             </button>
                                         </div>
-                                    )}
-                                </motion.div>
+                                    )} */}
+                                </div>
 
                             </div>
 
