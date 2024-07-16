@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Bizperto DSM App</string>
-    <string name="title_activity_main">Bizperto DSM App</string>
-    <string name="package_name">com.bizpertodsm.com</string>
-    <string name="custom_url_scheme">com.bizpertodsm.com</string>
+    <string name="app_name">Bizpetro</string>
+    <string name="title_activity_main">Bizpetro</string>
+    <string name="package_name">com.bizpetro.com</string>
+    <string name="custom_url_scheme">com.bizpetro.com</string>
 </resources>

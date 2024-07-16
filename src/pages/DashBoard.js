@@ -251,15 +251,15 @@ function DashBoard({ petrodata }) {
     const total_sale = parseFloat(total_sale_amount || 0) + parseFloat(getOtherSaleList || 0)
     const formatedtotal_sale = customFormat(total_sale);
     const total_msAndHsdSaleList = parseFloat(msAndHsdSaleList || 0)
-    const total_getOtherSaleList = parseFloat(getOtherSaleList || 0)
+    // const total_getOtherSaleList = parseFloat(getOtherSaleList || 0)
     const formattedtotal_msAndHsdSaleList = customFormat(total_msAndHsdSaleList);
-    const formattedtotal_getOtherSaleList = customFormat(total_getOtherSaleList);
+    // const formattedtotal_getOtherSaleList = customFormat(total_getOtherSaleList);
     const formattedexpensesVoucherList = customFormat(expensesVoucherList);
     const formattedrecieptList = customFormat(recieptList);
     const formattedwalletList = customFormat(walletList);
     const formattedcardList = customFormat(cardList);
     let cashBalance = 0;
-    cashBalance = parseFloat(total_sale_amount || 0) - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
+    cashBalance = parseFloat(total_sale || 0) + - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
 
     const formatedcashBalance = customFormat(cashBalance);
 
@@ -292,8 +292,6 @@ function DashBoard({ petrodata }) {
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                             <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale_amount)}>₹{formatedtotal_sale}</h1>
                         </div>
-
-
                         {msAndHsdSaleList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                             <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Sale</h2>
                             <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>

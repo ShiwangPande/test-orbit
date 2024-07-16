@@ -155,7 +155,7 @@ function Navbar({ petrodata }) {
             <div className={`lg:hidden  fixed inset-0 z-40 ${showMobileMenu ? 'block' : 'hidden'}`}>
                 <div className="flex items-center  justify-start h-full 	">
                     <motion.div
-                        className={`bg-navbar h-full fixed w-[80vw] py-5 px-8 flex flex-col navbar`}
+                        className={`bg-navbar h-full fixed w-[80vw] py-3 px-8 flex flex-col navbar`}
                         initial={{ x: '-80vw' }}
                         animate={controls}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -190,7 +190,7 @@ function Navbar({ petrodata }) {
                                     </svg>
                                 </button>
                             </div>
-                            <nav className="flex-1 px-2 flex gap-[1.3rem] flex-col  bg-navbar space-y-1">
+                            <nav className="flex-1 px-2 flex gap-[1.1rem] flex-col  bg-navbar space-y-1">
 
                                 <div className="flex flex-col items-start flex-shrink-0 px-5">
                                     <img
