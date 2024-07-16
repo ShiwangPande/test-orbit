@@ -64,6 +64,7 @@ function MsHsdCreditSale({ petrodata }) {
     const [petrolgst, setPetrolGst] = useState([]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
 
     // Function to open edit modal and populate with data
     const formatDate = (dateString) => {
@@ -111,40 +112,52 @@ function MsHsdCreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        if (petrodata && ShiftData && base_url) {
-            axios
-                .post(`${base_url}/assignNozzleList/1`, {
-                    "shift": ShiftData.shift,
-                    "emp_id": petrodata.user_id,
-                    "date": ShiftData.date,
-                    "petro_id": petrodata.petro_id,
-                    "day_shift": petrodata.daily_shift,
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
                 })
                 .then((response) => {
-                    if (response.status === 204) {
-                        console.warn("No content returned from the server.");
-                        // Handle this case as per your application's requirements
-                    } else if (response.status === 200) {
-                        if (response.data && response.data.data) {
+                    console.log("Assign nozzle list response:", response);
+
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
                             const data = response.data.data;
                             const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
                             setDsmIds(extractedDsmIds);
                             console.log('extractedDsmIds', extractedDsmIds);
                         } else {
                             console.error("Unexpected response data structure:", response.data);
-                            // Handle unexpected response structure here
                         }
+                        setShouldFetchAdd(noozleassigned);
                     } else {
-                        console.error("Unexpected response status:", response.status);
-                        // Handle other unexpected response statuses here
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
                     }
                 })
                 .catch((error) => {
                     console.error("Error fetching data:", error);
-                    // Handle specific error scenarios here
+                    setShouldFetchAdd(false);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, base_url]);
 
     useEffect(() => {
         axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
@@ -706,11 +719,14 @@ function MsHsdCreditSale({ petrodata }) {
 
             <main className="flex-1 overflow-x-hidden focus:outline-none">
                 <div className=' relative z-0 overflow-x-hidden overflow-y-auto'>
-                    <div className="flex flex-wrap gap-3">
-                        <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
-                            <img src={add} className="w-8 h-8" alt="" />
-                        </Button>
-                    </div>
+                    {shouldFetchAdd && (
+                        <div className="flex flex-wrap gap-3">
+                            <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
+                                <img src={add} className="w-8 h-8" alt="" />
+                            </Button>
+                        </div>
+                    )
+                    }
                     <Modal isOpen={isOpen} size="5xl" scrollBehavior="outside" isDismissable={false} isKeyboardDismissDisabled={true} placement="top"
                         onOpenChange={onOpenChange}>
                         <ModalContent>
@@ -954,21 +970,23 @@ function MsHsdCreditSale({ petrodata }) {
                                                     {errors.totalAmt && <span className="text-red-500 text-sm">{errors.totalAmt}</span>}
 
                                                 </div>
-                                                <div className="flex flex-col col-span-1  gap-1">
-                                                    <label htmlFor="Coupen">Driver Cash</label>
-                                                    <input autoComplete="off"
-                                                        type="number"
-                                                        value={driverCash}
-                                                        onChange={handleDriverCashChange}
-                                                        id="DRIVER CASH"
-                                                        placeholder="Driver Cash"
-                                                        className="border p-2 border-gray-300 rounded"
+                                                {selectedCustomer !== "CASH" && (
+                                                    <div className="flex flex-col col-span-1  gap-1">
+                                                        <label htmlFor="Coupen">Driver Cash</label>
+                                                        <input autoComplete="off"
+                                                            type="number"
+                                                            value={driverCash}
+                                                            onChange={handleDriverCashChange}
+                                                            id="DRIVER CASH"
+                                                            placeholder="Driver Cash"
+                                                            className="border p-2 border-gray-300 rounded"
 
 
-                                                    />
-                                                    {errors.driverCash && <span className="text-red-500 text-sm">{errors.driverCash}</span>}
+                                                        />
+                                                        {errors.driverCash && <span className="text-red-500 text-sm">{errors.driverCash}</span>}
 
-                                                </div>
+                                                    </div>
+                                                )}
 
                                                 {/* Driver Cash */}
 
@@ -1023,12 +1041,12 @@ function MsHsdCreditSale({ petrodata }) {
 
 
 
-
-                    <div className=" mt-5 mx-5  lg:mt-28 grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-5">
-                        {Array.isArray(msAndHsdSaleList) && msAndHsdSaleList.length > 0 ? (
-                            msAndHsdSaleList.map((voucher, index) => (
-                                <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
-                                    {/* {isMobile && (
+                    {shouldFetchAdd === true ? (
+                        <div className=" mt-5 mx-5  lg:mt-28 grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-5">
+                            {Array.isArray(msAndHsdSaleList) && msAndHsdSaleList.length > 0 ? (
+                                msAndHsdSaleList.map((voucher, index) => (
+                                    <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
+                                        {/* {isMobile && (
                                         <>
                                             {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                                 <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -1041,51 +1059,51 @@ function MsHsdCreditSale({ petrodata }) {
                                             )}
                                         </>
                                     )} */}
-                                    <div
-                                        className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                        <div
+                                            className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                         // initial={{ x: 0 }}
                                         // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                         // drag={isMobile ? "x" : false}
                                         // dragConstraints={dragConstraints}
                                         // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                         // onClick={() => handleCardClick(index)} 
-                                    >
-                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                            {voucher.Ledger?.name}
-                                        </h5>
+                                        >
+                                            <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                                {voucher.Ledger?.name}
+                                            </h5>
 
-                                        {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
-                                            <span className="font-bold">{voucher.Sale.vehicle_no}</span>
-                                        </div>}
-                                        {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
-                                            <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
-                                                {voucher.Sale.slip_no && <div className="text-gray-700 font-semibold">
-                                                    Slip No: <span className="font-bold">{voucher.Sale.slip_no}</span>
-                                                </div>}
-                                                {voucher.Sale.coupen_no && <div className="text-gray-700 font-semibold">
-                                                    Coupen No: <span className="font-bold">{voucher.Sale.coupen_no}</span>
-                                                </div>}
-                                                {detail.Item?.name && <p className="text-gray-700 font-semibold">
-                                                    Item: <span className="font-bold">{detail.Item?.name}</span>
-                                                </p>}
-                                                {detail.inclusive_rate && <p className="text-gray-700 font-semibold">
-                                                    Rate: <span className="font-bold">{detail.inclusive_rate}</span>
-                                                </p>}
-                                                {detail.quantity && <p className="text-gray-700 font-semibold">
-                                                    Quantity: <span className="font-bold">{detail.quantity}</span>
-                                                </p>}
-                                                {detail.total_amount && <p className="text-gray-700 font-semibold">
-                                                    Total Amount: <span className="font-bold">{detail.total_amount}</span>
-                                                </p>}
-                                                {detail.inclusive_total && <p className="text-gray-700 col-span-2 font-semibold">
-                                                    Inclusive Total: <span className="font-bold">{detail.inclusive_total}</span>
-                                                </p>}
+                                            {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
+                                                <span className="font-bold">{voucher.Sale.vehicle_no}</span>
+                                            </div>}
+                                            {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
+                                                <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
+                                                    {voucher.Sale.slip_no && <div className="text-gray-700 font-semibold">
+                                                        Slip No: <span className="font-bold">{voucher.Sale.slip_no}</span>
+                                                    </div>}
+                                                    {voucher.Sale.coupen_no && <div className="text-gray-700 font-semibold">
+                                                        Coupen No: <span className="font-bold">{voucher.Sale.coupen_no}</span>
+                                                    </div>}
+                                                    {detail.Item?.name && <p className="text-gray-700 font-semibold">
+                                                        Item: <span className="font-bold">{detail.Item?.name}</span>
+                                                    </p>}
+                                                    {detail.inclusive_rate && <p className="text-gray-700 font-semibold">
+                                                        Rate: <span className="font-bold">{detail.inclusive_rate}</span>
+                                                    </p>}
+                                                    {detail.quantity && <p className="text-gray-700 font-semibold">
+                                                        Quantity: <span className="font-bold">{detail.quantity}</span>
+                                                    </p>}
+                                                    {detail.total_amount && <p className="text-gray-700 font-semibold">
+                                                        Total Amount: <span className="font-bold">{detail.total_amount}</span>
+                                                    </p>}
+                                                    {detail.inclusive_total && <p className="text-gray-700 col-span-2 font-semibold">
+                                                        Inclusive Total: <span className="font-bold">{detail.inclusive_total}</span>
+                                                    </p>}
 
-                                            </div>
-                                        ))}
+                                                </div>
+                                            ))}
 
 
-                                        {/* {!isMobile && (
+                                            {/* {!isMobile && (
                                             <div className="flex flex-row justify-around mt-2">
                                                 <button
                                                     className="px-2 w-10 h-10"
@@ -1097,8 +1115,8 @@ function MsHsdCreditSale({ petrodata }) {
                                                 </button>
                                             </div>
                                         )} */}
-                                    </div>
-                                    {/* {isMobile && (
+                                        </div>
+                                        {/* {isMobile && (
                                         <>
                                             {swipeStates[index] && swipeStates[index].isHeld && (
                                                 <>
@@ -1113,15 +1131,27 @@ function MsHsdCreditSale({ petrodata }) {
                                             )}
                                         </>
                                     )} */}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
                                 </div>
-                            ))
-                        ) : (
-                            <p>No card sales available.</p>
-                        )}
+                            </div>
+
+                            )}
 
 
-
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+        </div>
+    </div>
+                    )}
                 </div>
             </main >
         </div >

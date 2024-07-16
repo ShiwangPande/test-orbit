@@ -17,6 +17,53 @@ function DashBoard({ petrodata }) {
     const [recieptList, setRecieptList] = useState("");
     const [cardList, setCardSales] = useState("");
     const [walletList, setWallet] = useState("");
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+
+    useEffect(() => {
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
+                })
+                .then((response) => {
+                    console.log("Assign nozzle list response:", response);
+
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
+                            console.log("Nozzle list assigned successfully.");
+
+                        } else {
+                            console.error("Unexpected response data structure:", response.data);
+                        }
+                        setShouldFetchAdd(noozleassigned);
+                    } else {
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                    setShouldFetchAdd(false);
+                });
+        }
+    }, [petrodata, base_url]);
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
@@ -274,9 +321,9 @@ function DashBoard({ petrodata }) {
     const formattedwalletList = customFormat(walletList);
     const formattedcardList = customFormat(cardList);
     let cashBalance = 0;
-    cashBalance = parseFloat(total_sale || 0)  - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
+    cashBalance = parseFloat(total_sale || 0) - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
 
-    const formatedcashBalance = customFormat(cashBalance);
+    const formatedcashBalance = customFormat(parseFloat(cashBalance).toFixed(2));
 
     const getTextStyle = (value) => ({
         color: value < 0 ? 'red' : 'black',
@@ -299,49 +346,59 @@ function DashBoard({ petrodata }) {
                     <h1 className='text-2xl w-full text-white mb-2 lg:hidden block text-center font-bold'>Hey, {petrodata.name}</h1>
                     <h1 className='text-xl lg:text-2xl w-full text-white  text-center font-bold'>Welcome to {petrodata.petro_name}</h1>
                 </div>
-                <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
-                    <div className='flex flex-col px-4 lg:px-10 w-full'>
+                {shouldFetchAdd === true ? (
 
-                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale_amount)}>₹{formatedtotal_sale}</h1>
-                        </div>
-                        {msAndHsdSaleList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Sale</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(msAndHsdSaleList)}>  ₹{formattedtotal_msAndHsdSaleList}</h1>
-                        </div>}
+                    <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
+                        <div className='flex flex-col px-4 lg:px-10 w-full'>
 
-                        {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(expensesVoucherList)}>₹{formattedexpensesVoucherList}</h1>
-                        </div>}
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale_amount)}>₹{formatedtotal_sale}</h1>
+                            </div>
+                            {msAndHsdSaleList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Sale</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(msAndHsdSaleList)}>  ₹{formattedtotal_msAndHsdSaleList}</h1>
+                            </div>}
 
-                        {recieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(recieptList)}>₹{formattedrecieptList}</h1>
-                        </div>}
-                        {walletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(walletList)}>₹{formattedwalletList}</h1>
-                        </div>}
-                        {cardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cardList)}>₹{formattedcardList}</h1>
-                        </div>}
+                            {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(expensesVoucherList)}>₹{formattedexpensesVoucherList}</h1>
+                            </div>}
 
-                        <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                            <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
-                            <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                            <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formatedcashBalance}</h1>
+                            {recieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(recieptList)}>₹{formattedrecieptList}</h1>
+                            </div>}
+                            {walletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(walletList)}>₹{formattedwalletList}</h1>
+                            </div>}
+                            {cardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cardList)}>₹{formattedcardList}</h1>
+                            </div>}
+
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formatedcashBalance}</h1>
+                            </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex h-[65vh]  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

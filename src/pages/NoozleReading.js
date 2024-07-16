@@ -16,6 +16,7 @@ const NoozleReading = ({ petrodata }) => {
     const [totalSale, setTotalSale] = useState("");
     const [amount, setAmount] = useState("");
     const [editingIndex, setEditingIndex] = useState(null);
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
 
     const [errors, setErrors] = useState({});
     const [shouldFetchReadings, setShouldFetchReadings] = useState(false);
@@ -177,47 +178,75 @@ const NoozleReading = ({ petrodata }) => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
     useEffect(() => {
-        if (base_url && shiftdata) {
-            axios
-                .post(`${base_url}/assignNozzleList/1`, {
-                    shift: `${shiftdata.shift}`,
-                    emp_id: petrodata.user_id,
-                    date: shiftdata.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                petro_id: petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    setShiftdata({ shift, day_shift_no, formattedDate, date });
+
+                    console.log("Fetching nozzle list data...");
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        shift: shift,
+                        emp_id: petrodata.user_id,
+                        date: date,
+                        petro_id: petrodata.petro_id,
+                        day_shift: petrodata.daily_shift,
+                    });
                 })
                 .then((response) => {
-                    const data = response.data.data;
-                    setNoozleData(data);
-                    const initialReadings = {};
-                    let allReadingsPresent = true;
+                    console.log("Assign nozzle list response:", response);
 
+                    if (response.status === 200 && response.data.status === 200) {
+                        const data = response.data.data;
+                        if (data && Array.isArray(data)) {
+                            const initialReadings = {};
+                            let allReadingsPresent = true;
 
-                    data.forEach((item) => {
-                        if (item.reading_id === "") {
-                            allReadingsPresent = false;
+                            data.forEach((item) => {
+                                if (item.reading_id === "") {
+                                    allReadingsPresent = false;
+                                }
+                                initialReadings[item.NozzlesAssign.nozzle_id] = {
+                                    startReading: item.start_reading,
+                                    closeReading: item.start_reading,
+                                    testing: 0,
+                                    commodityId: item.Nozzle.commodity,
+                                    nozzleId: item.NozzlesAssign.nozzle_id,
+                                    rate: item.rate,
+                                    maxReading: item.Nozzle.max_reading,
+                                };
+                            });
+
+                            setReadings(initialReadings);
+                            setShouldFetchReadings(allReadingsPresent);
+                            setShouldFetchAdd(true);
+                        } else {
+                            console.error("Invalid data format received from API:", data);
+                            setShouldFetchReadings(false);
+                            setShouldFetchAdd(false);
                         }
-                        initialReadings[item.NozzlesAssign.nozzle_id] = {
-                            startReading: item.start_reading,
-                            closeReading: item.start_reading,
-                            testing: 0,
-                            commodityId: item.Nozzle.commodity,
-                            nozzleId: item.NozzlesAssign.nozzle_id,
-                            rate: item.rate,
-                            maxReading: item.Nozzle.max_reading,
-                        };
-                    });
-                    setReadings(initialReadings); // Set readings state
-                    setShouldFetchReadings(allReadingsPresent);
-
-                    console.log("initial", initialReadings);
+                    } else {
+                        console.error("Unexpected API response:", response.data);
+                        setShouldFetchReadings(false);
+                        setShouldFetchAdd(false);
+                    }
                 })
                 .catch((error) => {
-                    console.error("Error fetching data:", error);
+                    console.error("Error fetching nozzle list data:", error);
+                    setShouldFetchReadings(false);
+                    setShouldFetchAdd(false);
                 });
         }
-    }, [petrodata, base_url, shiftdata]);
+    }, [petrodata, base_url]);
+
+
 
     useEffect(() => {
         if (base_url && shiftdata && shouldFetchReadings) {
@@ -598,6 +627,8 @@ const NoozleReading = ({ petrodata }) => {
 
                             return (
                                 <React.Fragment key={item.NozzlesAssign.nozzle_id}>
+
+
                                     {!isEditModalOpen && !shouldFetchReadings && (
                                         <div className="flex flex-wrap gap-3">
                                             <button
@@ -606,12 +637,17 @@ const NoozleReading = ({ petrodata }) => {
                                             >
                                                 <img
                                                     src={add}
-                                                    className="w-14 h-14 m-auto  p-3"
+                                                    className="w-14 h-14 m-auto p-3"
                                                     alt=""
                                                 />
                                             </button>
                                         </div>
                                     )}
+
+
+
+
+
 
                                     {isEditModalOpen && (
                                         <div>
@@ -821,89 +857,99 @@ const NoozleReading = ({ petrodata }) => {
                             </div>
                         </div>
                     )}
-                    {!isEditModalOpen && !isModalOpen && (
-                        <div className="flex  justify-center items-center flex-row w-full h-[80vh] lg:h-screen gap-2 py-2">
+                    {shouldFetchAdd === true ? (
+                        <>
+                            {!isEditModalOpen && !isModalOpen && (
+                                <div className="flex  justify-center items-center flex-row w-full h-[80vh] lg:h-screen gap-2 py-2">
 
-                            <div className="mt-5 mx-5   lg:mt-28 flex lg:flex-row  gap-3 lg:gap-5  my-auto  lg:my-auto auto-cols-max  rounded-lg flex-col   h-fit p-4 shadow">
-                                {nozzleListReadings &&
-                                    nozzleListReadings.map((data) => {
-                                        const nozzle = data.ShiftWiseNozzle;
-                                        const nozzleName = data.Nozzle;
-                                        const nozzleItem = data.Item;
-                                        const shiftWiseNozzle = data.ShiftWiseNozzle || {};
-                                        return (
-                                            <div
-                                                key={nozzle.id}
-                                                className="flex flex-col bg-white  gap-3 lg:gap-3 border border-black p-5 rounded-lg lg:text-lg text-lg"
-                                            >
-                                                <div className="flex flex-col gap-3 lg:gap-3 text-redish  p-3 lg:p-5 rounded-lg lg:text-lg text-lg">
-                                                    <div className="flex flex-col gap-3 w-full justify-between">
-                                                        {nozzleItem.name && (
-                                                            <h3 className="text-orange text-lg font-semibold">
-                                                                Nozzle: {nozzleItem.name}
-                                                            </h3>
-                                                        )}
-                                                        {nozzleName.name && (
-                                                            <h3 className="text-orange text-lg font-semibold">
-                                                                Commodity: {nozzleName.name}
-                                                            </h3>
-                                                        )}
-                                                    </div>
-                                                    {shiftWiseNozzle.start_reading !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Start Reading: {shiftWiseNozzle.start_reading}
-                                                        </p>
-                                                    )}
-                                                    {shiftWiseNozzle.closing_reading !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Close Reading: {shiftWiseNozzle.closing_reading}
-                                                        </p>
-                                                    )}
-                                                    {shiftWiseNozzle.testing !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Testing: {shiftWiseNozzle.testing}
-                                                        </p>
-                                                    )}
-                                                    {shiftWiseNozzle.total_sale !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Sale: {shiftWiseNozzle.total_sale}
-                                                        </p>
-                                                    )}
-                                                    {shiftWiseNozzle.rate !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Rate: {shiftWiseNozzle.rate}
-                                                        </p>
-                                                    )}
-                                                    {shiftWiseNozzle.amount !== undefined && (
-                                                        <p className="text-gray-700 font-semibold">
-                                                            Amount: {shiftWiseNozzle.amount}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <button
-                                                    className="mx-auto bg-navbar flex justify-center w-1/3 rounded-xl"
-                                                    onClick={() => handleEdit(nozzle.id)}
-                                                >
-                                                    <div className="px-2 invert flex w-10 h-10">
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 24 24"
+                                    <div className="mt-5 mx-5   lg:mt-28 flex lg:flex-row  gap-3 lg:gap-5  my-auto  lg:my-auto auto-cols-max  rounded-lg flex-col   h-fit p-4 shadow">
+                                        {nozzleListReadings &&
+                                            nozzleListReadings.map((data) => {
+                                                const nozzle = data.ShiftWiseNozzle;
+                                                const nozzleName = data.Nozzle;
+                                                const nozzleItem = data.Item;
+                                                const shiftWiseNozzle = data.ShiftWiseNozzle || {};
+                                                return (
+                                                    <div
+                                                        key={nozzle.id}
+                                                        className="flex flex-col bg-white  gap-3 lg:gap-3 border border-black p-5 rounded-lg lg:text-lg text-lg"
+                                                    >
+                                                        <div className="flex flex-col gap-3 lg:gap-3 text-redish  p-3 lg:p-5 rounded-lg lg:text-lg text-lg">
+                                                            <div className="flex flex-col gap-3 w-full justify-between">
+                                                                {nozzleItem.name && (
+                                                                    <h3 className="text-orange text-lg font-semibold">
+                                                                        Nozzle: {nozzleItem.name}
+                                                                    </h3>
+                                                                )}
+                                                                {nozzleName.name && (
+                                                                    <h3 className="text-orange text-lg font-semibold">
+                                                                        Commodity: {nozzleName.name}
+                                                                    </h3>
+                                                                )}
+                                                            </div>
+                                                            {shiftWiseNozzle.start_reading !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Start Reading: {shiftWiseNozzle.start_reading}
+                                                                </p>
+                                                            )}
+                                                            {shiftWiseNozzle.closing_reading !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Close Reading: {shiftWiseNozzle.closing_reading}
+                                                                </p>
+                                                            )}
+                                                            {shiftWiseNozzle.testing !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Testing: {shiftWiseNozzle.testing}
+                                                                </p>
+                                                            )}
+                                                            {shiftWiseNozzle.total_sale !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Sale: {shiftWiseNozzle.total_sale}
+                                                                </p>
+                                                            )}
+                                                            {shiftWiseNozzle.rate !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Rate: {shiftWiseNozzle.rate}
+                                                                </p>
+                                                            )}
+                                                            {shiftWiseNozzle.amount !== undefined && (
+                                                                <p className="text-gray-700 font-semibold">
+                                                                    Amount: {shiftWiseNozzle.amount}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            className="mx-auto bg-navbar flex justify-center w-1/3 rounded-xl"
+                                                            onClick={() => handleEdit(nozzle.id)}
                                                         >
-                                                            <path
-                                                                d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
-                                                                fill="#000"
-                                                            />
-                                                        </svg>
+                                                            <div className="px-2 invert flex w-10 h-10">
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path
+                                                                        d="M20.548 3.452a1.542 1.542 0 0 1 0 2.182l-7.636 7.636-3.273 1.091 1.091-3.273 7.636-7.636a1.542 1.542 0 0 1 2.182 0zM4 21h15a1 1 0 0 0 1-1v-8a1 1 0 0 0-2 0v7H5V6h7a1 1 0 0 0 0-2H4a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1z"
+                                                                        fill="#000"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        </button>
                                                     </div>
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
+                                                );
+                                            })}
 
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                            <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                                <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
                             </div>
                         </div>
                     )}
-
                     {isModalOpen && (
                         <div className="flex flex-row justify-between mt-20 lg:mt-5  items-center px-4 max-w-96 mx-auto rounded-md lg:rounded-lg lg:max-w-5xl lg:px-8 p-4  bg-navbar text-white gap-1">
                             <div className="text-xl lg:text-2xl">Update Nozzle Reading</div>

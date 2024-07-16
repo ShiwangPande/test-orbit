@@ -30,6 +30,7 @@ function Expenses({ petrodata }) {
     const [selectedLedgerName, setSelectedLedgerName] = useState(null);;
     const [ledgerId, setLedgerId] = useState(null);
     const [LedgerNamedata, setLedgerNamedata] = useState([]);
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
 
     // const [ledgerId, setLedgerId] = useState(null); // New state for ledger ID
     const [noozleData, setNoozleData] = useState([]);
@@ -95,26 +96,52 @@ function Expenses({ petrodata }) {
     }, [petrodata, ShiftData,  base_url]);
 
     useEffect(() => {
-        if (petrodata && ShiftData  && base_url) {
-            axios
-                .post(`${base_url}/assignNozzleList/1`, {
-                    shift: `${ShiftData.shift}`,
-                    emp_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
                 })
                 .then((response) => {
-                    const data = response.data.data;
-                    const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
-                    setDsmIds(extractedDsmIds);
-                    console.log('extractedDsmIds', extractedDsmIds)
+                    console.log("Assign nozzle list response:", response);
+
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
+                            const data = response.data.data;
+                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                            setDsmIds(extractedDsmIds);
+                            console.log('extractedDsmIds', extractedDsmIds);
+                        } else {
+                            console.error("Unexpected response data structure:", response.data);
+                        }
+                        setShouldFetchAdd(noozleassigned);
+                    } else {
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
+                    }
                 })
                 .catch((error) => {
                     console.error("Error fetching data:", error);
+                    setShouldFetchAdd(false);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, base_url]);
 
 
 
@@ -450,12 +477,14 @@ function Expenses({ petrodata }) {
                     Expenses
                 </h1>
                 <div className="flex flex-wrap gap-3">
-                    <Button
-                        className="bg-navbar fixed z-10  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
-                        onPress={onOpen}
-                    >
-                        <img src={add} className="w-8 h-8" alt="" />
-                    </Button>
+                {shouldFetchAdd && (
+                        <div className="flex flex-wrap gap-3">
+                            <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
+                                <img src={add} className="w-8 h-8" alt="" />
+                            </Button>
+                        </div>
+                    )
+                    }
                 </div>
                 <Modal
                     isOpen={isOpen}
@@ -645,6 +674,7 @@ function Expenses({ petrodata }) {
                         </div>
                     </div>
                 )}
+                  {shouldFetchAdd === true ? (
                 <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
                     {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
                         expensesVoucherList.map((voucher, index) => (
@@ -732,17 +762,30 @@ function Expenses({ petrodata }) {
                             </div>
                         ))
                     ) : (
-                        <p>No card sales available.</p>
-                    )}
+                        <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                        </div>
+                    </div>
 
-                    {isEditModalOpen && (
+                    )}
+</div>
+    ) : (
+        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+        </div>
+    </div>
+    )}
+                    {/* {isEditModalOpen && (
                         <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="rounded-lg lg:max-w-4xl w-full">
                                 <div className="flex p-5 flex-col text-2xl bg-navbar text-white gap-1">
                                     Edit Credit Sale
                                 </div>
                                 <div className="bg-white p-6 ">
-                                    {/* Edit form */}
+                                
                                     <form onSubmit={handleSubmitEdit}>
                                         <div className="">
                                             {creditdata.data && (
@@ -764,7 +807,7 @@ function Expenses({ petrodata }) {
                                                 </>
                                             )}
                                             <div className=" grid grid-cols-1 lg:grid-cols-2  gap-3">
-                                                {/* LedgerName */}
+                                                
                                                 <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
                                                     <label
                                                         htmlFor="LedgerName"
@@ -823,7 +866,7 @@ function Expenses({ petrodata }) {
                                                     </div>
                                                 </div>
 
-                                                {/* Amount */}
+                                                
                                                 <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
                                                     <label htmlFor="slip">Amount</label>
                                                      <input autoComplete="off"
@@ -842,7 +885,7 @@ function Expenses({ petrodata }) {
                                                     )}
                                                 </div>
 
-                                                {/* Narration */}
+                                            
                                                 <div className="flex flex-col col-span-2 lg:col-span-2 gap-1">
                                                     <label htmlFor="coupen">Narration</label>
                                                     <textarea
@@ -878,8 +921,7 @@ function Expenses({ petrodata }) {
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
+                    )} */}
             </main>
         </div>
     );

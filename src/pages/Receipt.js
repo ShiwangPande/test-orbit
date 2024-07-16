@@ -50,6 +50,7 @@ function Expenses({ petrodata }) {
         narration: "",
     });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
 
     // Function to open edit modal and populate with data
     const formatDate = (dateString) => {
@@ -80,7 +81,7 @@ function Expenses({ petrodata }) {
 
 
     useEffect(() => {
-        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
+        if (petrodata && ShiftData && petrodata.daily_shift  && base_url) {
             axios.post(`${base_url}/receiptVoucherList/1`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
@@ -100,27 +101,52 @@ function Expenses({ petrodata }) {
     }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
 
     useEffect(() => {
-        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
-            axios
-                .post(`${base_url}/assignNozzleList/1`, {
-                    shift: `${ShiftData.shift}`,
-                    emp_id: petrodata.user_id,
-                    date: ShiftData.date,
-                    petro_id: petrodata.petro_id,
-                    day_shift: petrodata.daily_shift,
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
                 })
                 .then((response) => {
-                    const data = response.data.data;
+                    console.log("Assign nozzle list response:", response);
 
-                    const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
-                    setDsmIds(extractedDsmIds);
-                    console.log('extractedDsmIds', extractedDsmIds)
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
+                            const data = response.data.data;
+                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                            setDsmIds(extractedDsmIds);
+                            console.log('extractedDsmIds', extractedDsmIds);
+                        } else {
+                            console.error("Unexpected response data structure:", response.data);
+                        }
+                        setShouldFetchAdd(noozleassigned);
+                    } else {
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
+                    }
                 })
                 .catch((error) => {
                     console.error("Error fetching data:", error);
+                    setShouldFetchAdd(false);
                 });
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, base_url]);
 
 
 
@@ -527,12 +553,14 @@ function Expenses({ petrodata }) {
                     Expenses
                 </h1>
                 <div className="flex flex-wrap gap-3">
-                    <Button
-                        className="bg-navbar fixed z-10  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
-                        onPress={onOpen}
-                    >
-                        <img src={add} className="w-8 h-8" alt="" />
-                    </Button>
+                    {shouldFetchAdd && (
+                        <div className="flex flex-wrap gap-3">
+                            <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
+                                <img src={add} className="w-8 h-8" alt="" />
+                            </Button>
+                        </div>
+                    )
+                    }
                 </div>
                 <Modal
                     isOpen={isOpen}
@@ -760,57 +788,58 @@ function Expenses({ petrodata }) {
                         </div>
                     </div>
                 )}
-                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
-                    {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
-                        expensesVoucherList.map((voucher, index) => (
-                            <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
-                                {isMobile && (
-                                    <>
-                                        {swipeStates[index] && swipeStates[index].isSwipedRight && (
-                                            <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
-                                                <div className="px-2 w-10 h-10 my-auto" color="primary">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                        <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
-                                                    </svg>
-                                                </div>
-                                            </button>
-                                        )}
-                                    </>
-                                )}
-                                <div
-                                    className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                {shouldFetchAdd === true ? (
+                    <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
+                        {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
+                            expensesVoucherList.map((voucher, index) => (
+                                <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
+                                    {isMobile && (
+                                        <>
+                                            {swipeStates[index] && swipeStates[index].isSwipedRight && (
+                                                <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
+                                                    <div className="px-2 w-10 h-10 my-auto" color="primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                            <path d="M5.755 20.283L4 8h16l-1.755 12.283A2 2 0 0 1 16.265 22h-8.53a2 2 0 0 1-1.98-1.717zM21 4h-5V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2z" fill="#fff" />
+                                                        </svg>
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                    <div
+                                        className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     // initial={{ x: 0 }}
                                     // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     // drag={isMobile ? "x" : false}
                                     // dragConstraints={dragConstraints}
                                     // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                     // onClick={() => handleCardClick(index)} // Added onClick handler
-                                >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        <ul>
-                                            {voucher.VoucherDetail.map((detail, detailIndex) => (
-                                                <li key={detailIndex}>
-                                                    {detail.Ledger.name}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </h5>
-                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
-                                        {voucher.Voucher.amount && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
-                                        {voucher.Voucher.narration && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Narration:{" "}
-                                                <span className="font-normal break-words">{voucher.Voucher.narration}</span>{" "}
-                                            </p>
-                                        )}
-                                    </div>
-                                    {/* {!isMobile && (
+                                    >
+                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                            <ul>
+                                                {voucher.VoucherDetail.map((detail, detailIndex) => (
+                                                    <li key={detailIndex}>
+                                                        {detail.Ledger.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </h5>
+                                        <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
+                                            {voucher.Voucher.amount && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
+                                            {voucher.Voucher.narration && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Narration:{" "}
+                                                    <span className="font-normal break-words">{voucher.Voucher.narration}</span>{" "}
+                                                </p>
+                                            )}
+                                        </div>
+                                        {/* {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
 
                                             <button
@@ -829,8 +858,8 @@ function Expenses({ petrodata }) {
                                             </button>
                                         </div>
                                     )} */}
-                                </div>
-                                {/* {isMobile && (
+                                    </div>
+                                    {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isHeld && (
                                             <>
@@ -844,157 +873,168 @@ function Expenses({ petrodata }) {
                                             </>
                                         )}
                                     </>)} */}
-                            </div>
-                        ))
-                    ) : (
-                        <p>No card sales available.</p>
-                    )}
-
-                    {isEditModalOpen && (
-                        <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
-                            <div className="rounded-lg lg:max-w-4xl w-full">
-                                <div className="flex p-5 flex-col text-2xl bg-navbar text-white gap-1">
-                                    Edit Credit Sale
                                 </div>
-                                <div className="bg-white p-6 ">
-                                    {/* Edit form */}
-                                    <form onSubmit={handleSubmitEdit}>
-                                        <div className="">
-                                            {creditdata.data && (
-                                                <>
-                                                    <div className="mb-4 flex justify-between">
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">
-                                                            Date:{" "}
-                                                            <span className="text-red-500 font-medium">
-                                                                {creditdata.data.DailyShift.date}
-                                                            </span>
-                                                        </h2>
-                                                        <h2 className="block text-gray-700 text-lg font-bold mb-2">
-                                                            Shift:{" "}
-                                                            <span className="text-red-500 font-medium">
-                                                                {creditdata.data.DailyShift.day_shift_no}
-                                                            </span>
-                                                        </h2>
-                                                    </div>
-                                                </>
-                                            )}
-                                            <div className=" grid grid-cols-1 lg:grid-cols-2  gap-3">
-                                                {/* LedgerName */}
-                                                <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
-                                                    <label
-                                                        htmlFor="LedgerName"
-                                                        className="block text-sm font-medium text-gray-700"
-                                                    >
-                                                        Ledger Name
-                                                    </label>
-                                                    <div className="mt-1 relative">
-                                                        <input autoComplete="off"
-                                                            type="text"
-                                                            value={editData.selectedLedgerName}
-                                                            name="selectedLedgerName"
-                                                            onChange={handleEditChange}
-                                                            onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
-                                                            placeholder="Search Ledger Names"
-                                                            className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                                        />
-                                                        {errorss.selectedLedgerName && (
-                                                            <span className="text-red-500 text-sm">
-                                                                {errorss.selectedLedgerName}
-                                                            </span>
-                                                        )}
-                                                        {editData.selectedLedgerName && (
-                                                            <button
-                                                                onClick={handleClear}
-                                                                className="absolute top-1 w-8 h-8 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-1"
-                                                            >
-                                                                &#x2715;
-                                                            </button>
-                                                        )}
-                                                        {showDropdown && ( // Show dropdown only if showDropdown is true
-                                                            <ul
-                                                                ref={dropdownRef}
-                                                                className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60"
-                                                            >
-                                                                {LedgerNamedata.length === 0 ? (
-                                                                    <li className="py-2 px-3 text-gray-500">
-                                                                        No data available
-                                                                    </li>
-                                                                ) : (
-                                                                    LedgerNamedata.filter((item) =>
-                                                                        item.toLowerCase().includes(editData.selectedLedgerName.toLowerCase())
-                                                                    ) // Filter based on search query
-                                                                        .map((item, index) => (
-                                                                            <li
-                                                                                key={index}
-                                                                                className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100"
-                                                                                onClick={() => handleSelectLedgerName(item)}
-                                                                            >
-                                                                                {item}
-                                                                            </li>
-                                                                        ))
-                                                                )}
-                                                            </ul>
-                                                        )}
-                                                    </div>
-                                                </div>
+                            ))
+                        ) : (
+                            <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                            <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                            </div>
+                        </div>
 
-                                                {/* Amount */}
-                                                <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
-                                                    <label htmlFor="slip">Amount</label>
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+        </div>
+    </div>
+                )}
+
+                {/* {isEditModalOpen && (
+                    <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
+                        <div className="rounded-lg lg:max-w-4xl w-full">
+                            <div className="flex p-5 flex-col text-2xl bg-navbar text-white gap-1">
+                                Edit Credit Sale
+                            </div>
+                            <div className="bg-white p-6 ">
+                                <form onSubmit={handleSubmitEdit}>
+                                    <div className="">
+                                        {creditdata.data && (
+                                            <>
+                                                <div className="mb-4 flex justify-between">
+                                                    <h2 className="block text-gray-700 text-lg font-bold mb-2">
+                                                        Date:{" "}
+                                                        <span className="text-red-500 font-medium">
+                                                            {creditdata.data.DailyShift.date}
+                                                        </span>
+                                                    </h2>
+                                                    <h2 className="block text-gray-700 text-lg font-bold mb-2">
+                                                        Shift:{" "}
+                                                        <span className="text-red-500 font-medium">
+                                                            {creditdata.data.DailyShift.day_shift_no}
+                                                        </span>
+                                                    </h2>
+                                                </div>
+                                            </>
+                                        )}
+                                        <div className=" grid grid-cols-1 lg:grid-cols-2  gap-3">
+                                           
+                                            <div className="flex flex-col col-span-2 lg:col-span-1 gap-1">
+                                                <label
+                                                    htmlFor="LedgerName"
+                                                    className="block text-sm font-medium text-gray-700"
+                                                >
+                                                    Ledger Name
+                                                </label>
+                                                <div className="mt-1 relative">
                                                     <input autoComplete="off"
                                                         type="text"
-                                                        value={editData.amount}
-                                                        name="amount"
+                                                        value={editData.selectedLedgerName}
+                                                        name="selectedLedgerName"
                                                         onChange={handleEditChange}
-                                                        id="slip"
-                                                        className="border p-2 border-gray-300 rounded"
-                                                        maxLength="7"
+                                                        onClick={() => setShowDropdown(true)} // Show dropdown when input is clicked
+                                                        placeholder="Search Ledger Names"
+                                                        className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                     />
-                                                    {errorss.amount && (
+                                                    {errorss.selectedLedgerName && (
                                                         <span className="text-red-500 text-sm">
-                                                            {errorss.amount}
+                                                            {errorss.selectedLedgerName}
                                                         </span>
                                                     )}
-                                                </div>
-
-                                                {/* Narration */}
-                                                <div className="flex flex-col col-span-2 lg:col-span-2 gap-1">
-                                                    <label htmlFor="coupen">Narration</label>
-                                                    <textarea
-                                                        type="text"
-                                                        value={editData.narration}
-                                                        name="narration"
-                                                        onChange={handleEditChange}
-                                                        id="coupen"
-                                                        className="border p-2 border-gray-300 rounded"
-                                                        maxLength="200"
-                                                    />
-                                                    {errorss.narration && (
-                                                        <span className="text-red-500 text-sm">
-                                                            {errorss.narration}
-                                                        </span>
+                                                    {editData.selectedLedgerName && (
+                                                        <button
+                                                            onClick={handleClear}
+                                                            className="absolute top-1 w-8 h-8 right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full p-1"
+                                                        >
+                                                            &#x2715;
+                                                        </button>
+                                                    )}
+                                                    {showDropdown && ( // Show dropdown only if showDropdown is true
+                                                        <ul
+                                                            ref={dropdownRef}
+                                                            className="mt-1 capitalize absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-md overflow-y-auto max-h-60"
+                                                        >
+                                                            {LedgerNamedata.length === 0 ? (
+                                                                <li className="py-2 px-3 text-gray-500">
+                                                                    No data available
+                                                                </li>
+                                                            ) : (
+                                                                LedgerNamedata.filter((item) =>
+                                                                    item.toLowerCase().includes(editData.selectedLedgerName.toLowerCase())
+                                                                ) // Filter based on search query
+                                                                    .map((item, index) => (
+                                                                        <li
+                                                                            key={index}
+                                                                            className="py-2 px-3 capitalize cursor-pointer hover:bg-gray-100"
+                                                                            onClick={() => handleSelectLedgerName(item)}
+                                                                        >
+                                                                            {item}
+                                                                        </li>
+                                                                    ))
+                                                            )}
+                                                        </ul>
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex flex-row gap-5 mt-5">
-                                            <Button color="primary" type="submit">
-                                                Save
-                                            </Button>
-                                            <Button
-                                                color="danger"
-                                                onClick={() => setIsEditModalOpen(false)}
-                                            >
-                                                Cancel
-                                            </Button>
+                                            
+                                            <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
+                                                <label htmlFor="slip">Amount</label>
+                                                <input autoComplete="off"
+                                                    type="text"
+                                                    value={editData.amount}
+                                                    name="amount"
+                                                    onChange={handleEditChange}
+                                                    id="slip"
+                                                    className="border p-2 border-gray-300 rounded"
+                                                    maxLength="7"
+                                                />
+                                                {errorss.amount && (
+                                                    <span className="text-red-500 text-sm">
+                                                        {errorss.amount}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col col-span-2 lg:col-span-2 gap-1">
+                                                <label htmlFor="coupen">Narration</label>
+                                                <textarea
+                                                    type="text"
+                                                    value={editData.narration}
+                                                    name="narration"
+                                                    onChange={handleEditChange}
+                                                    id="coupen"
+                                                    className="border p-2 border-gray-300 rounded"
+                                                    maxLength="200"
+                                                />
+                                                {errorss.narration && (
+                                                    <span className="text-red-500 text-sm">
+                                                        {errorss.narration}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </form>
-                                </div>
+                                    </div>
+
+                                    <div className="flex flex-row gap-5 mt-5">
+                                        <Button color="primary" type="submit">
+                                            Save
+                                        </Button>
+                                        <Button
+                                            color="danger"
+                                            onClick={() => setIsEditModalOpen(false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )} */}
             </main>
         </div>
     );

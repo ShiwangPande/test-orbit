@@ -23,6 +23,8 @@ function App() {
   const [data, setData] = useState(JSON.parse(localStorage.getItem('userData')) || null);
   const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
   const [userMobile, setUserMobile] = useState(localStorage.getItem('userMobile') || '');
+  const [ShiftData, setShiftData] = useState([]);
+
   const base_url = process.env.REACT_APP_API_URL;
 
 
@@ -53,9 +55,35 @@ function App() {
     }
   }, [base_url, isAuthenticated, userMobile, data]);
 
+  // const formatDate = (dateString) => {
+  //   const [year, month, day] = dateString.split('-');
+  //   return `${day}/${month}/${year}`;
+  // };
+
+  // useEffect(() => {
+  //   if (data && base_url) {
+  //     axios
+  //       .post(`${base_url}/currentShiftData/1`,
+  //         {
+  //           "petro_id": data.petro_id,
+  //         })
+  //       .then((response) => {
+  //         const { shift, day_shift_no, date } = response.data.data.DailyShift;
+  //         const formattedDate = formatDate(date);
+  //         setShiftData({ shift, day_shift_no, formattedDate, date });
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error fetching data:", error);
+  //       });
+  //   }
+  // }, [data, base_url]);
+
+
   if (data === null && isAuthenticated) {
     return <p>Loading...</p>;
   }
+
+
 
   return (
     <div className="App">
@@ -70,7 +98,7 @@ function App() {
           <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/OtherCreditSale" element={isAuthenticated ? <OtherCreditSale petrodata={data} /> : <Navigate to="/login" />} />
+          <Route path="/OtherCreditSale" element={isAuthenticated ? <OtherCreditSale petrodata={data}  /> : <Navigate to="/login" />} />
           <Route path="/MsHsdCreditSale" element={isAuthenticated ? <MsHsdCreditSale petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/dashboard" element={isAuthenticated ? <DashBoard petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/wallet" element={isAuthenticated ? <Wallet petrodata={data} /> : <Navigate to="/login" />} />

@@ -24,6 +24,7 @@ function Reciept({ petrodata }) {
     const [ShiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [dsmIds, setDsmIds] = useState([]); // State to store dsmIds
+    const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
 
     const [selectedWalletName, setSelectedWalletName] = useState(null);
     const [WalletNamedata, setWalletNamedata] = useState([]);
@@ -96,27 +97,52 @@ function Reciept({ petrodata }) {
 
 
     useEffect(() => {
-        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
-            axios
-                .post(`${base_url}/assignNozzleList/1`, {
-                    "shift": `${ShiftData.shift}`,
-                    "emp_id": petrodata.user_id,
-                    "date": ShiftData.date,
-                    "petro_id": petrodata.petro_id,
-                    "day_shift": petrodata.daily_shift,
+        if (petrodata && base_url) {
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
+            })
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
                 })
                 .then((response) => {
-                    const data = response.data.data;
+                    console.log("Assign nozzle list response:", response);
 
-                    const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
-                    setDsmIds(extractedDsmIds);
-                    console.log('extractedDsmIds', extractedDsmIds)
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
+                            const data = response.data.data;
+                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                            setDsmIds(extractedDsmIds);
+                            console.log('extractedDsmIds', extractedDsmIds);
+                        } else {
+                            console.error("Unexpected response data structure:", response.data);
+                        }
+                        setShouldFetchAdd(noozleassigned);
+                    } else {
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
+                    }
                 })
                 .catch((error) => {
                     console.error("Error fetching data:", error);
+                    setShouldFetchAdd(false);
                 });
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, base_url]);
 
 
     const handleEditChange = (e) => {
@@ -459,12 +485,14 @@ function Reciept({ petrodata }) {
 
                 <div className="flex flex-wrap gap-3">
 
-                    <Button
-                        className="bg-navbar fixed z-10  w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white"
-                        onPress={onOpen}
-                    >
-                        <img src={add} className="w-8 h-8" alt="" />
-                    </Button>
+                {shouldFetchAdd && (
+                        <div className="flex flex-wrap gap-3">
+                            <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
+                                <img src={add} className="w-8 h-8" alt="" />
+                            </Button>
+                        </div>
+                    )
+                    }
                 </div>
                 <Modal
                     isOpen={isOpen}
@@ -672,6 +700,7 @@ function Reciept({ petrodata }) {
                         </div>
                     </div>
                 )}
+                  {shouldFetchAdd === true ? (
 
                 <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
 
@@ -733,9 +762,22 @@ function Reciept({ petrodata }) {
 
                         ))
                     ) : (
-                        <p>No card sales available.</p>
+                        <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                        </div>
+                    </div>
+                    
                     )}
                 </div>
+                    ) : (
+                        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+        </div>
+    </div>
+                    )}
                 {/* {isEditModalOpen && (
                         <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="rounded-lg lg:max-w-4xl w-full">
