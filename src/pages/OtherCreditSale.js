@@ -629,10 +629,10 @@ function OtherCreditSale({ petrodata }) {
             const containerWidth = containerRef.current.offsetWidth;
             setDragConstraints({
                 right: containerWidth / 4,
-                left: 0
+                left: 0 // Prevent dragging to the left
             });
         }
-    }, [submittedData.length]);
+    }, [submittedData.length, containerRef.current]);
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
@@ -654,7 +654,6 @@ function OtherCreditSale({ petrodata }) {
         updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
-
 
 
     return (
@@ -1041,7 +1040,7 @@ function OtherCreditSale({ petrodata }) {
                                         drag={isMobile ? "x" : false}
                                         dragConstraints={dragConstraints}
                                         onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                        onClick={() => handleCardClick(index)}
+                                        onClick={() => handleCardClick(index)} // Added onClick handler
                                     >
                                         <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                             {voucher.Ledger?.name}

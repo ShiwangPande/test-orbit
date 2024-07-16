@@ -671,7 +671,7 @@ function MsHsdCreditSale({ petrodata }) {
                 left: 0 // Prevent dragging to the left
             });
         }
-    }, [submittedData.length]);
+    }, [submittedData.length, containerRef.current]);
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
@@ -1048,14 +1048,14 @@ function MsHsdCreditSale({ petrodata }) {
                                         drag={isMobile ? "x" : false}
                                         dragConstraints={dragConstraints}
                                         onDragEnd={(event, info) => handleDragEnd(index, event, info)}
-                                        onClick={() => handleCardClick(index)}
+                                        onClick={() => handleCardClick(index)} // Added onClick handler
                                     >
                                         <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                                             {voucher.Ledger?.name}
                                         </h5>
 
                                         {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
-                                             <span className="font-bold">{voucher.Sale.vehicle_no}</span>
+                                            <span className="font-bold">{voucher.Sale.vehicle_no}</span>
                                         </div>}
                                         {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
                                             <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
