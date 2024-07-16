@@ -11,7 +11,8 @@ function DashBoard({ petrodata }) {
     const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("");
     const [total_sale_amount, settotal_sale_amount] = useState(0);
     const base_url = process.env.REACT_APP_API_URL;
-    const [getOtherSaleList, setgetOtherSaleList] = useState("");
+    const [cashSalesTotal, setCashSalesTotal] = useState("");
+    const [otherSalesTotal, setOtherSalesTotal] = useState("");
     const [expensesVoucherList, setExpensesVoucherList] = useState("");
     const [recieptList, setRecieptList] = useState("");
     const [cardList, setCardSales] = useState("");
@@ -111,16 +112,30 @@ function DashBoard({ petrodata }) {
                 day_shift: petrodata.daily_shift,
             })
                 .then(response => {
-                    const totalamount = response.data.data.map(item => item.Sale.total_amount);
-                    const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
-                    setgetOtherSaleList(sum);
-                    console.log('getOtherSaleListByShiftOrType', response.data.data)
+                    const salesData = response.data.data;
+
+                    // Sum total_amount for sales where Ledger name is "Cash"
+                    const cashSalesTotal = salesData
+                        .filter(item => item.Ledger.name === 'Cash')
+                        .reduce((acc, curr) => acc + curr.Sale.total_amount, 0);
+
+                    // Sum total_amount for sales where Ledger name is not "Cash"
+                    const otherSalesTotal = salesData
+                        .filter(item => item.Ledger.name !== 'Cash')
+                        .reduce((acc, curr) => acc + curr.Sale.total_amount, 0);
+
+                    setCashSalesTotal(cashSalesTotal); // assuming setCashSalesTotal is a state setter
+                    setOtherSalesTotal(otherSalesTotal); // assuming setOtherSalesTotal is a state setter
+
+                    console.log('Cash Sales Total:', cashSalesTotal);
+                    console.log('Other Sales Total:', otherSalesTotal);
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
                 });
         }
     }, [petrodata, ShiftData, base_url]);
+
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
@@ -248,10 +263,10 @@ function DashBoard({ petrodata }) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     };
-    const total_sale = parseFloat(total_sale_amount || 0) + parseFloat(getOtherSaleList || 0)
+    const total_sale = parseFloat(total_sale_amount || 0) + parseFloat(cashSalesTotal || 0)
     const formatedtotal_sale = customFormat(total_sale);
     const total_msAndHsdSaleList = parseFloat(msAndHsdSaleList || 0)
-    // const total_getOtherSaleList = parseFloat(getOtherSaleList || 0)
+    const total_otherSalesTotal = parseFloat(otherSalesTotal || 0)
     const formattedtotal_msAndHsdSaleList = customFormat(total_msAndHsdSaleList);
     // const formattedtotal_getOtherSaleList = customFormat(total_getOtherSaleList);
     const formattedexpensesVoucherList = customFormat(expensesVoucherList);
@@ -259,7 +274,7 @@ function DashBoard({ petrodata }) {
     const formattedwalletList = customFormat(walletList);
     const formattedcardList = customFormat(cardList);
     let cashBalance = 0;
-    cashBalance = parseFloat(total_sale || 0) + - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
+    cashBalance = parseFloat(total_sale || 0)  - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
 
     const formatedcashBalance = customFormat(cashBalance);
 

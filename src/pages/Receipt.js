@@ -222,7 +222,9 @@ function Expenses({ petrodata }) {
         if (!selectedLedgerName || !LedgerNamedata.some(item => item.name === selectedLedgerName.name)) {
             newErrors.selectedLedgerName = 'Please select a valid Ledger Name from the list.';
         }
-
+        if (!selectedItem) {
+            newErrors.selectedItem = "Account Name is required";
+        }
         // Validate searchQuery
         if (!searchQuery || !LedgerNamedata.some(item => item.name === searchQuery)) {
             newErrors.selectedLedgerName = 'Please select a valid Ledger Name from the list.';
@@ -293,11 +295,10 @@ function Expenses({ petrodata }) {
                 setnarration("");
                 setEditingIndex(null);
                 setShowDropdown(false);
-                setSearchQuery("");
-                setSearchcardQuery("");
+                setSelectedItem({ id: 'CASH', type: 'CASH', name: 'CASH' }); // Reset to default value
 
-                setSearchcardQuery("")
-                setSelectedItem("")
+                setSearchQuery("");
+                setSearchcardQuery();
                 console.log("Form submitted successfully");
 
 
@@ -581,7 +582,7 @@ function Expenses({ petrodata }) {
                                                     Account Name
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                     <input autoComplete="off"
+                                                    <input autoComplete="off"
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={handleSearchChange}
@@ -637,7 +638,7 @@ function Expenses({ petrodata }) {
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Amount</label>
-                                                 <input autoComplete="off"
+                                                <input autoComplete="off"
                                                     type="number"
                                                     value={amount}
                                                     onChange={handleAmountChange}
@@ -657,7 +658,7 @@ function Expenses({ petrodata }) {
                                                     Deposited In
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                     <input autoComplete="off"
+                                                    <input autoComplete="off"
                                                         type="text"
                                                         value={selectedItem ? selectedItem.name : searchcardQuery}
                                                         onChange={handleCardSearchChange}
@@ -690,6 +691,11 @@ function Expenses({ petrodata }) {
                                                 {errors.fetch && (
                                                     <span className="text-red-500 text-sm">
                                                         {errors.fetch}
+                                                    </span>
+                                                )}
+                                                {errors.selectedItem && (
+                                                    <span className="text-red-500 text-sm">
+                                                        {errors.selectedItem}
                                                     </span>
                                                 )}
                                             </div>
@@ -806,7 +812,7 @@ function Expenses({ petrodata }) {
                                     </div>
                                     {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
-                                           
+
                                             <button
                                                 className="px-2 w-10 h-10"
                                                 onClick={() => handleRemove(index)}
@@ -882,7 +888,7 @@ function Expenses({ petrodata }) {
                                                         Ledger Name
                                                     </label>
                                                     <div className="mt-1 relative">
-                                                         <input autoComplete="off"
+                                                        <input autoComplete="off"
                                                             type="text"
                                                             value={editData.selectedLedgerName}
                                                             name="selectedLedgerName"
@@ -935,7 +941,7 @@ function Expenses({ petrodata }) {
                                                 {/* Amount */}
                                                 <div className="flex flex-col col-span-1 lg:col-span-1  gap-1">
                                                     <label htmlFor="slip">Amount</label>
-                                                     <input autoComplete="off"
+                                                    <input autoComplete="off"
                                                         type="text"
                                                         value={editData.amount}
                                                         name="amount"
