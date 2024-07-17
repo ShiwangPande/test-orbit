@@ -4,7 +4,7 @@ import add from "../images/add.svg";
 import { PuffLoader } from "react-spinners";
 import Navbar from "../components/Navbar";
 
-const NoozleReading = ({ petrodata }) => {
+const NoozleReading = ({ petrodata, financialYear }) => {
     const [noozleData, setNoozleData] = useState([]);
     const [nozzleListReadings, setNozzleListReadings] = useState([]);
     const [readings, setReadings] = useState({});
@@ -185,7 +185,7 @@ const NoozleReading = ({ petrodata }) => {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
+            axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                 petro_id: petrodata.petro_id,
             })
                 .then((response) => {
@@ -195,7 +195,7 @@ const NoozleReading = ({ petrodata }) => {
                     setShiftdata({ shift, day_shift_no, formattedDate, date });
 
                     console.log("Fetching nozzle list data...");
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${base_url}/assignNozzleList/${financialYear}`, {
                         shift: shift,
                         emp_id: petrodata.user_id,
                         date: date,
@@ -225,7 +225,7 @@ const NoozleReading = ({ petrodata }) => {
                                     maxReading: item.Nozzle.max_reading,
                                 };
                             });
-
+                            setNoozleData(data);
                             setReadings(initialReadings);
                             setShouldFetchReadings(allReadingsPresent);
                             setShouldFetchAdd(true);
@@ -256,7 +256,7 @@ const NoozleReading = ({ petrodata }) => {
     useEffect(() => {
         if (base_url && shiftdata && shouldFetchReadings) {
             axios
-                .post(`${base_url}/getNozzleListReadings/1`, {
+                .post(`${base_url}/getNozzleListReadings/${financialYear}`, {
                     shift: `${shiftdata.shift}`,
                     employee_id: petrodata.user_id,
                     date: shiftdata.date,
@@ -266,6 +266,7 @@ const NoozleReading = ({ petrodata }) => {
                 .then((response) => {
                     const data = response.data.data;
                     setNozzleListReadings(data);
+
                     const initialReadings = {};
                     data.forEach((item) => {
                         const nozzleId = item.ShiftWiseNozzle.nozzle_id;
@@ -365,11 +366,11 @@ const NoozleReading = ({ petrodata }) => {
             console.log("payload", payload);
             if (petrodata && shiftdata && base_url) {
                 await axios.post(
-                    `${base_url}/addShiftWiseNozzleReadingEntry_Reg/1`,
+                    `${base_url}/addShiftWiseNozzleReadingEntry_Reg/${financialYear}`,
                     payload
                 );
                 console.log("Data submitted successfully.");
-                const response = await axios.post(`${base_url}/getNozzleListReadings/1`, {
+                const response = await axios.post(`${base_url}/getNozzleListReadings/${financialYear}`, {
                     shift: shiftdata.shift,
                     employee_id: petrodata.user_id,
                     date: shiftdata.date,
@@ -418,7 +419,7 @@ const NoozleReading = ({ petrodata }) => {
     useEffect(() => {
         if (base_url && petrodata) {
             axios
-                .post(`${base_url}/currentShiftData/1`, {
+                .post(`${base_url}/currentShiftData/${financialYear}`, {
                     petro_id: petrodata.petro_id,
                 })
                 .then((response) => {
@@ -520,10 +521,10 @@ const NoozleReading = ({ petrodata }) => {
             console.log("Payload:", JSON.stringify(payload, null, 2));
 
             if (petrodata && shiftdata && base_url) {
-                await axios.post(`${base_url}/addShiftWiseNozzleClosingReadingEntry/1`, payload);
+                await axios.post(`${base_url}/addShiftWiseNozzleClosingReadingEntry/${financialYear}`, payload);
                 console.log("Data submitted successfully.");
 
-                const response = await axios.post(`${base_url}/getNozzleListReadings/1`, {
+                const response = await axios.post(`${base_url}/getNozzleListReadings/${financialYear}`, {
                     shift: shiftdata.shift,
                     employee_id: petrodata.user_id,
                     date: shiftdata.date,
@@ -606,7 +607,7 @@ const NoozleReading = ({ petrodata }) => {
                                             version="1.1"
                                             id="Layer_1"
                                             xmlns="http://www.w3.org/2000/svg"
-                                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                                            xmlnsXlink="http://www.w3.org/${financialYear}999/xlink"
                                             viewBox="0 0 512 512"
                                             xmlSpace="preserve"
                                         >
@@ -975,7 +976,7 @@ const NoozleReading = ({ petrodata }) => {
                                             version="1.1"
                                             id="Layer_1"
                                             xmlns="http://www.w3.org/2000/svg"
-                                            xmlnsXlink="http://www.w3.org/1999/xlink"
+                                            xmlnsXlink="http://www.w3.org/${financialYear}999/xlink"
                                             viewBox="0 0 512 512"
                                             xmlSpace="preserve"
                                         >

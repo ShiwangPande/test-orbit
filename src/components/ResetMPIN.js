@@ -12,7 +12,7 @@ const schema = yup.object().shape({
     confirmMpin: yup.string().oneOf([yup.ref('newMpin'), null], 'MPINs must match')
 });
 
-function ResetMPIN({ petrodata }) {
+function ResetMPIN({ petrodata, financialYear }) {
     const navigate = useNavigate();
 
     const { register, handleSubmit, setValue, formState: { errors } } = useForm({
@@ -64,7 +64,7 @@ function ResetMPIN({ petrodata }) {
 
         try {
             const response = await axios.post(
-                `${base_url}/mpinRegenration/1`,
+                `${base_url}/mpinRegenration/${financialYear}`,
                 {
                     "user_id": petrodata.user_id,
                     "old_mpin": oldMpin,

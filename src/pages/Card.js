@@ -20,7 +20,7 @@ import { PuffLoader } from "react-spinners";
 
 import React from "react";
 
-function Reciept({ petrodata }) {
+function Reciept({ petrodata,financialYear }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [shiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -63,7 +63,7 @@ function Reciept({ petrodata }) {
 
     useEffect(() => {
         axios
-            .post(`${base_url}/currentShiftData/1`,
+            .post(`${base_url}/currentShiftData/${financialYear}`,
                 {
 
                     petro_id: petrodata.petro_id,
@@ -84,7 +84,7 @@ function Reciept({ petrodata }) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
+            axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                 "petro_id": petrodata.petro_id,
             })
                 .then((response) => {
@@ -95,7 +95,7 @@ function Reciept({ petrodata }) {
                     setShiftData(newShiftData);
 
                     // Now perform the second API call
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${base_url}/assignNozzleList/${financialYear}`, {
                         "shift": shift,
                         "emp_id": petrodata.user_id,
                         "date": date,
@@ -136,7 +136,7 @@ function Reciept({ petrodata }) {
     useEffect(() => {
         if (petrodata && shiftData && base_url) {
             setLoading(true); // Start loading
-            axios.post(`${base_url}/cardSaleList/1`, {
+            axios.post(`${base_url}/cardSaleList/${financialYear}`, {
                 shift: `${shiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "type": 0,
@@ -298,11 +298,11 @@ function Reciept({ petrodata }) {
                 date: shiftData.date,
             };
             try {
-                await axios.post(`${base_url}/addCardSale/1`, payload);
+                await axios.post(`${base_url}/addCardSale/${financialYear}`, payload);
                 console.log('Data submitted successfully.');
 
                 // Fetch updated card sales data after successful submission
-                const response = await axios.post(`${base_url}/cardSaleList/1`, {
+                const response = await axios.post(`${base_url}/cardSaleList/${financialYear}`, {
                     shift: `${shiftData.shift}`,
                     employee_id: petrodata.user_id,
                     type: 0,
@@ -375,7 +375,7 @@ function Reciept({ petrodata }) {
     }, [dropdownRef]);
 
     useEffect(() => {
-        axios.post(`${base_url}/cardDropList/1`, {
+        axios.post(`${base_url}/cardDropList/${financialYear}`, {
             petro_id: petrodata.petro_id,
             type: 0,
         })

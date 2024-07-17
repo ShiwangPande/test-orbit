@@ -19,7 +19,7 @@ import { PuffLoader } from "react-spinners";
 
 import React from "react";
 import { useMemo } from "react";
-function OtherCreditSale({ petrodata }) {
+function OtherCreditSale({ petrodata, financialYear }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [ShiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -76,7 +76,7 @@ function OtherCreditSale({ petrodata }) {
     useEffect(() => {
         if (stablePetrodata && stablePetrodata && stableBaseUrl) {
             axios
-                .post(`${stableBaseUrl}/currentShiftData/1`,
+                .post(`${stableBaseUrl}/currentShiftData/${financialYear}`,
                     {
                         "petro_id": stablePetrodata.petro_id,
                     })
@@ -96,7 +96,7 @@ function OtherCreditSale({ petrodata }) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${stableBaseUrl}/currentShiftData/1`, {
+            axios.post(`${stableBaseUrl}/currentShiftData/${financialYear}`, {
                 "petro_id": stablePetrodata.petro_id,
             })
                 .then((response) => {
@@ -107,7 +107,7 @@ function OtherCreditSale({ petrodata }) {
                     setShiftData(newShiftData);
 
                     // Now perform the second API call
-                    return axios.post(`${stableBaseUrl}/assignNozzleList/1`, {
+                    return axios.post(`${stableBaseUrl}/assignNozzleList/${financialYear}`, {
                         "shift": shift,
                         "emp_id": stablePetrodata.user_id,
                         "date": date,
@@ -145,7 +145,7 @@ function OtherCreditSale({ petrodata }) {
     }, [stablePetrodata, stableBaseUrl]);
 
     useEffect(() => {
-        axios.post(`${stableBaseUrl}/getSundryDebtorsLedgerList/1`, {
+        axios.post(`${stableBaseUrl}/getSundryDebtorsLedgerList/${financialYear}`, {
             "petro_id": stablePetrodata.petro_id,
         })
             .then(response => {
@@ -167,7 +167,7 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (stablePetrodata && stableBaseUrl) {
-            axios.post(`${stableBaseUrl}/searchItemByName/1`, { "petro_id": stablePetrodata.petro_id })
+            axios.post(`${stableBaseUrl}/searchItemByName/${financialYear}`, { "petro_id": stablePetrodata.petro_id })
                 .then(response => {
                     const data = response.data.data;
                     console.log("setItemName", data);
@@ -200,7 +200,7 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (stableBaseUrl && PriceID.length > 0) {
-            axios.post(`${stableBaseUrl}/getItemGstDetails/1`, { "item_id": PriceID })
+            axios.post(`${stableBaseUrl}/getItemGstDetails/${financialYear}`, { "item_id": PriceID })
                 .then(response => {
                     console.log('getItemGstDetails', response.data.data);
                     setPetrolGst([response.data.data]);
@@ -319,11 +319,11 @@ function OtherCreditSale({ petrodata }) {
         if (stablePetrodata && ShiftData && stableBaseUrl) {
             setLoading(true); // Start loading
             try {
-                await axios.post(`${stableBaseUrl}/addSale/1`, payload);
+                await axios.post(`${stableBaseUrl}/addSale/${financialYear}`, payload);
                 console.log('Data submitted successfully.');
 
                 const [otherResponse] = await Promise.all([
-                    axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/1`, {
+                    axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/${financialYear}`, {
                         shift: `${ShiftData.shift}`,
                         employee_id: stablePetrodata.user_id,
                         date: ShiftData.date,
@@ -381,7 +381,7 @@ function OtherCreditSale({ petrodata }) {
         if (stablePetrodata && ShiftData && stableBaseUrl) {
             setLoading(true); // Start loading
 
-            axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/1`, {
+            axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/${financialYear}`, {
                 "shift": `${ShiftData.shift}`,
                 "employee_id": stablePetrodata.user_id,
                 "date": ShiftData.date,
@@ -422,7 +422,7 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
-            axios.post(`${stableBaseUrl}/customervehList/1`, {
+            axios.post(`${stableBaseUrl}/customervehList/${financialYear}`, {
                 "petro_id": stablePetrodata.petro_id,
                 "ledger_id": ledgerId, // Use the dynamic ledgerId
             })

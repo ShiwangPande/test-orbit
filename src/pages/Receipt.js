@@ -20,7 +20,7 @@ import { PuffLoader } from "react-spinners";
 
 import React from "react";
 
-function Expenses({ petrodata }) {
+function Expenses({ petrodata, financialYear }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [creditdata, setCreditData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -66,7 +66,7 @@ function Expenses({ petrodata }) {
 
     useEffect(() => {
         axios
-            .post(`${base_url}/currentShiftData/1`,
+            .post(`${base_url}/currentShiftData/${financialYear}`,
                 {
 
                     petro_id: petrodata.petro_id,
@@ -84,7 +84,7 @@ function Expenses({ petrodata }) {
     useEffect(() => {
         const fetchShiftData = async () => {
             try {
-                const response = await axios.post(`${base_url}/currentShiftData/1`, {
+                const response = await axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                     petro_id: petrodata.petro_id,
                 });
                 const { shift, day_shift_no, date } = response.data.data.DailyShift;
@@ -94,7 +94,7 @@ function Expenses({ petrodata }) {
 
                 if (shiftData && petrodata && petrodata.daily_shift) {
                     setLoading(true);
-                    const receiptResponse = await axios.post(`${base_url}/receiptVoucherList/1`, {
+                    const receiptResponse = await axios.post(`${base_url}/receiptVoucherList/${financialYear}`, {
                         shift: shiftData.shift,
                         employee_id: petrodata.user_id,
                         vid: 0,
@@ -122,7 +122,7 @@ function Expenses({ petrodata }) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
+            axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                 "petro_id": petrodata.petro_id,
             })
                 .then((response) => {
@@ -133,7 +133,7 @@ function Expenses({ petrodata }) {
                     setShiftData(newShiftData);
 
                     // Now perform the second API call
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${base_url}/assignNozzleList/${financialYear}`, {
                         "shift": shift,
                         "emp_id": petrodata.user_id,
                         "date": date,
@@ -321,10 +321,10 @@ function Expenses({ petrodata }) {
                 }]
             };
             try {
-                await axios.post(`${base_url}/receiptEntry/1`, payload);
+                await axios.post(`${base_url}/receiptEntry/${financialYear}`, payload);
                 console.log('Data submitted successfully.');
 
-                const response = await axios.post(`${base_url}/receiptVoucherList/1`, {
+                const response = await axios.post(`${base_url}/receiptVoucherList/${financialYear}`, {
                     shift: ShiftData.shift,
                     employee_id: petrodata.user_id,
                     "vid": 0,
@@ -397,7 +397,7 @@ function Expenses({ petrodata }) {
     useEffect(() => {
         if (petrodata && petrodata.petro_id && base_url) {
             axios
-                .post(`${base_url}/customerlist/1`, {
+                .post(`${base_url}/customerlist/${financialYear}`, {
                     petro_id: petrodata.petro_id,
                 })
                 .then((response) => {
@@ -435,11 +435,11 @@ function Expenses({ petrodata }) {
     const fetchCardData = async () => {
         try {
             const [cardResponse, walletResponse] = await Promise.all([
-                axios.post(`${base_url}/cardDropList/1`, {
+                axios.post(`${base_url}/cardDropList/${financialYear}`, {
                     petro_id: petrodata.petro_id,
                     type: 0,
                 }),
-                axios.post(`${base_url}/cardDropList/1`, {
+                axios.post(`${base_url}/cardDropList/${financialYear}`, {
                     petro_id: petrodata.petro_id,
                     type: 1,
                 })

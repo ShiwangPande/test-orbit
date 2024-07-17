@@ -20,7 +20,7 @@ import { Spinner } from "@nextui-org/react";
 import { PuffLoader } from "react-spinners";
 import React from "react";
 
-function MsHsdCreditSale({ petrodata }) {
+function MsHsdCreditSale({ petrodata, financialYear }) {
 
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [ShiftData, setShiftData] = useState([]);
@@ -92,7 +92,7 @@ function MsHsdCreditSale({ petrodata }) {
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
-                .post(`${base_url}/currentShiftData/1`,
+                .post(`${base_url}/currentShiftData/${financialYear}`,
                     {
                         petro_id: petrodata.petro_id,
                     })
@@ -115,7 +115,7 @@ function MsHsdCreditSale({ petrodata }) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
+            axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                 "petro_id": petrodata.petro_id,
             })
                 .then((response) => {
@@ -124,7 +124,7 @@ function MsHsdCreditSale({ petrodata }) {
                     const formattedDate = formatDate(date);
                     const newShiftData = { shift, day_shift_no, formattedDate, date };
                     setShiftData(newShiftData);
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${base_url}/assignNozzleList/${financialYear}`, {
                         "shift": shift,
                         "emp_id": petrodata.user_id,
                         "date": date,
@@ -165,7 +165,7 @@ function MsHsdCreditSale({ petrodata }) {
         if (petrodata && ShiftData && base_url) {
             setLoading(true); 
 
-            axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+            axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
@@ -187,7 +187,7 @@ function MsHsdCreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
+        axios.post(`${base_url}/getSundryDebtorsLedgerList/${financialYear}`, {
             "petro_id": petrodata.petro_id,
         })
             .then(response => {
@@ -213,7 +213,7 @@ function MsHsdCreditSale({ petrodata }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.post(`${base_url}/itemPriceList/1`, { petro_id: petrodata.petro_id });
+                const response = await axios.post(`${base_url}/itemPriceList/${financialYear}`, { petro_id: petrodata.petro_id });
                 if (response.status === 200 && response.data && response.data.data) {
                     setItemPriceList(response.data.data);
                     const extractedId = response.data.data.map(item => item.Item.id);
@@ -246,7 +246,7 @@ function MsHsdCreditSale({ petrodata }) {
     }, [itemPriceList]);
     useEffect(() => {
         if (base_url && PriceID.length > 0) {
-            axios.post(`${base_url}/getItemGstDetails/1`, { item_id: PriceID })
+            axios.post(`${base_url}/getItemGstDetails/${financialYear}`, { item_id: PriceID })
                 .then(response => {
                     console.log('getItemGstDetails', response.data.data);
                     setPetrolGst([response.data.data]);
@@ -373,11 +373,11 @@ function MsHsdCreditSale({ petrodata }) {
         try {
             setLoading(true); // Start loading
 
-            await axios.post(`${base_url}/addSale/1`, payload);
+            await axios.post(`${base_url}/addSale/${financialYear}`, payload);
             console.log('Data submitted successfully.');
 
             const [msHsdResponse] = await Promise.all([
-                axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+                axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
                     shift: `${ShiftData.shift}`,
                     employee_id: petrodata.user_id,
                     date: ShiftData.date,
@@ -454,7 +454,7 @@ function MsHsdCreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
+        axios.post(`${base_url}/getSundryDebtorsLedgerList/${financialYear}`, {
             "petro_id": petrodata.petro_id,
         })
             .then(response => {
@@ -473,7 +473,7 @@ function MsHsdCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
-            axios.post(`${base_url}/customervehList/1`, {
+            axios.post(`${base_url}/customervehList/${financialYear}`, {
                 "petro_id": petrodata.petro_id,
                 "ledger_id": ledgerId, // Use the dynamic ledgerId
             })

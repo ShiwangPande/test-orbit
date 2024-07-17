@@ -6,7 +6,7 @@ import { PuffLoader } from "react-spinners";
 
 
 
-function DashBoard({ petrodata }) {
+function DashBoard({ petrodata, financialYear }) {
 
     const [ShiftData, setShiftData] = useState("");
     const [msAndHsdSaleList, setmsAndHsdSaleList] = useState("");
@@ -26,7 +26,7 @@ function DashBoard({ petrodata }) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
+            axios.post(`${base_url}/currentShiftData/${financialYear}`, {
                 "petro_id": petrodata.petro_id,
             })
                 .then((response) => {
@@ -37,7 +37,7 @@ function DashBoard({ petrodata }) {
                     setShiftData(newShiftData);
 
                     // Now perform the second API call
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${base_url}/assignNozzleList/${financialYear}`, {
                         "shift": shift,
                         "emp_id": petrodata.user_id,
                         "date": date,
@@ -73,7 +73,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
-                .post(`${base_url}/currentShiftData/1`,
+                .post(`${base_url}/currentShiftData/${financialYear}`,
                     {
 
                         petro_id: petrodata.petro_id,
@@ -91,7 +91,7 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+            axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
@@ -114,7 +114,7 @@ function DashBoard({ petrodata }) {
     useEffect(() => {
         if (base_url && ShiftData) {
             axios
-                .post(`${base_url}/getNozzleListReadings/1`, {
+                .post(`${base_url}/getNozzleListReadings/${financialYear}`, {
                     shift: `${ShiftData.shift}`,
                     employee_id: petrodata.user_id,
                     date: ShiftData.date,
@@ -134,7 +134,7 @@ function DashBoard({ petrodata }) {
     }, [petrodata, base_url, ShiftData]);
     // useEffect(() => {
     //     if (petrodata && ShiftData && base_url) {
-    //         axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+    //         axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
     //             shift: `${ShiftData.shift}`,
     //             employee_id: petrodata.user_id,
     //             date: ShiftData.date,
@@ -157,7 +157,7 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+            axios.post(`${base_url}/getOtherSaleListByShiftOrType/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 date: ShiftData.date,
@@ -192,7 +192,7 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            axios.post(`${base_url}/expensesVoucherList/1`, {
+            axios.post(`${base_url}/expensesVoucherList/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "vid": 1,
@@ -214,7 +214,7 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            axios.post(`${base_url}/receiptVoucherList/1`, {
+            axios.post(`${base_url}/receiptVoucherList/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "vid": 0,
@@ -238,7 +238,7 @@ function DashBoard({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
-            axios.post(`${base_url}/cardSaleList/1`, {
+            axios.post(`${base_url}/cardSaleList/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 type: 1,
@@ -259,7 +259,7 @@ function DashBoard({ petrodata }) {
     }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
-            axios.post(`${base_url}/cardSaleList/1`, {
+            axios.post(`${base_url}/cardSaleList/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
                 "type": 0,

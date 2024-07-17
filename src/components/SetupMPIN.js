@@ -11,7 +11,7 @@ const mpinSchema = yup.object().shape({
     confirmMpin: yup.string().oneOf([yup.ref('mpin'), null], 'MPINs must match')
 });
 
-function SetupMPIN({ petrodata }) {
+function SetupMPIN({ petrodata, financialYear }) {
     const mobile = JSON.parse(localStorage.getItem('userMobile')) || '';
     const navigate = useNavigate();
 
@@ -51,7 +51,7 @@ function SetupMPIN({ petrodata }) {
         if (petrodata.mpin === null) {
             try {
                 const response = await axios.post(
-                    `${base_url}/addMpin/1`,
+                    `${base_url}/addMpin/${financialYear}`,
                     {
                         "user_id": petrodata.user_id,
                         "mpin": mpin
