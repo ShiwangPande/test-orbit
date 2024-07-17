@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { motion } from 'framer-motion';
 
 import axios from "axios";
 import { useEffect } from "react";
@@ -14,13 +13,12 @@ import {
     useDisclosure,
 } from "@nextui-org/react";
 import add from "../images/add.svg"
-import { useMediaQuery } from 'react-responsive';
 import { Spinner } from "@nextui-org/react";
 
 import { PuffLoader } from "react-spinners";
 
 import React from "react";
-
+import { useMemo } from "react";
 function OtherCreditSale({ petrodata }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
     const [ShiftData, setShiftData] = useState([]);
@@ -41,7 +39,6 @@ function OtherCreditSale({ petrodata }) {
 
     const [showDropdown, setShowDropdown] = useState(false);
     const [showDropdownVehicle, setShowDropdownVehicle] = useState(false);
-    const [showDropdownFuel, setShowDropdownFuel] = useState(false);
     const [rate, setRate] = useState(0);
     const [quantity, setQuantity] = useState('');
     const [selectedFuelId, setSelectedFuelId] = useState(null);
@@ -52,7 +49,6 @@ function OtherCreditSale({ petrodata }) {
     const [cgst, setCgst] = useState("");
     const [driverCash, setDriverCash] = useState('');
     const [inclusiveTotal, setInclusiveTotal] = useState('');
-    const [submittedData, setSubmittedData] = useState([]);
     const [slipNo, setSlipNo] = useState('');
     const [coupenNo, setCoupenNo] = useState('');
     const [errors, setErrors] = useState({});
@@ -70,18 +66,19 @@ function OtherCreditSale({ petrodata }) {
         return `${day}/${month}/${year}`;
     };
     const base_url = process.env.REACT_APP_API_URL;
-
+    const stablePetrodata = useMemo(() => petrodata, [petrodata]);
+    const stableBaseUrl = useMemo(() => base_url, [base_url]);
 
     const dropdownRef = useRef(null);
 
 
 
     useEffect(() => {
-        if (petrodata && petrodata && base_url) {
+        if (stablePetrodata && stablePetrodata && stableBaseUrl) {
             axios
-                .post(`${base_url}/currentShiftData/1`,
+                .post(`${stableBaseUrl}/currentShiftData/1`,
                     {
-                        "petro_id": petrodata.petro_id,
+                        "petro_id": stablePetrodata.petro_id,
                     })
                 .then((response) => {
                     const { shift, day_shift_no, date } = response.data.data.DailyShift;
@@ -92,15 +89,15 @@ function OtherCreditSale({ petrodata }) {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [stablePetrodata, stableBaseUrl]);
 
     useEffect(() => {
-        if (petrodata && base_url) {
+        if (stablePetrodata && stableBaseUrl) {
             setLoading(true); // Start loading
 
             console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
-                "petro_id": petrodata.petro_id,
+            axios.post(`${stableBaseUrl}/currentShiftData/1`, {
+                "petro_id": stablePetrodata.petro_id,
             })
                 .then((response) => {
                     console.log("Current shift data response:", response);
@@ -110,12 +107,12 @@ function OtherCreditSale({ petrodata }) {
                     setShiftData(newShiftData);
 
                     // Now perform the second API call
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                    return axios.post(`${stableBaseUrl}/assignNozzleList/1`, {
                         "shift": shift,
-                        "emp_id": petrodata.user_id,
+                        "emp_id": stablePetrodata.user_id,
                         "date": date,
-                        "petro_id": petrodata.petro_id,
-                        "day_shift": petrodata.daily_shift,
+                        "petro_id": stablePetrodata.petro_id,
+                        "day_shift": stablePetrodata.daily_shift,
                     });
                 })
                 .then((response) => {
@@ -145,11 +142,11 @@ function OtherCreditSale({ petrodata }) {
                     setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, base_url]);
+    }, [stablePetrodata, stableBaseUrl]);
 
     useEffect(() => {
-        axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
-            "petro_id": petrodata.petro_id,
+        axios.post(`${stableBaseUrl}/getSundryDebtorsLedgerList/1`, {
+            "petro_id": stablePetrodata.petro_id,
         })
             .then(response => {
                 console.log('data:', response.data);
@@ -163,14 +160,14 @@ function OtherCreditSale({ petrodata }) {
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, base_url]);
+    }, [stablePetrodata.petro_id, stableBaseUrl]);
 
 
 
 
     useEffect(() => {
-        if (petrodata && base_url) {
-            axios.post(`${base_url}/searchItemByName/1`, { "petro_id": petrodata.petro_id })
+        if (stablePetrodata && stableBaseUrl) {
+            axios.post(`${stableBaseUrl}/searchItemByName/1`, { "petro_id": stablePetrodata.petro_id })
                 .then(response => {
                     const data = response.data.data;
                     console.log("setItemName", data);
@@ -182,7 +179,7 @@ function OtherCreditSale({ petrodata }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [stablePetrodata, stableBaseUrl]);
 
 
 
@@ -202,8 +199,8 @@ function OtherCreditSale({ petrodata }) {
     }, [ItemName]);
 
     useEffect(() => {
-        if (base_url && PriceID.length > 0) {
-            axios.post(`${base_url}/getItemGstDetails/1`, { "item_id": PriceID })
+        if (stableBaseUrl && PriceID.length > 0) {
+            axios.post(`${stableBaseUrl}/getItemGstDetails/1`, { "item_id": PriceID })
                 .then(response => {
                     console.log('getItemGstDetails', response.data.data);
                     setPetrolGst([response.data.data]);
@@ -212,7 +209,7 @@ function OtherCreditSale({ petrodata }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [base_url, PriceID]);
+    }, [stableBaseUrl, PriceID]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -223,6 +220,7 @@ function OtherCreditSale({ petrodata }) {
         if (searchQuery !== selectedCustomer) {
             newErrors.selectedCustomer = 'Customer is required';
         }
+
         if (!selectedFuel) {
             newErrors.selectedFuel = 'Oil Type is required';
         }
@@ -273,7 +271,7 @@ function OtherCreditSale({ petrodata }) {
 
         const payload = {
             is_card: 0,
-            petro_id: petrodata.petro_id,
+            petro_id: stablePetrodata.petro_id,
             shift: `${ShiftData.shift}`,
             dsm_id: dsmIds[0],
             vehicle_no: selectedVehicle || searchQueryVehicle,
@@ -282,7 +280,7 @@ function OtherCreditSale({ petrodata }) {
             day_shift_no: ShiftData.day_shift_no,
             customer_id: customerid,
             date: ShiftData.date,
-            state_id: petrodata.state_id,
+            state_id: stablePetrodata.state_id,
             gst_type: gsttype,
             sale_type: sale_type,
             total_net_amt: inclusiveTotal,
@@ -296,7 +294,7 @@ function OtherCreditSale({ petrodata }) {
             total_gt_amt: totalAmt,
             addSaleItemList: [
                 {
-                    petro_id: petrodata.petro_id,
+                    petro_id: stablePetrodata.petro_id,
                     shift: `${ShiftData.shift}`,
                     batch_no: null,
                     qty: quantity,
@@ -318,19 +316,19 @@ function OtherCreditSale({ petrodata }) {
                 }
             ]
         };
-        if (petrodata && ShiftData && base_url) {
+        if (stablePetrodata && ShiftData && stableBaseUrl) {
             setLoading(true); // Start loading
             try {
-                await axios.post(`${base_url}/addSale/1`, payload);
+                await axios.post(`${stableBaseUrl}/addSale/1`, payload);
                 console.log('Data submitted successfully.');
 
                 const [otherResponse] = await Promise.all([
-                    axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+                    axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/1`, {
                         shift: `${ShiftData.shift}`,
-                        employee_id: petrodata.user_id,
+                        employee_id: stablePetrodata.user_id,
                         date: ShiftData.date,
-                        petro_id: petrodata.petro_id,
-                        day_shift: petrodata.daily_shift,
+                        petro_id: stablePetrodata.petro_id,
+                        day_shift: stablePetrodata.daily_shift,
                     })
 
                 ]);
@@ -380,15 +378,15 @@ function OtherCreditSale({ petrodata }) {
 
 
     useEffect(() => {
-        if (petrodata && ShiftData && base_url) {
+        if (stablePetrodata && ShiftData && stableBaseUrl) {
             setLoading(true); // Start loading
 
-            axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
+            axios.post(`${stableBaseUrl}/getOtherSaleListByShiftOrType/1`, {
                 "shift": `${ShiftData.shift}`,
-                "employee_id": petrodata.user_id,
+                "employee_id": stablePetrodata.user_id,
                 "date": ShiftData.date,
-                "petro_id": petrodata.petro_id,
-                "day_shift": petrodata.daily_shift,
+                "petro_id": stablePetrodata.petro_id,
+                "day_shift": stablePetrodata.daily_shift,
             })
                 .then(response => {
                     setgetOtherSaleList(response.data.data);
@@ -401,7 +399,7 @@ function OtherCreditSale({ petrodata }) {
                     setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [stablePetrodata, ShiftData, stableBaseUrl]);
 
 
 
@@ -412,7 +410,6 @@ function OtherCreditSale({ petrodata }) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowDropdown(false);
                 setShowDropdownVehicle(false);
-                setShowDropdownFuel(false);
             }
         }
         document.addEventListener('mousedown', handleClickOutside);
@@ -425,8 +422,8 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
-            axios.post(`${base_url}/customervehList/1`, {
-                "petro_id": petrodata.petro_id,
+            axios.post(`${stableBaseUrl}/customervehList/1`, {
+                "petro_id": stablePetrodata.petro_id,
                 "ledger_id": ledgerId, // Use the dynamic ledgerId
             })
                 .then(response => {
@@ -437,7 +434,7 @@ function OtherCreditSale({ petrodata }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata.petro_id, ledgerId, base_url]);
+    }, [stablePetrodata.petro_id, ledgerId, stableBaseUrl]);
 
 
     const handleSelectCustomer = (customer) => {
@@ -509,7 +506,6 @@ function OtherCreditSale({ petrodata }) {
             calculateTotalAmt(quantity, mrp, mrp);
         }
 
-        setShowDropdownFuel(false);
     };
 
 
@@ -647,41 +643,7 @@ function OtherCreditSale({ petrodata }) {
 
 
 
-    const isMobile = useMediaQuery({ maxWidth: 767 });
-    const [swipeStates, setSwipeStates] = useState(Array(submittedData.length).fill({ isSwipedRight: false }));
-    const containerRef = useRef(null);
-    const [dragConstraints, setDragConstraints] = useState({ right: 0 });
 
-    useEffect(() => {
-        if (containerRef.current) {
-            const containerWidth = containerRef.current.offsetWidth;
-            setDragConstraints({
-                right: containerWidth / 4,
-                left: 0 // Prevent dragging to the left
-            });
-        }
-    }, [submittedData.length, containerRef.current]);
-
-    const handleDragEnd = (index, event, info) => {
-        if (isMobile) {
-            const updatedSwipeStates = [...swipeStates];
-            const swipeThreshold = containerRef.current.offsetWidth / 4; // Adjust this dynamically based on container width
-
-            if (info.point.x > swipeThreshold) {
-                updatedSwipeStates[index] = { isSwipedRight: true };
-            } else {
-                updatedSwipeStates[index] = { isSwipedRight: false };
-            }
-
-            setSwipeStates(updatedSwipeStates);
-        }
-    };
-
-    const handleCardClick = (index) => {
-        const updatedSwipeStates = [...swipeStates];
-        updatedSwipeStates[index] = { isSwipedRight: false };
-        setSwipeStates(updatedSwipeStates);
-    };
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -694,7 +656,7 @@ function OtherCreditSale({ petrodata }) {
 
         <div className="h-full  min-h-screen flex   bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
 
-            <Navbar petrodata={petrodata} />
+            <Navbar petrodata={stablePetrodata} />
 
             <main className="flex-1 overflow-x-hidden focus:outline-none">
                 <div className=' relative z-0 overflow-x-hidden overflow-y-auto'>
@@ -743,6 +705,7 @@ function OtherCreditSale({ petrodata }) {
                                                             placeholder="Search customers"
                                                             className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                                         />
+                                                        {errors.selectedCustomer && <span className="text-red-500 text-sm">{errors.selectedCustomer}</span>}
                                                         {selectedCustomer && (
                                                             <button
                                                                 onClick={handleClear}
@@ -1052,13 +1015,11 @@ function OtherCreditSale({ petrodata }) {
                     </div>
                     </div>
 
-
-
                     {shouldFetchAdd === true ? (
                         <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-3 gap-3 lg:gap-5">
                             {Array.isArray(getOtherSaleList) && getOtherSaleList.length > 0 ? (
                                 getOtherSaleList.map((voucher, index) => (
-                                    <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
+                                    <div key={index} className="relative -z-0  justify-center flex flex-row overflow-hidden">
                                         {/* {isMobile && (
                                         <>
                                             {swipeStates[index] && swipeStates[index].isSwipedRight && (

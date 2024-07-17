@@ -22,7 +22,7 @@ import React from "react";
 
 function Reciept({ petrodata }) {
     const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-    const [ShiftData, setShiftData] = useState([]);
+    const [shiftData, setShiftData] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [dsmIds, setDsmIds] = useState([]); // State to store dsmIds
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,28 +78,6 @@ function Reciept({ petrodata }) {
             });
     }, [petrodata, base_url]);
 
-    useEffect(() => {
-        if (petrodata && ShiftData && base_url) {
-            setLoading(true); // Start loading
-            axios.post(`${base_url}/cardSaleList/1`, {
-                shift: `${ShiftData.shift}`,
-                employee_id: petrodata.user_id,
-                "type": 0,
-                date: ShiftData.date,
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            })
-                .then(response => {
-                    setCardSales(response.data.data);
-                    console.log('setCardSales', response.data.data)
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                }).finally(() => {
-                    setLoading(false); // Stop loading
-                });
-        }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
 
     useEffect(() => {
         if (petrodata && base_url) {
@@ -128,7 +106,7 @@ function Reciept({ petrodata }) {
                 .then((response) => {
                     console.log("Assign nozzle list response:", response);
 
-                    if (response.status === 200 && response.data.status === 200) {
+                    if (response.status === 200 && response.data.status === 200 && response.statusText === "OK") {
                         let noozleassigned = true;
                         if (response.data.data) {
                             const data = response.data.data;
@@ -154,6 +132,30 @@ function Reciept({ petrodata }) {
         }
     }, [petrodata, base_url]);
 
+    // Second useEffect for fetching card sales data
+    useEffect(() => {
+        if (petrodata && shiftData && base_url) {
+            setLoading(true); // Start loading
+            axios.post(`${base_url}/cardSaleList/1`, {
+                shift: `${shiftData.shift}`,
+                employee_id: petrodata.user_id,
+                "type": 0,
+                date: shiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setCardSales(response.data.data);
+                    console.log('setCardSales', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
+                });
+        }
+    }, [petrodata, shiftData, base_url]);
 
     const handleEditChange = (e) => {
         const { name, value } = e.target;
@@ -284,16 +286,16 @@ function Reciept({ petrodata }) {
         if (validateForm()) {
             const payload = {
                 petro_id: petrodata.petro_id,
-                shift: `${ShiftData.shift}`,
+                shift: `${shiftData.shift}`,
                 dsm_id: dsmIds[0],
-                day_shift: ShiftData.day_shift_no,
+                day_shift: shiftData.day_shift_no,
                 amount: amount,
                 card_id: selectedCardName.id,
                 batch_no: batch,
                 vehicle_no: vehicle,
                 description: narration,
                 type: 0,
-                date: ShiftData.date,
+                date: shiftData.date,
             };
             try {
                 await axios.post(`${base_url}/addCardSale/1`, payload);
@@ -301,10 +303,10 @@ function Reciept({ petrodata }) {
 
                 // Fetch updated card sales data after successful submission
                 const response = await axios.post(`${base_url}/cardSaleList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: `${shiftData.shift}`,
                     employee_id: petrodata.user_id,
                     type: 0,
-                    date: ShiftData.date,
+                    date: shiftData.date,
                     petro_id: petrodata.petro_id,
                     day_shift: petrodata.daily_shift,
                 });
@@ -548,7 +550,7 @@ function Reciept({ petrodata }) {
                                                     Date:{" "}
                                                     <span className="text-red-500 font-medium">
                                                         {" "}
-                                                        {ShiftData.formattedDate}
+                                                        {shiftData.formattedDate}
                                                     </span>
                                                 </h2>
                                                 <h2 className="block text-gray-700 text-lg font-bold mb-0 lg:mb-2">
@@ -556,7 +558,7 @@ function Reciept({ petrodata }) {
                                                     Shift:{" "}
                                                     <span className="text-red-500 font-medium">
                                                         {" "}
-                                                        {ShiftData.day_shift_no}
+                                                        {shiftData.day_shift_no}
                                                     </span>
                                                 </h2>
                                             </div>
@@ -717,7 +719,7 @@ function Reciept({ petrodata }) {
                                 Date:{" "}
                                 <span className="text-red-500 font-medium">
                                     {" "}
-                                    {ShiftData.formattedDate}
+                                    {shiftData.formattedDate}
                                 </span>
                             </h2>
                             <h2 className="block   text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
@@ -725,7 +727,7 @@ function Reciept({ petrodata }) {
                                 Shift:{" "}
                                 <span className="text-red-500 font-medium">
                                     {" "}
-                                    {ShiftData.day_shift_no}
+                                    {shiftData.day_shift_no}
                                 </span>
                             </h2>
                         </div>

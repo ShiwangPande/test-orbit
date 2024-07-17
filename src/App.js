@@ -9,7 +9,7 @@ import Receipt from './pages/Receipt';
 import Expenses from './pages/Expenses';
 import OtherCreditSale from './pages/OtherCreditSale';
 import MsHsdCreditSale from './pages/MsHsdCreditSale';
-
+import { useMemo } from 'react';
 import DashBoard from './pages/DashBoard';
 import MPINLogin from './components/MPINLogin';
 import SetupMPIN from './components/SetupMPIN';
@@ -29,31 +29,32 @@ function App() {
 
 
 
+  const fetchData = useMemo(() => async () => {
+    try {
+      const response = await axios.post(
+        `${base_url}/login/1`,
+        {
+          "mobile_no": userMobile,
+          "password": "12345678"
+        }
+      );
+      console.log('Login successful. Data:', response.data);
+      setData(response.data);
+      localStorage.setItem('userData', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Error logging in:', error);
+      setIsAuthenticated(false);
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userMobile');
+      localStorage.removeItem('userData');
+    }
+  }, [base_url, userMobile]);
+
   useEffect(() => {
     if (isAuthenticated && !data) {
-      const fetchData = async () => {
-        try {
-          const response = await axios.post(
-            `${base_url}/login/1`,
-            {
-              "mobile_no": userMobile,
-              "password": "12345678" // Adjust this if needed
-            }
-          );
-          console.log('Login successful. Data:', response.data);
-          setData(response.data);
-          localStorage.setItem('userData', JSON.stringify(response.data));
-        } catch (error) {
-          console.error('Error logging in:', error);
-          setIsAuthenticated(false);
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('userMobile');
-          localStorage.removeItem('userData');
-        }
-      };
       fetchData();
     }
-  }, [base_url, isAuthenticated, userMobile, data]);
+  }, [isAuthenticated, data, fetchData]);
 
   // const formatDate = (dateString) => {
   //   const [year, month, day] = dateString.split('-');
@@ -98,7 +99,7 @@ function App() {
           <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/expenses" element={isAuthenticated ? <Expenses petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/OtherCreditSale" element={isAuthenticated ? <OtherCreditSale petrodata={data}  /> : <Navigate to="/login" />} />
+          <Route path="/OtherCreditSale" element={isAuthenticated ? <OtherCreditSale petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/MsHsdCreditSale" element={isAuthenticated ? <MsHsdCreditSale petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/dashboard" element={isAuthenticated ? <DashBoard petrodata={data} /> : <Navigate to="/login" />} />
           <Route path="/wallet" element={isAuthenticated ? <Wallet petrodata={data} /> : <Navigate to="/login" />} />
