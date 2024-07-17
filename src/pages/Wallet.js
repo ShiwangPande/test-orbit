@@ -131,53 +131,6 @@ function Reciept({ petrodata }) {
     }, [petrodata, base_url]);
 
 
-    useEffect(() => {
-        if (petrodata && base_url) {
-            console.log("Fetching current shift data...");
-            axios.post(`${base_url}/currentShiftData/1`, {
-                "petro_id": petrodata.petro_id,
-            })
-                .then((response) => {
-                    console.log("Current shift data response:", response);
-                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                    const formattedDate = formatDate(date);
-                    const newShiftData = { shift, day_shift_no, formattedDate, date };
-                    setShiftData(newShiftData);
-
-                    // Now perform the second API call
-                    return axios.post(`${base_url}/assignNozzleList/1`, {
-                        "shift": shift,
-                        "emp_id": petrodata.user_id,
-                        "date": date,
-                        "petro_id": petrodata.petro_id,
-                        "day_shift": petrodata.daily_shift,
-                    });
-                })
-                .then((response) => {
-                    console.log("Assign nozzle list response:", response);
-
-                    if (response.status === 200 && response.data.status === 200) {
-                        let noozleassigned = true;
-                        if (response.data.data) {
-                            const data = response.data.data;
-                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
-                            setDsmIds(extractedDsmIds);
-                            console.log('extractedDsmIds', extractedDsmIds);
-                        } else {
-                            console.error("Unexpected response data structure:", response.data);
-                        }
-                        setShouldFetchAdd(noozleassigned);
-                    } else {
-                        console.log("No content returned from the API or unexpected status:", response.data);
-                        setShouldFetchAdd(false);
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching data:", error);
-                    setShouldFetchAdd(false);
-                });
-        }
-    }, [petrodata, base_url]);
 
 
     useEffect(() => {

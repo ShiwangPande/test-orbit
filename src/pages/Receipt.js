@@ -81,29 +81,41 @@ function Expenses({ petrodata }) {
             });
     }, [petrodata, base_url]);
 
-
     useEffect(() => {
-        if (petrodata && ShiftData && petrodata.daily_shift  && base_url) {
-            setLoading(true); // Start loading
-            axios.post(`${base_url}/receiptVoucherList/1`, {
-                shift: `${ShiftData.shift}`,
-                employee_id: petrodata.user_id,
-                "vid": 0,
-                date: ShiftData.date,
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            })
-                .then(response => {
-                    setExpensesVoucherList(response.data.data);
-                    console.log('setExpensesVoucherList', response.data.data)
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                }).finally(() => {
-                    setLoading(false); // Stop loading
+        const fetchShiftData = async () => {
+            try {
+                const response = await axios.post(`${base_url}/currentShiftData/1`, {
+                    petro_id: petrodata.petro_id,
                 });
+                const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                const formattedDate = formatDate(date);
+                const shiftData = { shift, day_shift_no, formattedDate, date };
+                setShiftData(shiftData);
+
+                if (shiftData && petrodata && petrodata.daily_shift) {
+                    setLoading(true);
+                    const receiptResponse = await axios.post(`${base_url}/receiptVoucherList/1`, {
+                        shift: shiftData.shift,
+                        employee_id: petrodata.user_id,
+                        vid: 0,
+                        date: shiftData.date,
+                        petro_id: petrodata.petro_id,
+                        day_shift: petrodata.daily_shift,
+                    });
+                    setExpensesVoucherList(receiptResponse.data.data);
+                    console.log('setExpensesVoucherList', receiptResponse.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (petrodata && base_url) {
+            fetchShiftData();
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, base_url]);
 
     useEffect(() => {
         if (petrodata && base_url) {
@@ -313,7 +325,7 @@ function Expenses({ petrodata }) {
                 console.log('Data submitted successfully.');
 
                 const response = await axios.post(`${base_url}/receiptVoucherList/1`, {
-                    shift: `${ShiftData.shift}`,
+                    shift: ShiftData.shift,
                     employee_id: petrodata.user_id,
                     "vid": 0,
                     date: ShiftData.date,
@@ -896,20 +908,20 @@ function Expenses({ petrodata }) {
                             ))
                         ) : (
                             <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-                            <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                                <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                </div>
                             </div>
-                        </div>
 
                         )}
                     </div>
                 ) : (
                     <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
-            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
-        </div>
-    </div>
+                        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+                        </div>
+                    </div>
                 )}
 
                 {/* {isEditModalOpen && (

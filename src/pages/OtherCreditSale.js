@@ -1081,12 +1081,15 @@ function OtherCreditSale({ petrodata }) {
                                         // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                         // onClick={() => handleCardClick(index)} 
                                         >
-                                            <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                                {voucher.Ledger?.name}
-                                            </h5>
-                                            {voucher.Sale.vehicle_no && <div className="text-redish font-semibold">
-                                                <span className="font-bold">{voucher.Sale.vehicle_no}</span>
-                                            </div>}
+                                            <div>
+                                                <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                                    {voucher.Ledger?.name}
+                                                </h5>
+                                                {voucher.Sale.vehicle_no && <div className="text-redish lg:text-lg text-sm font-semibold">
+                                                    <span className="font-bold">{voucher.Sale.vehicle_no}</span>
+                                                </div>}
+                                            </div>
+
                                             {voucher.SalesDetail && voucher.SalesDetail.length > 0 && voucher.SalesDetail.map((detail, detailIndex) => (
                                                 <div key={detailIndex} className="lg:my-2 my-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
                                                     {voucher.Sale.slip_no && <div className="text-gray-700 font-semibold">
