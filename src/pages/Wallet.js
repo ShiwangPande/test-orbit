@@ -16,6 +16,7 @@ import {
 import add from "../images/add.svg";
 import { useLongPress } from 'use-long-press';
 import { Spinner } from "@nextui-org/react";
+import { PuffLoader } from "react-spinners";
 
 import React from "react";
 
@@ -48,6 +49,7 @@ function Reciept({ petrodata }) {
         narration: "",
     });
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // Function to open edit modal and populate with data
     const formatDate = (dateString) => {
@@ -76,24 +78,57 @@ function Reciept({ petrodata }) {
     }, [petrodata, base_url]);
 
     useEffect(() => {
-        if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
-            axios.post(`${base_url}/cardSaleList/1`, {
-                shift: `${ShiftData.shift}`,
-                employee_id: petrodata.user_id,
-                type: 1,
-                date: ShiftData.date,
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
+        if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
+            console.log("Fetching current shift data...");
+            axios.post(`${base_url}/currentShiftData/1`, {
+                "petro_id": petrodata.petro_id,
             })
-                .then(response => {
-                    setCardSales(response.data.data);
-                    console.log('setCardSales', response.data.data);
+                .then((response) => {
+                    console.log("Current shift data response:", response);
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    const newShiftData = { shift, day_shift_no, formattedDate, date };
+                    setShiftData(newShiftData);
+
+                    // Now perform the second API call
+                    return axios.post(`${base_url}/assignNozzleList/1`, {
+                        "shift": shift,
+                        "emp_id": petrodata.user_id,
+                        "date": date,
+                        "petro_id": petrodata.petro_id,
+                        "day_shift": petrodata.daily_shift,
+                    });
                 })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
+                .then((response) => {
+                    console.log("Assign nozzle list response:", response);
+
+                    if (response.status === 200 && response.data.status === 200) {
+                        let noozleassigned = true;
+                        if (response.data.data) {
+                            const data = response.data.data;
+                            const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
+                            setDsmIds(extractedDsmIds);
+                            console.log('extractedDsmIds', extractedDsmIds);
+                        } else {
+                            console.error("Unexpected response data structure:", response.data);
+                        }
+                        setShouldFetchAdd(noozleassigned);
+                    } else {
+                        console.log("No content returned from the API or unexpected status:", response.data);
+                        setShouldFetchAdd(false);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                    setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, base_url]);
 
 
     useEffect(() => {
@@ -143,6 +178,30 @@ function Reciept({ petrodata }) {
                 });
         }
     }, [petrodata, base_url]);
+
+
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            setLoading(true); // Start loading
+            axios.post(`${base_url}/cardSaleList/1`, {
+                shift: `${ShiftData.shift}`,
+                employee_id: petrodata.user_id,
+                type: 1,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setCardSales(response.data.data);
+                    console.log('setCardSales', response.data.data)
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                }).finally(() => {
+                    setLoading(false); // Stop loading
+                });
+        }
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
 
 
     const handleEditChange = (e) => {
@@ -349,25 +408,30 @@ function Reciept({ petrodata }) {
     }, [dropdownRef]);
 
     useEffect(() => {
-        axios.post(`${base_url}/cardDropList/1`, {
-            petro_id: petrodata.petro_id,
-            type: 1,
-        })
-            .then((response) => {
-                const data = response.data;
-                if (data.status === 200) {
-                    const WalletData = data.data.map((item) => ({
-                        id: item.Card.id,
-                        card_name: item.Card.card_name
-                    }));
-                    setWalletNamedata(WalletData);
-                } else {
-                    setErrors({ fetch: 'Failed to fetch data' });
-                }
+        if (petrodata && base_url) {
+            setLoading(true); // Start loading
+            axios.post(`${base_url}/cardDropList/1`, {
+                petro_id: petrodata.petro_id,
+                type: 1,
             })
-            .catch((error) => {
-                setErrors({ fetch: 'Failed to fetch data' });
-            });
+                .then((response) => {
+                    const data = response.data;
+                    if (data.status === 200) {
+                        const WalletData = data.data.map((item) => ({
+                            id: item.Card.id,
+                            card_name: item.Card.card_name
+                        }));
+                        setWalletNamedata(WalletData);
+                    } else {
+                        setErrors({ fetch: 'Failed to fetch data' });
+                    }
+                })
+                .catch((error) => {
+                    setErrors({ fetch: 'Failed to fetch data' });
+                }).finally(() => {
+                    setLoading(false); // Stop loading
+                });
+        }
     }, [petrodata, base_url]);
 
 
@@ -477,6 +541,14 @@ function Reciept({ petrodata }) {
     };
 
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
+
     return (
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">
             <Navbar petrodata={petrodata} />
@@ -485,7 +557,7 @@ function Reciept({ petrodata }) {
 
                 <div className="flex flex-wrap gap-3">
 
-                {shouldFetchAdd && (
+                    {shouldFetchAdd && (
                         <div className="flex flex-wrap gap-3">
                             <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
                                 <img src={add} className="w-8 h-8" alt="" />
@@ -542,7 +614,7 @@ function Reciept({ petrodata }) {
                                                     Account Name
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                     <input autoComplete="off"
+                                                    <input autoComplete="off"
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={handleSearchChange}
@@ -593,7 +665,7 @@ function Reciept({ petrodata }) {
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Amount</label>
-                                                 <input autoComplete="off"
+                                                <input autoComplete="off"
                                                     type="number"
                                                     value={amount}
                                                     onChange={handleAmountChange}
@@ -608,7 +680,7 @@ function Reciept({ petrodata }) {
                                             </div>
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Batch No.</label>
-                                                 <input autoComplete="off"
+                                                <input autoComplete="off"
                                                     type="text"
                                                     value={batch}
                                                     onChange={handleBatchChange}
@@ -625,7 +697,7 @@ function Reciept({ petrodata }) {
                                             </div>
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="vehicle">Vehicle No.</label>
-                                                 <input autoComplete="off"
+                                                <input autoComplete="off"
                                                     type="text"
                                                     value={vehicle}
                                                     onChange={handleVehicleChange}
@@ -700,14 +772,14 @@ function Reciept({ petrodata }) {
                         </div>
                     </div>
                 )}
-                  {shouldFetchAdd === true ? (
+                {shouldFetchAdd === true ? (
 
-                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
+                    <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
 
-                    {Array.isArray(cardSales) && cardSales.length > 0 ? (
-                        cardSales.map((sale, index) => (
-                            <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
-                                {/* {isMobile && (
+                        {Array.isArray(cardSales) && cardSales.length > 0 ? (
+                            cardSales.map((sale, index) => (
+                                <div key={index} ref={containerRef} className="relative -z-0  justify-center flex flex-row overflow-hidden">
+                                    {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                             <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -720,33 +792,33 @@ function Reciept({ petrodata }) {
                                         )}
                                     </>
                                 )} */}
-                                <div
-                                    className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                    <div
+                                        className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     // initial={{ x: 0 }}
                                     // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     // drag={isMobile ? "x" : false}
                                     // dragConstraints={dragConstraints}
                                     // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                     // onClick={() => handleCardClick(index)}
-                                >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        {sale.Card && sale.Card.card_name}
-                                    </h5>
-                                    <div className="lg:mb-1 mb-1  grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-basetext-xs">
-                                        {sale.CardSale && sale.CardSale.amount && <p className="text-gray-700 font-semibold">
-                                            Amount: <span className="font-bold"> {sale.CardSale && sale.CardSale.amount}</span>
-                                        </p>}
+                                    >
+                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                            {sale.Card && sale.Card.card_name}
+                                        </h5>
+                                        <div className="lg:mb-1 mb-1  grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-basetext-xs">
+                                            {sale.CardSale && sale.CardSale.amount && <p className="text-gray-700 font-semibold">
+                                                Amount: <span className="font-bold"> {sale.CardSale && sale.CardSale.amount}</span>
+                                            </p>}
 
-                                        {sale.CardSale && sale.CardSale.batch_no && <p className="text-gray-700 font-semibold">
-                                            Batch: <span className="font-bold"> {sale.CardSale && sale.CardSale.batch_no}</span>
-                                        </p>}
-                                    </div>
-                                    <div className="lg:mb-1 mb-1  grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
-                                        {sale.CardSale && sale.CardSale.vehicle_no && <p className="text-gray-700 font-semibold">
-                                            Vehicle No.: <span className="font-normal break-words"> {sale.CardSale && sale.CardSale.vehicle_no}</span>
-                                        </p>}
-                                    </div>
-                                    {/* {!isMobile && (
+                                            {sale.CardSale && sale.CardSale.batch_no && <p className="text-gray-700 font-semibold">
+                                                Batch: <span className="font-bold"> {sale.CardSale && sale.CardSale.batch_no}</span>
+                                            </p>}
+                                        </div>
+                                        <div className="lg:mb-1 mb-1  grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
+                                            {sale.CardSale && sale.CardSale.vehicle_no && <p className="text-gray-700 font-semibold">
+                                                Vehicle No.: <span className="font-normal break-words"> {sale.CardSale && sale.CardSale.vehicle_no}</span>
+                                            </p>}
+                                        </div>
+                                        {/* {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
                                          
                                             <button className="px-2 w-10 h-10" onClick={() => handleRemove(index)}>
@@ -756,28 +828,28 @@ function Reciept({ petrodata }) {
                                             </button>
                                         </div>
                                     )} */}
+                                    </div>
+
                                 </div>
 
+                            ))
+                        ) : (
+                            <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                </div>
                             </div>
 
-                        ))
-                    ) : (
-                        <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                         <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
                         </div>
                     </div>
-                    
-                    )}
-                </div>
-                    ) : (
-                        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
-            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
-        </div>
-    </div>
-                    )}
+                )}
                 {/* {isEditModalOpen && (
                         <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="rounded-lg lg:max-w-4xl w-full">

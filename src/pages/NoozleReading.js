@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import add from "../images/add.svg";
-
+import { PuffLoader } from "react-spinners";
 import Navbar from "../components/Navbar";
 
 const NoozleReading = ({ petrodata }) => {
@@ -17,6 +17,7 @@ const NoozleReading = ({ petrodata }) => {
     const [amount, setAmount] = useState("");
     const [editingIndex, setEditingIndex] = useState(null);
     const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [errors, setErrors] = useState({});
     const [shouldFetchReadings, setShouldFetchReadings] = useState(false);
@@ -181,6 +182,8 @@ const NoozleReading = ({ petrodata }) => {
 
     useEffect(() => {
         if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
             console.log("Fetching current shift data...");
             axios.post(`${base_url}/currentShiftData/1`, {
                 petro_id: petrodata.petro_id,
@@ -202,7 +205,6 @@ const NoozleReading = ({ petrodata }) => {
                 })
                 .then((response) => {
                     console.log("Assign nozzle list response:", response);
-
                     if (response.status === 200 && response.data.status === 200) {
                         const data = response.data.data;
                         if (data && Array.isArray(data)) {
@@ -242,6 +244,9 @@ const NoozleReading = ({ petrodata }) => {
                     console.error("Error fetching nozzle list data:", error);
                     setShouldFetchReadings(false);
                     setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, base_url]);
@@ -574,7 +579,13 @@ const NoozleReading = ({ petrodata }) => {
 
 
 
-
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
 
     return (
         <div className="h-full min-h-screen flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">

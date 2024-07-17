@@ -17,7 +17,7 @@ import add from "../images/add.svg"
 import { useMediaQuery } from 'react-responsive';
 import { Spinner } from "@nextui-org/react";
 
-
+import { PuffLoader } from "react-spinners";
 import React from "react";
 
 function MsHsdCreditSale({ petrodata }) {
@@ -65,6 +65,7 @@ function MsHsdCreditSale({ petrodata }) {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // Function to open edit modal and populate with data
     const formatDate = (dateString) => {
@@ -93,7 +94,6 @@ function MsHsdCreditSale({ petrodata }) {
             axios
                 .post(`${base_url}/currentShiftData/1`,
                     {
-
                         petro_id: petrodata.petro_id,
                     })
                 .then((response) => {
@@ -110,9 +110,10 @@ function MsHsdCreditSale({ petrodata }) {
 
 
 
-
     useEffect(() => {
         if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
             console.log("Fetching current shift data...");
             axios.post(`${base_url}/currentShiftData/1`, {
                 "petro_id": petrodata.petro_id,
@@ -155,9 +156,37 @@ function MsHsdCreditSale({ petrodata }) {
                 .catch((error) => {
                     console.error("Error fetching data:", error);
                     setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, base_url]);
+
+    useEffect(() => {
+        if (petrodata && ShiftData && base_url) {
+            setLoading(true); // Start loading
+
+            axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
+                shift: `${ShiftData.shift}`,
+                employee_id: petrodata.user_id,
+                date: ShiftData.date,
+                petro_id: petrodata.petro_id,
+                day_shift: petrodata.daily_shift,
+            })
+                .then(response => {
+                    setmsAndHsdSaleList(response.data.data);
+                    console.log('msAndHsdSaleListByShift', response.data.data);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
+                });
+        }
+    }, [petrodata, ShiftData, base_url]);
+
 
     useEffect(() => {
         axios.post(`${base_url}/getSundryDebtorsLedgerList/1`, {
@@ -344,6 +373,8 @@ function MsHsdCreditSale({ petrodata }) {
         };
 
         try {
+            setLoading(true); // Start loading
+
             await axios.post(`${base_url}/addSale/1`, payload);
             console.log('Data submitted successfully.');
 
@@ -360,7 +391,6 @@ function MsHsdCreditSale({ petrodata }) {
             setmsAndHsdSaleList(msHsdResponse.data.data);
 
             resetForm();
-
             console.log('Form submitted successfully');
             onClose();
 
@@ -371,7 +401,9 @@ function MsHsdCreditSale({ petrodata }) {
                 console.error('Response status:', error.response.status);
                 console.error('Response headers:', error.response.headers);
             }
-        }
+        } finally {
+            setLoading(false); // Stop loading
+        };
 
         setIsSubmitting(false);
     };
@@ -394,24 +426,8 @@ function MsHsdCreditSale({ petrodata }) {
 
     };
 
-    useEffect(() => {
-        if (petrodata && ShiftData && base_url) {
-            axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
-                shift: `${ShiftData.shift}`,
-                employee_id: petrodata.user_id,
-                date: ShiftData.date,
-                petro_id: petrodata.petro_id,
-                day_shift: petrodata.daily_shift,
-            })
-                .then(response => {
-                    setmsAndHsdSaleList(response.data.data);
-                    console.log('msAndHsdSaleListByShift', response.data.data)
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                });
-        }
-    }, [petrodata, ShiftData, base_url]);
+
+
 
 
 
@@ -709,6 +725,13 @@ function MsHsdCreditSale({ petrodata }) {
 
 
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
 
 
     return (
@@ -1135,10 +1158,10 @@ function MsHsdCreditSale({ petrodata }) {
                                 ))
                             ) : (
                                 <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                    <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                        <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                    </div>
                                 </div>
-                            </div>
 
                             )}
 
@@ -1146,11 +1169,11 @@ function MsHsdCreditSale({ petrodata }) {
                         </div>
                     ) : (
                         <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
-            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
-        </div>
-    </div>
+                            <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                                <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+                            </div>
+                        </div>
                     )}
                 </div>
             </main >

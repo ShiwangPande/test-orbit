@@ -16,6 +16,7 @@ import {
 import add from "../images/add.svg";
 import { useLongPress } from 'use-long-press';
 import { Spinner } from "@nextui-org/react";
+import { PuffLoader } from "react-spinners";
 
 import React from "react";
 
@@ -31,6 +32,7 @@ function Expenses({ petrodata }) {
     const [ledgerId, setLedgerId] = useState(null);
     const [LedgerNamedata, setLedgerNamedata] = useState([]);
     const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // const [ledgerId, setLedgerId] = useState(null); // New state for ledger ID
     const [noozleData, setNoozleData] = useState([]);
@@ -77,6 +79,7 @@ function Expenses({ petrodata }) {
  } }, [petrodata, base_url]);
     useEffect(() => {
         if (petrodata && ShiftData  && base_url) {
+            setLoading(true); // Start loading
             axios.post(`${base_url}/expensesVoucherList/1`, {
                 shift: `${ShiftData.shift}`,
                 employee_id: petrodata.user_id,
@@ -91,12 +94,16 @@ function Expenses({ petrodata }) {
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
+                }).finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, ShiftData,  base_url]);
 
     useEffect(() => {
         if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
             console.log("Fetching current shift data...");
             axios.post(`${base_url}/currentShiftData/1`, {
                 "petro_id": petrodata.petro_id,
@@ -139,6 +146,9 @@ function Expenses({ petrodata }) {
                 .catch((error) => {
                     console.error("Error fetching data:", error);
                     setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, base_url]);
@@ -468,6 +478,16 @@ function Expenses({ petrodata }) {
         updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
+
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
+
 
     return (
         <div className="h-full min-h-screen flex overflow-hidden  bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 ">

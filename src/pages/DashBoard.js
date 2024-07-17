@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
+import { PuffLoader } from "react-spinners";
 
 
 
@@ -18,9 +19,12 @@ function DashBoard({ petrodata }) {
     const [cardList, setCardSales] = useState("");
     const [walletList, setWallet] = useState("");
     const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
             console.log("Fetching current shift data...");
             axios.post(`${base_url}/currentShiftData/1`, {
                 "petro_id": petrodata.petro_id,
@@ -47,8 +51,7 @@ function DashBoard({ petrodata }) {
                     if (response.status === 200 && response.data.status === 200) {
                         let noozleassigned = true;
                         if (response.data.data) {
-                            console.log("Nozzle list assigned successfully.");
-
+                            console.log("nozzle assigned successfully.")
                         } else {
                             console.error("Unexpected response data structure:", response.data);
                         }
@@ -61,6 +64,9 @@ function DashBoard({ petrodata }) {
                 .catch((error) => {
                     console.error("Error fetching data:", error);
                     setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, base_url]);
@@ -328,6 +334,15 @@ function DashBoard({ petrodata }) {
     const getTextStyle = (value) => ({
         color: value < 0 ? 'red' : 'black',
     });
+
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
 
     return (
         <div className="h-screen   flex bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600 overflow-hidden bg-gray-100">

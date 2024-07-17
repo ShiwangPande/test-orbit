@@ -17,6 +17,7 @@ import add from "../images/add.svg"
 import { useMediaQuery } from 'react-responsive';
 import { Spinner } from "@nextui-org/react";
 
+import { PuffLoader } from "react-spinners";
 
 import React from "react";
 
@@ -61,6 +62,7 @@ function OtherCreditSale({ petrodata }) {
     const [igst, setIgst] = useState('')
     const [gstType, setGstType] = useState("cgst_sgst"); // New state to track GST type
     const [shouldFetchAdd, setShouldFetchAdd] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const formatDate = (dateString) => {
@@ -94,6 +96,8 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && base_url) {
+            setLoading(true); // Start loading
+
             console.log("Fetching current shift data...");
             axios.post(`${base_url}/currentShiftData/1`, {
                 "petro_id": petrodata.petro_id,
@@ -136,6 +140,9 @@ function OtherCreditSale({ petrodata }) {
                 .catch((error) => {
                     console.error("Error fetching data:", error);
                     setShouldFetchAdd(false);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, base_url]);
@@ -312,12 +319,12 @@ function OtherCreditSale({ petrodata }) {
             ]
         };
         if (petrodata && ShiftData && base_url) {
+            setLoading(true); // Start loading
             try {
                 await axios.post(`${base_url}/addSale/1`, payload);
                 console.log('Data submitted successfully.');
 
                 const [otherResponse] = await Promise.all([
-
                     axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
                         shift: `${ShiftData.shift}`,
                         employee_id: petrodata.user_id,
@@ -343,7 +350,9 @@ function OtherCreditSale({ petrodata }) {
                     console.error('Response status:', error.response.status);
                     console.error('Response headers:', error.response.headers);
                 }
-            }
+            } finally {
+                setLoading(false); // Stop loading
+            };
         }
 
         setIsSubmitting(false);
@@ -372,6 +381,8 @@ function OtherCreditSale({ petrodata }) {
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
+            setLoading(true); // Start loading
+
             axios.post(`${base_url}/getOtherSaleListByShiftOrType/1`, {
                 "shift": `${ShiftData.shift}`,
                 "employee_id": petrodata.user_id,
@@ -385,6 +396,9 @@ function OtherCreditSale({ petrodata }) {
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
+                })
+                .finally(() => {
+                    setLoading(false); // Stop loading
                 });
         }
     }, [petrodata, ShiftData, base_url]);
@@ -668,7 +682,13 @@ function OtherCreditSale({ petrodata }) {
         updatedSwipeStates[index] = { isSwipedRight: false };
         setSwipeStates(updatedSwipeStates);
     };
-
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <PuffLoader size={150} color={"#000000"} loading={loading} />
+            </div>
+        );
+    }
 
     return (
 
@@ -1124,22 +1144,22 @@ function OtherCreditSale({ petrodata }) {
                                 ))
                             ) : (
                                 <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                    <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                        <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                    </div>
                                 </div>
-                            </div>
 
-                               
+
                             )}
 
                         </div>
                     ) : (
                         <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
-            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
-        </div>
-    </div>
+                            <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                                <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
+                            </div>
+                        </div>
                     )}
                 </div>
             </main >
