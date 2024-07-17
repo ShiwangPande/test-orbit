@@ -61,24 +61,25 @@ function Expenses({ petrodata }) {
 
 
     useEffect(() => {
-        if (petrodata  && base_url) {
-        axios
-            .post(`${base_url}/currentShiftData/1`,
-                {
+        if (petrodata && base_url) {
+            axios
+                .post(`${base_url}/currentShiftData/1`,
+                    {
 
-                    petro_id: petrodata.petro_id,
+                        petro_id: petrodata.petro_id,
+                    })
+                .then((response) => {
+                    const { shift, day_shift_no, date } = response.data.data.DailyShift;
+                    const formattedDate = formatDate(date);
+                    setShiftData({ shift, day_shift_no, formattedDate, date });
                 })
-            .then((response) => {
-                const { shift, day_shift_no, date } = response.data.data.DailyShift;
-                const formattedDate = formatDate(date);
-                setShiftData({ shift, day_shift_no, formattedDate, date });
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
- } }, [petrodata, base_url]);
+                .catch((error) => {
+                    console.error("Error fetching data:", error);
+                });
+        }
+    }, [petrodata, base_url]);
     useEffect(() => {
-        if (petrodata && ShiftData  && base_url) {
+        if (petrodata && ShiftData && base_url) {
             setLoading(true); // Start loading
             axios.post(`${base_url}/expensesVoucherList/1`, {
                 shift: `${ShiftData.shift}`,
@@ -98,7 +99,7 @@ function Expenses({ petrodata }) {
                     setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, ShiftData,  base_url]);
+    }, [petrodata, ShiftData, base_url]);
 
     useEffect(() => {
         if (petrodata && base_url) {
@@ -497,7 +498,7 @@ function Expenses({ petrodata }) {
                     Expenses
                 </h1>
                 <div className="flex flex-wrap gap-3">
-                {shouldFetchAdd && (
+                    {shouldFetchAdd && (
                         <div className="flex flex-wrap gap-3">
                             <Button className="bg-navbar fixed z-50 w-16 max-w-none min-w-16 h-16 border-2 p-0 border-white right-0   bottom-0 m-5 rounded-full hover:invert text-white" onPress={onOpen}>
                                 <img src={add} className="w-8 h-8" alt="" />
@@ -554,7 +555,7 @@ function Expenses({ petrodata }) {
                                                     Ledger Name
                                                 </label>
                                                 <div className="mt-1 relative">
-                                                     <input autoComplete="off"
+                                                    <input autoComplete="off"
                                                         type="text"
                                                         value={searchQuery}
                                                         onChange={handleSearchChange}
@@ -609,7 +610,7 @@ function Expenses({ petrodata }) {
                                             {/* Amount */}
                                             <div className="flex flex-col col-span-1  gap-1">
                                                 <label htmlFor="slip">Amount</label>
-                                                 <input autoComplete="off"
+                                                <input autoComplete="off"
                                                     type="number"
                                                     value={amount}
                                                     onChange={handleAmountChange}
@@ -653,19 +654,19 @@ function Expenses({ petrodata }) {
                                         </div>
                                     </ModalBody>
                                     <ModalFooter>
-                                            <Button className="bg-red-500 text-white" onPress={onClose}>
-                                                Close
-                                            </Button>
-                                            <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
-                                                Submit
-                                            </Button>
-                                            <br />
+                                        <Button className="bg-red-500 text-white" onPress={onClose}>
+                                            Close
+                                        </Button>
+                                        <Button className="bg-gray-800 text-white" type="submit" disabled={isSubmitting}>
+                                            Submit
+                                        </Button>
+                                        <br />
 
 
 
 
-                                            {isSubmitting && <Spinner label="Submitting..." color="default" />}
-                                        </ModalFooter>
+                                        {isSubmitting && <Spinner label="Submitting..." color="default" />}
+                                    </ModalFooter>
                                 </form>
                             </>
                         )}
@@ -694,12 +695,12 @@ function Expenses({ petrodata }) {
                         </div>
                     </div>
                 )}
-                  {shouldFetchAdd === true ? (
-                <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
-                    {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
-                        expensesVoucherList.map((voucher, index) => (
-                            <div key={index} ref={containerRef} className="relative -z-0 justify-center flex flex-row overflow-hidden">
-                                {/* {isMobile && (
+                {shouldFetchAdd === true ? (
+                    <div className=" mt-5 mx-5 grid grid-cols-1 lg:mt-28 lg:grid-cols-4 gap-3 lg:gap-5">
+                        {Array.isArray(expensesVoucherList) && expensesVoucherList.length > 0 ? (
+                            expensesVoucherList.map((voucher, index) => (
+                                <div key={index} ref={containerRef} className="relative -z-0 justify-center flex flex-row overflow-hidden">
+                                    {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isSwipedRight && (
                                             <button className="h-full flex flex-row rounded-lg bg-redish justify-around" onClick={() => handleRemove(index)}>
@@ -712,40 +713,40 @@ function Expenses({ petrodata }) {
                                         )}
                                     </>
                                 )} */}
-                                <div
-                                    className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                                    <div
+                                        className="flex select-none flex-col w-full justify-between lg:max-w-3xl max-w-sm lg:p-4 p-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                                     // initial={{ x: 0 }}
                                     // animate={{ x: (swipeStates[index]?.isSwipedRight ? 10 : 0) }}
                                     // drag={isMobile ? "x" : false}
                                     // dragConstraints={dragConstraints}
                                     // onDragEnd={(event, info) => handleDragEnd(index, event, info)}
                                     // onClick={() => handleCardClick(index)} // Added onClick handler
-                                >
-                                    <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                                        <ul>
-                                            {voucher.VoucherDetail.map((detail, detailIndex) => (
-                                                <li key={detailIndex}>
-                                                    {detail.Ledger.name}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </h5>
-                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
-                                        {voucher.Voucher.amount && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
-                                            </p>
-                                        )}
-                                    </div>
-                                    <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
-                                        {voucher.Voucher.narration && (
-                                            <p className="text-gray-700 font-semibold">
-                                                Narration:{" "}
-                                                <span className="font-normal break-words">{voucher.Voucher.narration}</span>{" "}
-                                            </p>
-                                        )}
-                                    </div>
-                                    {/* {!isMobile && (
+                                    >
+                                        <h5 className="lg:mb-1 mb-1 text-lg lg:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                            <ul>
+                                                {voucher.VoucherDetail.map((detail, detailIndex) => (
+                                                    <li key={detailIndex}>
+                                                        {detail.Ledger.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </h5>
+                                        <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-2 lg:grid-cols-2 lg:gap-2 gap-1 lg:text-base text-xs">
+                                            {voucher.Voucher.amount && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Amount: <span className="font-bold">{voucher.Voucher.amount}</span>
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="lg:mb-1 mb-1 mt-1 grid grid-cols-1 lg:grid-cols-1 lg:gap-2 gap-1 lg:text-base text-xs">
+                                            {voucher.Voucher.narration && (
+                                                <p className="text-gray-700 font-semibold">
+                                                    Narration:{" "}
+                                                    <span className="font-normal break-words">{voucher.Voucher.narration}</span>{" "}
+                                                </p>
+                                            )}
+                                        </div>
+                                        {/* {!isMobile && (
                                         <div className="flex flex-row justify-around mt-2">
                                            
                                             <button
@@ -764,8 +765,8 @@ function Expenses({ petrodata }) {
                                             </button>
                                         </div>
                                     )} */}
-                                </div>
-                                {/* {isMobile && (
+                                    </div>
+                                    {/* {isMobile && (
                                     <>
                                         {swipeStates[index] && swipeStates[index].isHeld && (
                                             <>
@@ -779,26 +780,26 @@ function Expenses({ petrodata }) {
                                             </>
                                         )}
                                     </>)} */}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                                <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
+                                    <h1 className="text-2xl capitalize sm:text-3xl lg:text-4xl text-red-500 mb-4  text-center">No expenses sales added.</h1>
+                                </div>
                             </div>
-                        ))
-                    ) : (
-                        <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+
+                        )}
+                    </div>
+                ) : (
+                    <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                         <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
+                            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
                         </div>
                     </div>
-
-                    )}
-</div>
-    ) : (
-        <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
-            <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
-        </div>
-    </div>
-    )}
-                    {/* {isEditModalOpen && (
+                )}
+                {/* {isEditModalOpen && (
                         <div className="fixed inset-0  flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="rounded-lg lg:max-w-4xl w-full">
                                 <div className="flex p-5 flex-col text-2xl bg-navbar text-white gap-1">

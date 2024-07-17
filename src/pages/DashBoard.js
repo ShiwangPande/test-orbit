@@ -378,7 +378,7 @@ function DashBoard({ petrodata }) {
                             </div>}
 
                             {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expenses</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
                                 <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(expensesVoucherList).toFixed(2))}>₹{formattedexpensesVoucherList}</h1>
                             </div>}

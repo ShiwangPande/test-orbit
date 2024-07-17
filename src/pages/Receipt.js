@@ -909,14 +909,14 @@ function Expenses({ petrodata }) {
                         ) : (
                             <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                                 <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                    <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No Reciept sales added.</h1>
                                 </div>
                             </div>
 
                         )}
                     </div>
                 ) : (
-                    <div className="flex h-[79vh] lg:h-screen justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-[70vh] lg:h-[80vh]  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                         <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">Nozzle is not Assigned.</h1>
                             <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>

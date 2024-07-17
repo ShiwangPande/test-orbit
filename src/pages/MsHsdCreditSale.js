@@ -124,8 +124,6 @@ function MsHsdCreditSale({ petrodata }) {
                     const formattedDate = formatDate(date);
                     const newShiftData = { shift, day_shift_no, formattedDate, date };
                     setShiftData(newShiftData);
-
-                    // Now perform the second API call
                     return axios.post(`${base_url}/assignNozzleList/1`, {
                         "shift": shift,
                         "emp_id": petrodata.user_id,
@@ -140,7 +138,7 @@ function MsHsdCreditSale({ petrodata }) {
                     if (response.status === 200 && response.data.status === 200) {
                         let noozleassigned = true;
                         if (response.data.data) {
-                            const data = response.data.data;
+                            const data = response.data.data || [];
                             const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
                             setDsmIds(extractedDsmIds);
                             console.log('extractedDsmIds', extractedDsmIds);
@@ -158,14 +156,14 @@ function MsHsdCreditSale({ petrodata }) {
                     setShouldFetchAdd(false);
                 })
                 .finally(() => {
-                    setLoading(false); // Stop loading
+                    setLoading(false); 
                 });
         }
     }, [petrodata, base_url]);
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            setLoading(true); // Start loading
+            setLoading(true); 
 
             axios.post(`${base_url}/msAndHsdSaleListByShift/1`, {
                 shift: `${ShiftData.shift}`,
@@ -182,7 +180,7 @@ function MsHsdCreditSale({ petrodata }) {
                     console.error('Error fetching data:', error);
                 })
                 .finally(() => {
-                    setLoading(false); // Stop loading
+                    setLoading(false); 
                 });
         }
     }, [petrodata, ShiftData, base_url]);

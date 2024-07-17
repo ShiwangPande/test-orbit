@@ -124,7 +124,7 @@ function OtherCreditSale({ petrodata }) {
                     if (response.status === 200 && response.data.status === 200) {
                         let noozleassigned = true;
                         if (response.data.data) {
-                            const data = response.data.data;
+                            const data = response.data.data || [];
                             const extractedDsmIds = data.map(item => item.NozzlesAssign.dsm_id);
                             setDsmIds(extractedDsmIds);
                             console.log('extractedDsmIds', extractedDsmIds);
@@ -1163,6 +1163,7 @@ function OtherCreditSale({ petrodata }) {
                                 <p className="text-gray-700 text-center sm:text-lg">Please contact your administrator or try again later.</p>
                             </div>
                         </div>
+
                     )}
                 </div>
             </main >
