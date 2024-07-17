@@ -317,14 +317,14 @@ function DashBoard({ petrodata }) {
         return `${day}/${month}/${year}`;
     };
     const total_sale = parseFloat(total_sale_amount || 0) + parseFloat(cashSalesTotal || 0)
-    const formatedtotal_sale = customFormat(total_sale);
+    const formatedtotal_sale = customFormat(parseFloat(total_sale).toFixed(2));
     const total_msAndHsdSaleList = parseFloat(msAndHsdSaleList || 0)
     const total_otherSalesTotal = parseFloat(otherSalesTotal || 0)
-    const formattedtotal_msAndHsdSaleList = customFormat(total_msAndHsdSaleList);
+    const formattedtotal_msAndHsdSaleList = customFormat(total_msAndHsdSaleList.toFixed(2) || 0);
     // const formattedtotal_getOtherSaleList = customFormat(total_getOtherSaleList);
     const formattedexpensesVoucherList = customFormat(expensesVoucherList);
-    const formattedrecieptList = customFormat(recieptList);
-    const formattedwalletList = customFormat(walletList);
+    const formattedrecieptList = customFormat(parseFloat(recieptList).toFixed(2));
+    const formattedwalletList = customFormat(parseFloat(walletList).toFixed(2));
     const formattedcardList = customFormat(cardList);
     let cashBalance = 0;
     cashBalance = parseFloat(total_sale || 0) - parseFloat(total_msAndHsdSaleList || 0) + parseFloat(recieptList || 0) - parseFloat(expensesVoucherList || 0) - parseFloat(cardList || 0) - parseFloat(walletList || 0);
@@ -369,34 +369,34 @@ function DashBoard({ petrodata }) {
                             <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(total_sale_amount)}>₹{formatedtotal_sale}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(total_sale_amount).toFixed(2))}>₹{formatedtotal_sale}</h1>
                             </div>
                             {msAndHsdSaleList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Sale</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(msAndHsdSaleList)}>  ₹{formattedtotal_msAndHsdSaleList}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(msAndHsdSaleList).toFixed(2))}>  ₹{formattedtotal_msAndHsdSaleList}</h1>
                             </div>}
 
                             {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expense</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(expensesVoucherList)}>₹{formattedexpensesVoucherList}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(expensesVoucherList).toFixed(2))}>₹{formattedexpensesVoucherList}</h1>
                             </div>}
 
                             {recieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(recieptList)}>₹{formattedrecieptList}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(recieptList).toFixed(2))}>₹{formattedrecieptList}</h1>
                             </div>}
                             {walletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(walletList)}>₹{formattedwalletList}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(walletList).toFixed(2))}>₹{formattedwalletList}</h1>
                             </div>}
                             {cardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cardList)}>₹{formattedcardList}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(cardList).toFixed(2))}>₹{formattedcardList}</h1>
                             </div>}
 
                             <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
