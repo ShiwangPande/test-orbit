@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/static/css/main.4d429e13.css",
+    "main.js": "/static/js/main.91b7ee76.js",
+    "static/js/453.63fa0758.chunk.js": "/static/js/453.63fa0758.chunk.js",
+    "static/media/nozzle.png": "/static/media/nozzle.4195162974a236d38da4.png",
+    "static/media/nozzlee.png": "/static/media/nozzlee.d3e39fdbd5e14f019826.png",
+    "static/media/geomanist.ttf": "/static/media/geomanist.dfc15950047391892e0d.ttf",
+    "service-worker.js": "/service-worker.js",
+    "static/media/Metropolis.otf": "/static/media/Metropolis.67a1988d7b65b0aaa16d.otf",
+    "static/media/logo.svg": "/static/media/logo.81b31b3af8103d98287d6cea4170e822.svg",
+    "static/media/loginlogo.svg": "/static/media/loginlogo.768cf2fa684802d444e11ca299d257e3.svg",
+    "static/media/navlogo.svg": "/static/media/navlogo.fc166443c35603153b00aee51788ec3c.svg",
+    "static/media/wave.svg": "/static/media/wave.43c2715f337f7e088aa06494ae9fdac1.svg",
+    "index.html": "/index.html",
+    "static/media/add.svg": "/static/media/add.c043f9f45d5c9f44387c0e4321f92345.svg",
+    "static/media/arrow.svg": "/static/media/arrow.90df51665fa832ba226d9f2433c80510.svg",
+    "main.4d429e13.css.map": "/static/css/main.4d429e13.css.map",
+    "main.91b7ee76.js.map": "/static/js/main.91b7ee76.js.map",
+    "453.63fa0758.chunk.js.map": "/static/js/453.63fa0758.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.4d429e13.css",
+    "static/js/main.91b7ee76.js"
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import axios from 'axios';
@@ -18,10 +18,14 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState('');
-    const [financialYears, setFinancialYears] = useState([]);
+    const [financialYears, setFinancialYears] = useState({});
+    const [defaultFinancialYear, setDefaultFinancialYear] = useState('');
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
+        defaultValues: {
+            financialYear: '',
+        },
     });
 
     const base_url = process.env.REACT_APP_API_URL;
@@ -32,13 +36,16 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
                 const response = await axios.get(`${base_url}/financialYearDropList`);
                 if (response.data.status === 200) {
                     setFinancialYears(response.data.data);
+                    const firstKey = Object.keys(response.data.data)[0];
+                    setDefaultFinancialYear(firstKey);
+                    setValue('financialYear', firstKey);
                 }
             } catch (error) {
                 console.error('Error fetching financial years:', error);
             }
         };
         fetchFinancialYears();
-    }, [base_url]);
+    }, [base_url, setValue]);
 
     const onSubmit = async (formData) => {
         const { mobile, password, financialYear } = formData;
@@ -61,6 +68,7 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
                 setFinancialYear(financialYear);
                 localStorage.setItem('isAuthenticated', 'true');
                 localStorage.setItem('userMobile', mobile);
+                localStorage.setItem('financialYear', financialYear);
                 localStorage.setItem('userData', JSON.stringify(response.data));
                 if (response.data.mpin === null) {
                     navigate("/setup-mpin")
@@ -122,16 +130,22 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
                     <div className="mb-4 lg:mb-8">
                         <label htmlFor="financialYear" className="block mb-1 text-black">Financial Year</label>
                         <div className="relative">
-                            <select
-                                id="financialYear"
-                                {...register('financialYear')}
-                                className={`w-full py-2 pl-3 pr-3 border ${errors.financialYear ? 'border-red-500' : 'border-gray-300'} font-sans text-black rounded-lg focus:outline-none focus:border-black`}
-                            >
-                                <option value="">Select Financial Year</option>
-                                {Object.keys(financialYears).map((key) => (
-                                    <option key={key} value={key}>{financialYears[key]}</option>
-                                ))}
-                            </select>
+                            <Controller
+                                name="financialYear"
+                                control={control}
+                                render={({ field }) => (
+                                    <select
+                                        {...field}
+                                        id="financialYear"
+                                        className={`w-full py-2 pl-3 pr-3 border ${errors.financialYear ? 'border-red-500' : 'border-gray-300'} font-sans text-black rounded-lg focus:outline-none focus:border-black`}
+                                    >
+                                        <option value="">Select Financial Year</option>
+                                        {Object.keys(financialYears).map((key) => (
+                                            <option key={key} value={key}>{financialYears[key]}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            />
                         </div>
                         {errors.financialYear && <p className="text-red-500 text-sm mt-1">{errors.financialYear.message}</p>}
                     </div>

@@ -249,7 +249,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                     setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, financialYear, base_url]);
 
 
 
@@ -287,7 +287,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url, shiftdata, shouldFetchReadings]);
+    }, [petrodata, base_url, shiftdata, financialYear, shouldFetchReadings]);
 
 
     useEffect(() => {
@@ -431,7 +431,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
 
 
 
@@ -607,7 +607,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                                             version="1.1"
                                             id="Layer_1"
                                             xmlns="http://www.w3.org/2000/svg"
-                                            xmlnsXlink="http://www.w3.org/${financialYear}999/xlink"
+                                            xmlnsXlink="http://www.w3.org/1999/xlink"
                                             viewBox="0 0 512 512"
                                             xmlSpace="preserve"
                                         >
@@ -833,7 +833,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                                                                         type="submit"
                                                                         className="bg-navbar text-white py-2 px-4 rounded hover:invert"
                                                                     >
-                                                                        submit
+                                                                        Submit
                                                                     </button>
                                                                 </div>
                                                             )}
@@ -976,7 +976,7 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                                             version="1.1"
                                             id="Layer_1"
                                             xmlns="http://www.w3.org/2000/svg"
-                                            xmlnsXlink="http://www.w3.org/${financialYear}999/xlink"
+                                            xmlnsXlink="http://www.w3.org/1999/xlink"
                                             viewBox="0 0 512 512"
                                             xmlSpace="preserve"
                                         >
