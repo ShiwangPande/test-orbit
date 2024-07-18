@@ -890,12 +890,12 @@ const NoozleReading = ({ petrodata, financialYear }) => {
                                                             <div className="flex flex-col gap-3 w-full justify-between">
                                                                 {nozzleItem.name && (
                                                                     <h3 className="text-orange text-lg font-semibold">
-                                                                        Nozzle: {nozzleItem.name}
+                                                                        Nozzle: {nozzleName.name}
                                                                     </h3>
                                                                 )}
                                                                 {nozzleName.name && (
                                                                     <h3 className="text-orange text-lg font-semibold">
-                                                                        Commodity: {nozzleName.name}
+                                                                        Commodity: {nozzleItem.name}
                                                                     </h3>
                                                                 )}
                                                             </div>
