@@ -34,7 +34,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
 /* Hide increment/decrement buttons in Firefox */
 input[type="number"] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .navbar {
   will-change: transform;
@@ -75,7 +75,7 @@ input::-webkit-inner-spin-button {
 }
 /* Firefox */
 input[type="number"] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .KLTLZ {
   justify-content: center;

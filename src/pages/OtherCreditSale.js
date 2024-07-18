@@ -1109,7 +1109,7 @@ function OtherCreditSale({ petrodata, financialYear }) {
                             ) : (
                                 <div className="flex h-[70vh] lg:h-[80vh] col-span-4  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                                     <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">
-                                        <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No card sales added.</h1>
+                                        <h1 className="text-2xl sm:text-3xl lg:text-4xl text-red-500 mb-4 text-center">No Other Credit/Cash Sale added.</h1>
                                     </div>
                                 </div>
 

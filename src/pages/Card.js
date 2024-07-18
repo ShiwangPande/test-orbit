@@ -540,7 +540,7 @@ function Reciept({ petrodata,financialYear }) {
                         {(onClose) => (
                             <>
                                 <ModalHeader className="flex flex-col text-2xl bg-navbar text-white gap-1">
-                                    Add Card Sale
+                                    Add Card
                                 </ModalHeader>
                                 <form onSubmit={handleSubmit}>
                                     <ModalBody className="px-4 lg:px-8">

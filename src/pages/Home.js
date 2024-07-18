@@ -41,7 +41,7 @@ function Home({ petrodata }) {
                             </>
                         ) : (
                             <>
-                                Bizperto DSM App
+                                Bizpetro DSM App
                             </>
                         )}
                     </h1>
