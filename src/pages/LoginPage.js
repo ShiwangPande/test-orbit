@@ -20,7 +20,7 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
     const [loginError, setLoginError] = useState('');
     const [financialYears, setFinancialYears] = useState({});
     const [defaultFinancialYear, setDefaultFinancialYear] = useState('');
-
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
         defaultValues: {
@@ -71,10 +71,10 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
                 localStorage.setItem('financialYear', financialYear);
                 localStorage.setItem('userData', JSON.stringify(response.data));
                 if (response.data.mpin === null) {
-                    navigate("/setup-mpin")
+                    navigate(`${dsm_url}/setup-mpin`)
                 }
                 else {
-                    navigate("/mpin-login");
+                    navigate(`${dsm_url}/mpin-login`);
                 }
             } else {
                 setLoginError('Mobile number or password is incorrect. Please try again.');

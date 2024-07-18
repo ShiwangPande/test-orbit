@@ -2,6 +2,7 @@
   "name": "petrol-pump",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://erp1.bizpetro.com/dsm/",
   "dependencies": {
     "@capacitor/android": "^6.1.0",
     "@capacitor/cli": "^6.1.0",

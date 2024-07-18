@@ -13,6 +13,8 @@ function DashBoard({ petrodata, financialYear }) {
     const [total_sale_amount, settotal_sale_amount] = useState(0);
     const base_url = process.env.REACT_APP_API_URL;
     const [cashSalesTotal, setCashSalesTotal] = useState("");
+    const [MsAmount, setMsAmount] = useState("");
+    const [HsdAmount, setHsdAmount] = useState("");
     const [otherSalesTotal, setOtherSalesTotal] = useState("");
     const [expensesVoucherList, setExpensesVoucherList] = useState("");
     const [recieptList, setRecieptList] = useState("");
@@ -69,7 +71,7 @@ function DashBoard({ petrodata, financialYear }) {
                     setLoading(false); // Stop loading
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
     useEffect(() => {
         if (petrodata && petrodata.user_id && petrodata.petro_id && petrodata.daily_shift && base_url) {
             axios
@@ -87,7 +89,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
@@ -109,7 +111,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, ShiftData, base_url, financialYear]);
 
     useEffect(() => {
         if (base_url && ShiftData) {
@@ -123,6 +125,19 @@ function DashBoard({ petrodata, financialYear }) {
                 })
                 .then((response) => {
                     const totalamount = response.data.data.map(item => item.ShiftWiseNozzle.amount);
+                    const msAmount = response.data.data
+                        .filter(item => item.Item.name === 'MS')
+                        .map(item => item.ShiftWiseNozzle.amount)
+                        .reduce((acc, curr) => acc + curr, 0);
+
+                    const hsdAmount = response.data.data
+                        .filter(item => item.Item.name === 'HSD')
+                        .map(item => item.ShiftWiseNozzle.amount)
+                        .reduce((acc, curr) => acc + curr, 0);
+
+                    // Set state with the calculated sums
+                    setMsAmount(msAmount);
+                    setHsdAmount(hsdAmount);
                     const sum = totalamount.reduce((acc, curr) => acc + curr, 0);
                     settotal_sale_amount(sum);
 
@@ -131,7 +146,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url, ShiftData]);
+    }, [petrodata, base_url, ShiftData, financialYear]);
     // useEffect(() => {
     //     if (petrodata && ShiftData && base_url) {
     //         axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
@@ -177,8 +192,8 @@ function DashBoard({ petrodata, financialYear }) {
                         .filter(item => item.Ledger.name !== 'Cash')
                         .reduce((acc, curr) => acc + curr.Sale.total_amount, 0);
 
-                    setCashSalesTotal(cashSalesTotal); // assuming setCashSalesTotal is a state setter
-                    setOtherSalesTotal(otherSalesTotal); // assuming setOtherSalesTotal is a state setter
+                    setCashSalesTotal(cashSalesTotal);
+                    setOtherSalesTotal(otherSalesTotal);
 
                     console.log('Cash Sales Total:', cashSalesTotal);
                     console.log('Other Sales Total:', otherSalesTotal);
@@ -187,7 +202,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, ShiftData, base_url, financialYear]);
 
 
     useEffect(() => {
@@ -210,7 +225,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, ShiftData, base_url, financialYear]);
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
@@ -232,7 +247,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, ShiftData, base_url, financialYear]);
 
 
 
@@ -256,7 +271,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url, financialYear]);
     useEffect(() => {
         if (petrodata && ShiftData && petrodata.daily_shift && base_url) {
             axios.post(`${base_url}/cardSaleList/${financialYear}`, {
@@ -277,7 +292,7 @@ function DashBoard({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata, ShiftData, petrodata.daily_shift, base_url]);
+    }, [petrodata, ShiftData, petrodata.daily_shift, base_url, financialYear]);
 
 
     function customFormat(number) {
@@ -316,13 +331,19 @@ function DashBoard({ petrodata, financialYear }) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
     };
+    const total_msAmount = parseFloat(MsAmount || 0);
+    const formatedtotal_msAmount = customFormat(parseFloat(total_msAmount).toFixed(2));
+    const total_hsdAmount = parseFloat(HsdAmount || 0);
+    const formatedtotal_hsdAmount = customFormat(parseFloat(total_hsdAmount).toFixed(2));
     const total_sale = parseFloat(total_sale_amount || 0) + parseFloat(cashSalesTotal || 0)
     const formatedtotal_sale = customFormat(parseFloat(total_sale).toFixed(2));
-    const total_msAndHsdSaleList = parseFloat(msAndHsdSaleList || 0)
-    const total_otherSalesTotal = parseFloat(otherSalesTotal || 0)
+
+    const total_msAndHsdSaleList = parseFloat(msAndHsdSaleList || 0);
+    const total_otherSalesTotal = parseFloat(otherSalesTotal || 0) + parseFloat(cashSalesTotal || 0);
+    const total_expenses = parseFloat(expensesVoucherList || 0);
     const formattedtotal_msAndHsdSaleList = customFormat(total_msAndHsdSaleList.toFixed(2) || 0);
-    // const formattedtotal_getOtherSaleList = customFormat(total_getOtherSaleList);
-    const formattedexpensesVoucherList = customFormat(expensesVoucherList);
+    const formattedtotal_getOtherSaleList = customFormat(total_otherSalesTotal.toFixed(2) || 0);
+    const formattedexpensesVoucherList = customFormat(total_expenses.toFixed(2) || 0);
     const formattedrecieptList = customFormat(parseFloat(recieptList).toFixed(2));
     const formattedwalletList = customFormat(parseFloat(walletList).toFixed(2));
     const formattedcardList = customFormat(cardList);
@@ -366,46 +387,89 @@ function DashBoard({ petrodata, financialYear }) {
                     <div className='flex flex-col bg-white border-3 drop-shadow-2xl mt-4 border-black lg:w-1/2 lg:mx-auto rounded-lg justify-center mx-2 lg:mt-5'>
                         <div className='flex flex-col px-4 lg:px-10 w-full'>
 
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Sale Amount</h2>
+
+
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total MS Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(total_sale_amount).toFixed(2))}>₹{formatedtotal_sale}</h1>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(total_msAmount).toFixed(2))}>₹{formatedtotal_msAmount}</h1>
                             </div>
-                            {msAndHsdSaleList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Credit Sale</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(msAndHsdSaleList).toFixed(2))}>  ₹{formattedtotal_msAndHsdSaleList}</h1>
-                            </div>}
 
-                            {expensesVoucherList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expenses</h2>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total HSD Amount</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(expensesVoucherList).toFixed(2))}>₹{formattedexpensesVoucherList}</h1>
-                            </div>}
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(total_hsdAmount).toFixed(2))}>₹{formatedtotal_hsdAmount}</h1>
+                            </div>
 
-                            {recieptList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(recieptList).toFixed(2))}>₹{formattedrecieptList}</h1>
-                            </div>}
-                            {walletList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(walletList).toFixed(2))}>₹{formattedwalletList}</h1>
-                            </div>}
-                            {cardList && <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
-                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
-                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(cardList).toFixed(2))}>₹{formattedcardList}</h1>
-                            </div>}
 
-                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-5'>
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Other Credit Sale</h2>
+                                <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(msAndHsdSaleList).toFixed(2))}>₹{formattedtotal_getOtherSaleList}</h1>
+                            </div>
+                           
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl  font-semibold">Total Sale Amount</h2>
+                                    <div className="font-bold text-xl col-span-0 lg:text-xl">:</div>
+                                    <h1 className=" font-black text-lg col-span-3 lg:col-span-3 text-end text-redish lg:text-xl" >₹{formatedtotal_sale}</h1>
+
+                                </div>
+                           
+                            {/* Total Credit Sale Section */}
+                            {msAndHsdSaleList &&
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">MS HSD Credit Sale</h2>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                    <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(msAndHsdSaleList).toFixed(2))}>₹{formattedtotal_msAndHsdSaleList}</h1>
+                                </div>
+                            }
+
+                            {/* Total Expenses Section */}
+                            {expensesVoucherList &&
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Expenses</h2>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                    <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(expensesVoucherList).toFixed(2))}>₹{formattedexpensesVoucherList}</h1>
+                                </div>
+                            }
+
+                            {/* Total Receipt Section */}
+                            {recieptList &&
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Receipt</h2>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                    <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(recieptList).toFixed(2))}>₹{formattedrecieptList}</h1>
+                                </div>
+                            }
+
+                            {/* Total Wallet Section */}
+                            {walletList &&
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Wallet</h2>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                    <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(walletList).toFixed(2))}>₹{formattedwalletList}</h1>
+                                </div>
+                            }
+
+                            {/* Total Card Section */}
+                            {cardList &&
+                                <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
+                                    <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Total Card</h2>
+                                    <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
+                                    <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(parseFloat(cardList).toFixed(2))}>₹{formattedcardList}</h1>
+                                </div>
+                            }
+
+                            {/* Cash Balance Section */}
+                            <div className='grid lg:grid-cols-8 grid-cols-7 justify-between w-full gap-2 my-2 lg:my-4'>
                                 <h2 className="text-gray-700 text-lg col-span-3 lg:col-span-4 lg:text-xl font-semibold">Cash Balance</h2>
                                 <div className="font-bold text-xl col-span-1 lg:text-xl">:</div>
-                                <h1 className="font-bold text-lg col-span-3 lg:col-span-3 text-end lg:text-xl" style={getTextStyle(cashBalance)}>₹{formatedcashBalance}</h1>
+                                <h1 className="font-black text-lg col-span-3 lg:col-span-3 text-end lg:text-xl text-redish  " >₹{formatedcashBalance}</h1>
                             </div>
+
                         </div>
                     </div>
+
                 ) : (
                     <div className="flex h-[65vh]  justify-center items-center w-full  px-4 sm:px-6 lg:px-8">
                         <div className="bg-white shadow-lg rounded-lg p-6 sm:p-8 lg:p-10 border border-gray-300 max-w-md sm:max-w-lg lg:max-w-2xl">

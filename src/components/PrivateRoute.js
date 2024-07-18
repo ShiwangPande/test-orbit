@@ -6,7 +6,7 @@ const PrivateRoute = ({ path, element, isAuthenticated }) => {
   return (
     <Route
       path={path}
-      element={isAuthenticated ? element : <Navigate to="/login" />}
+      element={isAuthenticated ? element : <Navigate to="/dsm/login" />}
     />
   );
 };

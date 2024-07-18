@@ -14,7 +14,7 @@ const schema = yup.object().shape({
 
 function ResetMPIN({ petrodata, financialYear }) {
     const navigate = useNavigate();
-
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const { register, handleSubmit, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
     });
@@ -73,7 +73,7 @@ function ResetMPIN({ petrodata, financialYear }) {
             );
 
             if (response.data.status === 200 && response.data.msg === "UPDATED") {
-                navigate('/mpin-login', { state: { mobile: petrodata.mobile } });
+                navigate(`${dsm_url}/mpin-login`, { state: { mobile: petrodata.mobile } });
             } else {
                 setResetError('Failed to reset MPIN. Please try again.');
             }

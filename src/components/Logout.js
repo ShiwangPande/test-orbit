@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 function LogoutButton({ setIsAuthenticated }) {
 
-
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -17,7 +17,7 @@ function LogoutButton({ setIsAuthenticated }) {
         // Redirect to the login page or any other appropriate page
         // localStorage.removeItem('isAuthenticated');
     
-        navigate('/');
+        navigate({dsm_url});
     };
 
     return (

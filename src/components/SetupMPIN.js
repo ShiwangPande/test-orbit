@@ -14,7 +14,7 @@ const mpinSchema = yup.object().shape({
 function SetupMPIN({ petrodata, financialYear }) {
     const mobile = JSON.parse(localStorage.getItem('userMobile')) || '';
     const navigate = useNavigate();
-
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const { register, handleSubmit, setValue, formState: { errors } } = useForm({
         resolver: yupResolver(mpinSchema),
     });
@@ -59,7 +59,7 @@ function SetupMPIN({ petrodata, financialYear }) {
                 );
 
                 if (response.data.status === 201 && response.data.msg === "SUCCESSFUL") {
-                    navigate('/dashboard');
+                    navigate(`${dsm_url}/dashboard`);
                 } else {
                     setSetupError('Failed to set up MPIN. Please try again.');
                 }
@@ -72,9 +72,7 @@ function SetupMPIN({ petrodata, financialYear }) {
         }
     };
 
-    const handleback = () => {
-        navigate('/login');
-    };
+
 
     return (
         <div className='overflow-hidden w-full bg-gradient-to-t from-gray-200 via-gray-400 to-gray-600  h-screen'>

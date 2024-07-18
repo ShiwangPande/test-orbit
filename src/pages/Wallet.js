@@ -531,8 +531,34 @@ function Reciept({ petrodata, financialYear }) {
                     <ModalContent>
                         {(onClose) => (
                             <>
-                                <ModalHeader className="flex flex-col text-2xl bg-navbar text-white gap-1">
-                                    Add Wallet
+                                <ModalHeader className="flex flex-row justify-between w-full text-2xl bg-navbar text-white gap-1">
+                                    <div>
+                                        Add Wallet
+                                    </div>
+                                    <div>
+                                        <button
+                                            className="lg:w-10 w-6 relative bottom-2 left-4 lg:bottom-3 lg:left-5 h-6 lg:h-10 p-0 lg:p-2 bg-navbar border-2 border-navbar hover:border-white hover:bg-white rounded-full"
+                                            onClick={() => onClose(false)}
+                                        >
+                                            <div className="mx-auto lg:w-5 h-5 w-5 lg:h-5">
+                                                <svg
+                                                    fill="#71717a"
+                                                    version="1.1"
+                                                    id="Layer_1"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    xmlnsXlink="http://www.w3.org/1999/xlink"
+                                                    viewBox="0 0 512 512"
+                                                    xmlSpace="preserve"
+                                                >
+                                                    <g>
+                                                        <g>
+                                                            <polygon points="512,59.076 452.922,0 256,196.922 59.076,0 0,59.076 196.922,256 0,452.922 59.076,512 256,315.076 452.922,512 512,452.922 315.076,256" />
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </ModalHeader>
                                 <form onSubmit={handleSubmit}>
                                     <ModalBody className="px-4 lg:px-8">
@@ -623,6 +649,7 @@ function Reciept({ petrodata, financialYear }) {
                                                     value={amount}
                                                     onChange={handleAmountChange}
                                                     id="slip"
+                                                    placeholder="Enter the Amount"
                                                     className="border p-2 border-gray-300 rounded"
                                                 />
                                                 {errors.amount && (
@@ -638,6 +665,7 @@ function Reciept({ petrodata, financialYear }) {
                                                     value={batch}
                                                     onChange={handleBatchChange}
                                                     id="slip"
+                                                    placeholder="Enter the Batch No."
                                                     className="border p-2 border-gray-300 rounded"
                                                     maxlength="7"
                                                 />
@@ -655,6 +683,7 @@ function Reciept({ petrodata, financialYear }) {
                                                     value={vehicle}
                                                     onChange={handleVehicleChange}
                                                     id="vehicle"
+                                                    placeholder="Enter the Vehicle No."
                                                     className="border p-2 border-gray-300 rounded"
                                                     maxlength="10"
                                                 />

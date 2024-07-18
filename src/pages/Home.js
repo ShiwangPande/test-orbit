@@ -7,9 +7,10 @@ import nozzlee from "../images/nozzlee.png";
 import { useNavigate } from "react-router-dom";
 import wave from "../images/wave.svg";
 function Home({ petrodata }) {
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const navigate = useNavigate();
     const handleclick = () => {
-        navigate("/mpin-login");
+        navigate(`${dsm_url}/mpin-login`);
     };
 
     const floatVariants = {

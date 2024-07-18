@@ -26,6 +26,7 @@ function App() {
   const [financialYear, setFinancialYear] = useState(localStorage.getItem('financialYear') || '');
 
   const base_url = process.env.REACT_APP_API_URL;
+  const dsm_url = process.env.REACT_APP_DSM_URL;
 
 
 
@@ -48,7 +49,7 @@ function App() {
       localStorage.removeItem('userMobile');
       localStorage.removeItem('userData');
     }
-  }, [base_url, userMobile]);
+  }, [base_url, financialYear, userMobile]);
 
   useEffect(() => {
     if (isAuthenticated && !data) {
@@ -90,21 +91,21 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/" element={<Home petrodata={data} />} />
-          <Route path="/login" element={<LoginPage setUserMobile={setUserMobile} financialYear={financialYear} setFinancialYear={setFinancialYear} setIsAuthenticated={setIsAuthenticated} setData={setData} />} />
-          <Route path="/receipt" element={isAuthenticated ? <Receipt financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/reset-mpin" element={isAuthenticated ? <ResetMPIN financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/setup-mpin" element={isAuthenticated ? <SetupMPIN financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/logout" element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/mpin-login" element={isAuthenticated ? <MPINLogin financialYear={financialYear} isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/noozle-reading" element={isAuthenticated ? <NoozleReading financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/expenses" element={isAuthenticated ? <Expenses financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/OtherCreditSale" element={isAuthenticated ? <OtherCreditSale financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/MsHsdCreditSale" element={isAuthenticated ? <MsHsdCreditSale financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/dashboard" element={isAuthenticated ? <DashBoard financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/wallet" element={isAuthenticated ? <Wallet financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="/card" element={isAuthenticated ? <Card financialYear={financialYear} petrodata={data} /> : <Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path={`${dsm_url}/`} element={<Home petrodata={data} />} />
+          <Route path={`${dsm_url}/login`} element={<LoginPage setUserMobile={setUserMobile} financialYear={financialYear} setFinancialYear={setFinancialYear} setIsAuthenticated={setIsAuthenticated} setData={setData} />} />
+          <Route path={`${dsm_url}/receipt`} element={isAuthenticated ? <Receipt financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/reset-mpin`} element={isAuthenticated ? <ResetMPIN financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/setup-mpin`} element={isAuthenticated ? <SetupMPIN financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/logout`} element={<Logout setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path={`${dsm_url}/mpin-login`} element={isAuthenticated ? <MPINLogin financialYear={financialYear} isAuthenticated={isAuthenticated} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/noozle-reading`} element={isAuthenticated ? <NoozleReading financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/expenses`} element={isAuthenticated ? <Expenses financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/OtherCreditSale`} element={isAuthenticated ? <OtherCreditSale financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/MsHsdCreditSale`} element={isAuthenticated ? <MsHsdCreditSale financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/dashboard`} element={isAuthenticated ? <DashBoard financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/wallet`} element={isAuthenticated ? <Wallet financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/card`} element={isAuthenticated ? <Card financialYear={financialYear} petrodata={data} /> : <Navigate to={`${dsm_url}/login`} />} />
+          <Route path={`${dsm_url}/*`} element={<Navigate to={`${dsm_url}/`} />} />
         </Routes>
       </Router>
     </div>

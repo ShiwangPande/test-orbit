@@ -18,6 +18,7 @@ const DigitalKeyboard = ({ onKeyPress, onBackspace, onClose }) => {
     //     setKeys(shuffledKeys);
     // }, []);
 
+
     const keys = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     return (
         <div className="grid grid-cols-3 mx-auto">
@@ -65,7 +66,7 @@ function MPINLogin({ petrodata, financialYear }) {
     const [mpin, setMpin] = useState(['', '', '', '']);
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const base_url = process.env.REACT_APP_API_URL;
-
+    const dsm_url = process.env.REACT_APP_DSM_URL;
     const onMPINSubmit = async () => {
         const mpinValue = mpin.join('');
         console.log('Submitting MPIN:', mpinValue); // Debug log for MPIN value
@@ -84,7 +85,7 @@ function MPINLogin({ petrodata, financialYear }) {
             console.log('API Response:', response.data); // Debug log for API response
 
             if (response.data.status === 200 && response.data.msg === "CHECKED") {
-                navigate('/dashboard');
+                navigate(`${dsm_url}/dashboard`);
             } else {
                 setLoginError('Incorrect MPIN. Please try again.');
             }
@@ -94,9 +95,9 @@ function MPINLogin({ petrodata, financialYear }) {
         }
     };
 
-    const handleForget = () => navigate("/reset-mpin");
-    const handleSetup = () => navigate("/setup-mpin");
-    const handleLogin = () => navigate("/login");
+    const handleForget = () => navigate(`${dsm_url}reset-mpin`);
+    const handleSetup = () => navigate(`${dsm_url}setup-mpin`);
+    const handleLogin = () => navigate(`${dsm_url}login`);
 
     const handlePinChange = (value, index) => {
         const newMpin = [...mpin];

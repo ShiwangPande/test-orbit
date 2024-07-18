@@ -105,7 +105,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     console.error("Error fetching data:", error);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
 
 
 
@@ -156,14 +156,14 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     setShouldFetchAdd(false);
                 })
                 .finally(() => {
-                    setLoading(false); 
+                    setLoading(false);
                 });
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
 
     useEffect(() => {
         if (petrodata && ShiftData && base_url) {
-            setLoading(true); 
+            setLoading(true);
 
             axios.post(`${base_url}/msAndHsdSaleListByShift/${financialYear}`, {
                 shift: `${ShiftData.shift}`,
@@ -180,10 +180,10 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 })
                 .finally(() => {
-                    setLoading(false); 
+                    setLoading(false);
                 });
         }
-    }, [petrodata, ShiftData, base_url]);
+    }, [petrodata, ShiftData, base_url, financialYear]);
 
 
     useEffect(() => {
@@ -202,7 +202,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, base_url]);
+    }, [petrodata.petro_id, base_url, financialYear]);
 
 
 
@@ -229,7 +229,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
         if (petrodata && base_url) {
             fetchData();
         }
-    }, [petrodata, base_url]);
+    }, [petrodata, base_url, financialYear]);
 
 
     useEffect(() => {
@@ -255,7 +255,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [base_url, PriceID]);
+    }, [base_url, PriceID, financialYear]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -469,7 +469,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
             .catch(error => {
                 console.error('Error fetching data:', error);
             });
-    }, [petrodata.petro_id, base_url]);
+    }, [petrodata.petro_id, base_url, financialYear]);
 
     useEffect(() => {
         if (ledgerId) { // Check if ledgerId is not null
@@ -485,7 +485,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     console.error('Error fetching data:', error);
                 });
         }
-    }, [petrodata.petro_id, ledgerId, base_url]);
+    }, [petrodata.petro_id, ledgerId, base_url, financialYear]);
 
 
     const handleSelectCustomer = (customer) => {
@@ -698,7 +698,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                 left: 0 // Prevent dragging to the left
             });
         }
-    }, [submittedData.length, containerRef.current]);
+    }, [submittedData.length]);
 
     const handleDragEnd = (index, event, info) => {
         if (isMobile) {
@@ -749,12 +749,39 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                     )
                     }
                     <Modal isOpen={isOpen} size="5xl" scrollBehavior="outside" isDismissable={false} isKeyboardDismissDisabled={true} placement="top"
-                        onOpenChange={onOpenChange}>
+                         onOpenChange={onOpenChange}>
+
                         <ModalContent>
-                            {(onClose) => (
+                         
                                 <>
-                                    <ModalHeader className="flex flex-col text-2xl bg-navbar text-white gap-1">
-                                        Add MS HSD Credit/Cash Sale
+                                    <ModalHeader className="flex flex-row justify-between w-full text-2xl bg-navbar text-white gap-1">
+                                        <div>
+                                            Add MS HSD Credit/Cash Sale
+                                        </div>
+                                        <div>
+                                            <button
+                                                className="lg:w-10 w-6 relative bottom-2 left-4 lg:bottom-3 lg:left-5 h-6 lg:h-10 p-0 lg:p-2 bg-navbar border-2 border-navbar hover:border-white hover:bg-white rounded-full"
+                                                onClick={() => onClose(false)}
+                                            >
+                                                <div className="mx-auto lg:w-5 h-5 w-5 lg:h-5">
+                                                    <svg
+                                                        fill="#71717a"
+                                                        version="1.1"
+                                                        id="Layer_1"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        xmlnsXlink="http://www.w3.org/1999/xlink"
+                                                        viewBox="0 0 512 512"
+                                                        xmlSpace="preserve"
+                                                    >
+                                                        <g>
+                                                            <g>
+                                                                <polygon points="512,59.076 452.922,0 256,196.922 59.076,0 0,59.076 196.922,256 0,452.922 59.076,512 256,315.076 452.922,512 512,452.922 315.076,256" />
+                                                            </g>
+                                                        </g>
+                                                    </svg>
+                                                </div>
+                                            </button>
+                                        </div>
                                     </ModalHeader>
                                     <form onSubmit={handleSubmit}>
                                         <ModalBody className="px-4 lg:px-8">
@@ -1046,7 +1073,7 @@ function MsHsdCreditSale({ petrodata, financialYear }) {
                                 </>
 
 
-                            )}
+                      
                         </ModalContent>
                     </Modal>
 

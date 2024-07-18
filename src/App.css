@@ -81,3 +81,6 @@ input[type="number"] {
   justify-content: center;
   gap: 1rem;
 }
+.modal-close-button {
+  display: none;
+}
