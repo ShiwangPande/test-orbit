@@ -373,7 +373,7 @@ function DashBoard({ petrodata, financialYear }) {
                 <div className='w-[90vw] lg:w-[80.5vw] bg-navbar lg:mt-5 mt-10 mx-5 fixed rounded-md px-8 py-5 '>
                     <div className="flex justify-between">
                         <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">
-                            Date: <span className='text-red-500 font-medium'>{ShiftData.date}</span>
+                            Date: <span className='text-red-500 font-medium'>{ShiftData.formattedDate}</span>
                         </h2>
                         <h2 className="block text-white text-md lg:text-lg font-bold mb-0 lg:mb-2">Shift: <span className='text-red-500 font-medium'>{ShiftData.day_shift_no}</span></h2>
                     </div>
