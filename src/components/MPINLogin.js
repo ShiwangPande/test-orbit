@@ -95,7 +95,7 @@ function MPINLogin({ petrodata, financialYear }) {
         }
     };
 
-    const handleForget = () => navigate(`${dsm_url}/reset-mpin`);
+    const handleForget = () => navigate(`${dsm_url}reset-mpin`);
     const handleSetup = () => navigate(`${dsm_url}/setup-mpin`);
     const handleLogin = () => navigate(`${dsm_url}/login`);
 
