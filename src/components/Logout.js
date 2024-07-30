@@ -15,9 +15,9 @@ function LogoutButton({ setIsAuthenticated }) {
         localStorage.removeItem('submittedExpensesData');
 
         // Redirect to the login page or any other appropriate page
-        // localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('isAuthenticated');
     
-        navigate({dsm_url});
+        navigate(`${dsm_url}/`);
     };
 
     return (

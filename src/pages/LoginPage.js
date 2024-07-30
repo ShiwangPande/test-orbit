@@ -139,7 +139,7 @@ function LoginPage({ setIsAuthenticated, setUserMobile, setData, setFinancialYea
                                         id="financialYear"
                                         className={`w-full py-2 pl-3 pr-3 border ${errors.financialYear ? 'border-red-500' : 'border-gray-300'} font-sans text-black rounded-lg focus:outline-none focus:border-black`}
                                     >
-                                        <option value="">Select Financial Year</option>
+                                        <option disabled value="">Select Financial Year</option>
                                         {Object.keys(financialYears).map((key) => (
                                             <option key={key} value={key}>{financialYears[key]}</option>
                                         ))}

@@ -284,7 +284,7 @@ function Navbar({ petrodata }) {
                             <span className="sr-only">Open main menu</span>
                             {/* Hamburger Icon */}
                             <svg
-                                className={`block h - 6 w - 6 ${showMobileMenu ? 'hidden' : 'block'} `}
+                                className={`block h-6 w-6 ${showMobileMenu ? 'hidden' : 'block'}`}
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -295,7 +295,7 @@ function Navbar({ petrodata }) {
                             </svg>
                             {/* Close Icon */}
                             <svg
-                                className={`block h - 6 w - 6 ${showMobileMenu ? 'block' : 'hidden'} `}
+                                className={`block h-6 w-6 ${showMobileMenu ? 'block' : 'hidden'}`}
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"

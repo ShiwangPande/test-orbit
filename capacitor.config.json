@@ -1,5 +1,8 @@
 {
   "appId": "com.bizpetro.com",
   "appName": "Bizpetro",
-  "webDir": "build"
+  "webDir": "build",
+  "server": {
+    "url": "https://erp1.bizpetro.com/dsm/"
+  }
 }
